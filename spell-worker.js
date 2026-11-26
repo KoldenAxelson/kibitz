@@ -12,7 +12,6 @@
 const fs = require('fs');
 const path = require('path');
 const { loadModule } = require('@farscrl/hunspell-wasm');
-const { normalizeRomanianWord } = require('./spell-ro');
 
 let factory = null;       // the WebAssembly module, loaded once
 let spell = null;         // { hunspell, files } for the current language
@@ -32,8 +31,7 @@ async function load(msg) {
   if (!factory) factory = await loadModule();
   const aff = fs.readFileSync(path.join(msg.dir, 'index.aff'));
   const dic = fs.readFileSync(path.join(msg.dir, 'index.dic'));
-  const romanian = msg.language === 'ro';
-  const normalize = romanian ? normalizeRomanianWord : (word) => word;
+  const normalize = (word) => word;
   const n = ++mounts;
   const files = [
     factory.mountBuffer(aff, `kibitz-${n}.aff`),

@@ -2022,7 +2022,6 @@ window.kibitz.onMenu(async (msg) => {
   if (msg.type === 'emailSettings') emailSettings();
   if (msg.type === 'find') openSearch();
   if (msg.type === 'spellcheck') toggleSpellcheck();
-  if (msg.type === 'spellLanguage') changeSpellLanguage(msg.value);
   if (msg.type === 'reshelve') reshelveBook();
   if (msg.type === 'typewriter') toggleTypewriter();
   if (msg.type === 'nbspMarks') toggleNbspMarks();
@@ -2049,12 +2048,6 @@ window.kibitz.onMenu(async (msg) => {
   if (msg.type === 'alignBook') alignBookProse(msg.value);
   if (msg.type === 'poetry' && !(book && isScript())) togglePoetry();
   if (msg.type === 'flush' && !(book && isScript())) toggleFlush();
-  if (msg.type === 'uiLanguage') {
-    // save every open page, then reload the window in the new language
-    flushAllSaves();
-    try { if (book && !$('#editor-view').hidden) sessionStorage.setItem('kibitz-reopen', book.id); } catch { /* a nicety */ }
-    setTimeout(() => window.kibitz.reloadForLanguage(), 400);
-  }
   if (msg.type === 'uiZoomStep') {
     const next = nextZoomStep(library.uiZoom, msg.value);
     if (next !== snapZoom(library.uiZoom)) {

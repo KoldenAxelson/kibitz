@@ -52,7 +52,6 @@ contextBridge.exposeInMainWorld('kibitz', {
   decideCancel: (id) => ipcRenderer.invoke('kibitz:decide-cancel', id),
   spellSuggest: (word) => ipcRenderer.invoke('spell:suggest', word),
   spellLearn: (word) => ipcRenderer.invoke('spell:learn', word),
-  setSpellLanguage: (code) => ipcRenderer.invoke('spell:setLanguage', code),
   appVersion: () => ipcRenderer.invoke('app:version'),
   isPackaged: () => ipcRenderer.sendSync('app:packaged'),
 
@@ -74,12 +73,9 @@ contextBridge.exposeInMainWorld('kibitz', {
   // interface language, fetched once before the page's scripts run
   i18n: ipcRenderer.sendSync('i18n:get'),
   paper: ipcRenderer.sendSync('paper:get'), // 'Letter' or 'A4', from the computer's region
-  reloadForLanguage: () => ipcRenderer.invoke('i18n:reload'),
 
   writingStyleState: (st) => ipcRenderer.send('style:state', st),
   featuresState: (on) => ipcRenderer.send('features:state', on),
-  uiLanguages: () => ipcRenderer.invoke('i18n:languages'),
-  setUiLanguage: (code) => ipcRenderer.send('i18n:set', code),
   setPressHold: (on) => ipcRenderer.send('pressHold:set', on),
   viewState: (st) => ipcRenderer.send('view:state', st),
   onMenu: (cb) => ipcRenderer.on('menu', (_e, msg) => cb(msg))

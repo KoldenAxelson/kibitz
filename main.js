@@ -61,104 +61,24 @@ function writeSettings(obj) {
 }
 
 // ---------------------------------------------------------------------------
-// Interface language: one JSON file per language in locales/ (see i18n.js).
-// The choice is app-level, like the library folder, so it lives in
-// settings.json. First launch follows the system language when Kibitz has it.
+// Interface text: English only. Every string still goes through t() (i18n.js)
+// for its {placeholders} and its English plurals (locales/en.json).
 // ---------------------------------------------------------------------------
 const KibitzI18n = require('./i18n.js');
 const { t } = KibitzI18n;
-const LOCALES_DIR = path.join(__dirname, 'locales');
-let uiLanguage = 'en';
+const EN_FILE = path.join(__dirname, 'locales', 'en.json');
 
-function readLocaleFile(code) {
-  if (!/^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/.test(code)) return null;
-  try { return JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, code + '.json'), 'utf8')); } catch { return null; }
-}
-
-// Every locales/<code>.json is a language on the menu, named in its own words
-function listLanguages() {
-  const out = [];
-  try {
-    for (const f of fs.readdirSync(LOCALES_DIR)) {
-      const m = f.match(/^([a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*)\.json$/);
-      if (!m) continue;
-      const data = readLocaleFile(m[1]);
-      if (!data) continue;
-      out.push({ code: m[1], name: (data._meta && data._meta.name) || m[1] });
-    }
-  } catch (err) {
-    logError('locales', err);
-  }
-  if (!out.some((l) => l.code === 'en')) out.push({ code: 'en', name: 'English' });
-  return out.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-// Codes follow BCP 47 (fr-CA); the POSIX spelling (fr_CA) is accepted too.
-// A regional file (fr-CA.json) holds only what differs from its language's
-// base file (fr.json): fr-CA falls back to fr, then to English.
-const normCode = (c) => String(c || '').replace(/_/g, '-');
-
-function resolveLanguage(wanted) {
-  wanted = normCode(wanted);
-  const codes = listLanguages().map((l) => l.code);
-  const tries = [wanted, wanted && wanted.split('-')[0]].filter(Boolean);
-  for (const c of tries) {
-    const hit = codes.find((x) => x.toLowerCase() === c.toLowerCase());
-    if (hit) return hit;
-  }
-  return null;
-}
-
-// The chosen language's strings: its base language first, then the
-// regional file's own wording on top
-function localeDict(code) {
-  if (code === 'en') return readLocaleFile('en') || {};
-  const base = code.split('-')[0];
-  const dict = base !== code ? { ...(readLocaleFile(base) || {}) } : {};
-  Object.assign(dict, readLocaleFile(code) || {});
-  return dict;
-}
-
-function loadLanguage(code) {
-  uiLanguage = resolveLanguage(code) || 'en';
-  const english = readLocaleFile('en') || {};
-  const dict = localeDict(uiLanguage);
-  KibitzI18n.setLocale(uiLanguage, dict, english);
-  return { locale: uiLanguage, dict, base: english };
+function englishStrings() {
+  try { return JSON.parse(fs.readFileSync(EN_FILE, 'utf8')); } catch { return {}; }
 }
 
 function initLanguage() {
-  const saved = readSettings().uiLanguage;
-  let sys = 'en';
-  try { sys = app.getLocale(); } catch { /* early start */ }
-  loadLanguage(saved || resolveLanguage(sys) || 'en');
+  KibitzI18n.setLocale('en', {}, englishStrings());
 }
 
 // The window asks once, synchronously, before any of its code runs
 ipcMain.on('i18n:get', (e) => {
-  const english = readLocaleFile('en') || {};
-  e.returnValue = { locale: uiLanguage, dict: localeDict(uiLanguage), base: english };
-});
-
-// View → Language: save the choice, redraw the menus, and let the window
-// save its pages before it reloads in the new language
-function setUiLanguage(code) {
-  loadLanguage(code);
-  const settings = readSettings();
-  settings.uiLanguage = uiLanguage;
-  writeSettings(settings);
-  // no dictionary picked yet: spellcheck moves with the interface
-  if (!SPELL_LANGUAGES[chosenSpellLanguage()] && defaultSpellLanguage() !== spellLanguage) {
-    spellLanguage = defaultSpellLanguage();
-    loadSpellDictionary(spellLanguage);
-  }
-  try { buildMenu(); } catch (err) { logError('menu', err); }
-  sendToWindow({ type: 'uiLanguage', value: uiLanguage });
-}
-
-ipcMain.handle('i18n:reload', (e) => {
-  e.sender.reload();
-  return true;
+  e.returnValue = { locale: 'en', dict: {}, base: englishStrings() };
 });
 
 // File → Library Folder…: point Kibitz at any folder, or back at the default.
@@ -2478,32 +2398,12 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------------------------
-// Spellcheck: Kibitz's own bundled Hunspell dictionaries, checked by Hunspell
-// itself (WebAssembly, in spell-worker.js), identical
-// on every platform. The renderer paints the squiggles and asks for
-// suggestions. Edit → Spellcheck Language picks the dictionary; the choice
-// lives in library.json so it travels with the writer's books.
-// (Languages beyond US English: idea and dictionary set from Zaim Halili.)
+// Spellcheck: US English, Hunspell itself (WebAssembly, in spell-worker.js)
+// on the bundled dictionary-en-us. The renderer paints the squiggles and
+// asks for suggestions.
 // ---------------------------------------------------------------------------
-let spellLanguage = 'en-US';
 const SPELL_LANGUAGES = {
-  'en-US': { label: 'English (US)', pkg: 'dictionary-en-us' },
-  'en-GB': { label: 'English (UK)', pkg: 'dictionary-en-gb' },
-  'en-CA': { label: 'English (Canada)', pkg: 'dictionary-en-ca' },
-  'en-AU': { label: 'English (Australia)', pkg: 'dictionary-en-au' },
-  'fr': { label: 'Français', pkg: 'dictionary-fr' },
-  'es': { label: 'Español', pkg: 'dictionary-es' },
-  'de': { label: 'Deutsch', pkg: 'dictionary-de' },
-  'nl': { label: 'Nederlands', pkg: 'dictionary-nl' },
-  'pl': { label: 'Polski', pkg: 'dictionary-pl' },
-  'pt-BR': { label: 'Português (Brasil)', pkg: 'dictionary-pt' },
-  'ro': { label: 'Română', pkg: 'dictionary-ro' },
-  'hu': { label: 'Magyar', pkg: 'dictionary-hu' },
-  'ru': { label: 'Русский', pkg: 'dictionary-ru' },
-  'uk': { label: 'Українська', pkg: 'dictionary-uk' },
-  'sv': { label: 'Svenska', pkg: 'dictionary-sv' },
-  'da': { label: 'Dansk', pkg: 'dictionary-da' },
-  'el': { label: 'Ελληνικά', pkg: 'dictionary-el' }
+  'en-US': { label: 'English (US)', pkg: 'dictionary-en-us' }
 };
 
 // The dictionary work runs in a helper process (spell-worker.js), so the
@@ -2561,43 +2461,13 @@ async function loadSpellDictionary(code) {
   try { custom = readJSON(LIBRARY_FILE, {}).customWords || []; } catch { /* a nicety */ }
   const res = await spellRequest({ type: 'load', language: known, dir: path.join(__dirname, 'node_modules', entry.pkg), custom });
   if (!res.ok) { logError('spell', new Error(res.error || 'dictionary failed to load')); return false; }
-  spellLanguage = known;
   spellLoaded = known;
   return true;
 }
 
-// One rule for every language: a dictionary picked in Edit → Spellcheck
-// Language wins. Until there is one, spellcheck follows the interface
-// language when Kibitz has its dictionary (fr-CA → fr), else US English.
-// Nothing is saved on the writer's behalf, so switching the interface back
-// takes the dictionary (and the typed quotes) along with it.
-function chosenSpellLanguage() {
-  const saved = readJSON(LIBRARY_FILE, null);
-  return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved.spellLanguage : undefined;
-}
-
-function defaultSpellLanguage() {
-  const ui = String(uiLanguage || 'en');
-  if (SPELL_LANGUAGES[ui]) return ui;
-  // Kibitz's Portuguese interface is Brazilian; the dictionary is too. The
-  // European interface (pt-PT) leaves the choice to the writer.
-  if (ui === 'pt' || ui === 'pt-BR') return 'pt-BR';
-  const base = ui.split('-')[0];
-  return SPELL_LANGUAGES[base] ? base : 'en-US';
-}
-
 function initSpell() {
-  const chosen = chosenSpellLanguage();
-  spellLanguage = SPELL_LANGUAGES[chosen] ? chosen : defaultSpellLanguage();
-  loadSpellDictionary(spellLanguage);
+  loadSpellDictionary('en-US');
 }
-
-ipcMain.handle('spell:setLanguage', async (_e, code) => {
-  if (!SPELL_LANGUAGES[code]) return false;
-  const ok = await loadSpellDictionary(code);
-  if (ok) { try { buildMenu(); } catch (err) { logError('menu', err); } }
-  return ok;
-});
 
 ipcMain.handle('spell:check', async (_e, words) => {
   const res = await spellRequest({ type: 'check', words });
@@ -2774,8 +2644,6 @@ ipcMain.on('features:state', (_e, on) => {
   try { buildMenu(); } catch (err) { logError('menu', err); }
 });
 // the menu bar's Options items and the window's own controls
-ipcMain.handle('i18n:languages', () => ({ list: listLanguages(), current: uiLanguage }));
-ipcMain.on('i18n:set', (_e, code) => { if (typeof code === 'string') setUiLanguage(code); });
 ipcMain.on('pressHold:set', (_e, on) => setPressAndHold(!!on));
 // a template without the items of features that are off, and without the
 // separators they leave at an end or side by side

@@ -204,29 +204,6 @@ function toggleSpellcheck() {
   toast(spellOn ? t('Spellcheck on') : t('Spellcheck off'));
 }
 
-// Edit → Spellcheck Language: swap the dictionary, remember the choice with
-// the library, and re-check whatever is on screen
-const SPELL_LANGUAGE_NAMES = {
-  'en-US': t('US English'), 'en-GB': t('UK English'), 'en-CA': t('Canadian English'),
-  'en-AU': t('Australian English'), fr: t('French'), es: t('Spanish'), de: t('German'),
-  nl: t('Dutch'), pl: t('Polish'), 'pt-BR': t('Brazilian Portuguese'), ro: t('Romanian'), ru: t('Russian'), uk: t('Ukrainian'), hu: t('Hungarian'), sv: t('Swedish'), da: t('Danish')
-};
-async function changeSpellLanguage(code) {
-  const ok = await window.kibitz.setSpellLanguage(code);
-  if (!ok) { toast(t('That dictionary would not load')); return; }
-  library.spellLanguage = code;
-  await writeLibrary(library);
-  spellCache.clear();
-  if (spellOn) {
-    spellScanned = new Set();
-    spellRanges = new Map();
-    capsRanges.clear();
-    CSS.highlights.delete('kibitz-spell');
-    scanSpellingHere();
-  }
-  toast(t('Spellcheck: {lang}', { lang: SPELL_LANGUAGE_NAMES[code] || code }));
-}
-
 // right-click a flagged word for suggestions
 document.addEventListener('contextmenu', async (e) => {
   if (!spellOn) return;

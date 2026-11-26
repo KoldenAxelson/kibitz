@@ -80,7 +80,6 @@ async function setFeature(key, on) {
 let optionsOpen = null;
 async function openOptions() {
   if (optionsOpen) { optionsOpen.querySelector('.opt-panel').focus(); return; }
-  const langs = window.kibitz.uiLanguages ? await window.kibitz.uiLanguages().catch(() => null) : null;
   const pressHoldShown = window.kibitz.platform === 'darwin' && !!window.kibitz.setPressHold;
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
@@ -91,7 +90,6 @@ async function openOptions() {
       <input type="checkbox" data-opt="${id}"${on ? ' checked' : ''}>
       <span><span class="opt-label">${label}</span>${desc ? `<span class="opt-desc">${desc}</span>` : ''}</span>
     </label>`;
-  const spellCodes = Object.keys(SPELL_LANGUAGE_NAMES);
   bd.innerHTML = `
     <div class="modal options-modal" role="dialog" aria-modal="true" aria-labelledby="opt-title">
       <h2 id="opt-title">${t('Options')}</h2>
@@ -114,11 +112,7 @@ async function openOptions() {
           ${featureOn('exports') ? check('chapterTitles', !!library.exportCustomChapterTitles, t('Chapter titles only'), t('Exports show a chapter’s own title without “Chapter 7” before it.')) : ''}
         </section>
         <section>
-          <h3>${t('Language and size')}</h3>
-          ${langs && langs.list && langs.list.length > 1 ? `<label class="opt-row opt-select"><span class="opt-label">${t('Interface language')}</span>
-            <select data-opt="uiLanguage">${langs.list.map((l) => `<option value="${escHtml(l.code)}"${l.code === langs.current ? ' selected' : ''}>${escHtml(l.name)}</option>`).join('')}</select></label>` : ''}
-          <label class="opt-row opt-select"><span class="opt-label">${t('Spellcheck language')}</span>
-            <select data-opt="spellLanguage">${spellCodes.map((c) => `<option value="${c}"${c === library.spellLanguage ? ' selected' : ''}>${escHtml(SPELL_LANGUAGE_NAMES[c])}</option>`).join('')}</select></label>
+          <h3>${t('Size')}</h3>
           ${`<div class="opt-row opt-select"><span class="opt-label">${t('Interface size')}</span>
             <span class="opt-steps"><button type="button" data-zoom="-1" aria-label="${t('Smaller')}">−</button><span class="opt-zoom"></span><button type="button" data-zoom="1" aria-label="${t('Larger')}">+</button><button type="button" class="btn-link" data-zoom="0">${t('Reset')}</button></span></div>`}
         </section>
@@ -159,9 +153,7 @@ async function openOptions() {
       if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
       return;
     }
-    if (opt === 'chapterTitles') { library.exportCustomChapterTitles = !!on; await writeLibrary(library); return; }
-    if (opt === 'spellLanguage') { await changeSpellLanguage(on); return; }
-    if (opt === 'uiLanguage') { close(); window.kibitz.setUiLanguage(on); }
+    if (opt === 'chapterTitles') { library.exportCustomChapterTitles = !!on; await writeLibrary(library); }
   });
   bd.addEventListener('click', async (e) => {
     const z = e.target.closest && e.target.closest('[data-zoom]');
