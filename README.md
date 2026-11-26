@@ -19,18 +19,12 @@ revision passes you run on purpose, and outline cards that ask questions.
 Books live in `~/Documents/Kibitz Library` (File → Library Folder… to move
 it). The library format is NEO's, so a NEO library folder opens here too.
 
-## Staying close to NEO
+## A personal fork
 
-NEO is renamed to Kibitz by a script, `tools/rebrand.py`, not by hand. The
-`upstream-kibitz` branch holds each NEO release run through it, and
-`make sync` builds the next one and merges it into `main`. So when NEO
-changes, the merge only stops where NEO and Kibitz edited the same lines.
-To rename something new, change the script rather than the code it renames.
-Kibitz's own README lives on `main` (the script drops NEO's).
-
-Desktop Kibitz still pairs with Hugh's **NEO Pocket** for iPad and iPhone
-(App Store) through its iCloud Drive folder. The `pocket/` sources are
-renamed to Kibitz Pocket, for a build of our own one day.
+Kibitz is a desktop writer for one Mac. NEO was the starting point; it no
+longer tracks NEO, and NEO Pocket, auto-update, translations, the other
+spellcheck languages, the OpenAI cover painter and the Windows and Linux
+builds have been cut (November 2026). English (US) only.
 
 ## Licence
 

@@ -21,18 +21,15 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a feature. The product is 
 | `main.js` | Window, menus, every filesystem operation, import parsing, PDF, backups |
 | `preload.js` | The entire renderer API, `window.kibitz` |
 | `index.html` | Two views: `#bookshelf-view` and `#editor-view`. CSP is `script-src 'self'` |
-| `app/*.js` | The whole UI (the window), one file per area, loaded in order by `index.html` and Pocket's page (`scripts/app-files.js` holds the order). They share one global scope, as one file did |
+They share one global scope, as one file did |
 | `styles.css` | All styling. Tokens are CSS variables at the top |
 | `covers.js` | Shelf covers in the window: seeded canvas art plus real title type. `window.KibitzCovers` |
-| `art.js` | Painted covers in the main process. OpenAI only. Title and author are never sent to the image model |
 | `i18n.js` | `t()` / `tk()`, shared by main and the window. English source text is the key |
 | `spell-worker.js` | Hunspell WASM, forked with `utilityProcess`. Messages: `load`, `check`, `suggest`, `add` |
 | `backup-worker.js` | The day's backup zip, forked with `utilityProcess` by `dailyBackup` so a file that won't come off iCloud never holds the main process |
 | `spell-ro.js` | Romanian diacritics, used by the worker. Does not alter the manuscript |
-| `dictionaries/<code>/` | Dictionaries Kibitz keeps itself (Hungarian, Danish), each a local `dictionary-<code>` package with its notice and license; see TRANSLATING.md |
 | `manuscript.js` | Standard manuscript format: the word count's rounding, the header's surname, the `.docx`'s parts and the PDF's page, from a model the window hands it. Plain JavaScript that also runs in Node (`window.KibitzManuscript`, loaded by `index.html`) |
-| `locales/<code>.json` | One language. Regional files (`fr-CA.json`) hold only the strings that differ |
-| `pocket/` | Capacitor shell. It does not contain its own editor |
+| `locales/en.json` | English plural forms and overrides for `t()` |
 | `print/` | Vendored Paged.js and hyphenation patterns for paperback PDFs |
 
 The window's files, in load order: `core` (state, helpers, the library), `shelf` (bookshelf, bound shelves), `editor` (open, render), `typing`, `paragraphs` (poetry, flush), `litrpg`, `typing-rules` (scene breaks, the opening line, paste, emphasis, capitals, quotes, dashes), `vim`, `screenplay`, `footnotes` (and placeholders, stickies), `nav` (and notes pages), `tabs` (and the structured outline), `cards`, `saving` (counters, saving, snapshots, refresh), `undo` (and read aloud), `find` (and import), `spellcheck` (and typewriter, focus, goals, cover art settings), `menu`, `options` (features and the Options window), `export` (and manuscript format), `print` (paperback, the export builders), `startup` (safety net, fonts, accessibility, launch). Inside each, section banners look like `/*  SAVING  */`.
@@ -48,12 +45,12 @@ Menus are built in `buildMenu()` in `main.js`. A menu click sends `{ type, ... }
 One Kibitz for everyone. Kibitz → Options… (File → Options… off the Mac; FEATURES & OPTIONS in `app/options.js`) turns Kibitz's features on and off and holds the settings that used to be menu ticks. The features are `FEATURES` in `app/core.js`; `featureOn(key)` asks whether one is on (`library.features`, in library.json, so every device of the library follows it).
 
 - A menu item that belongs to a feature carries `feature: '<key>'` in `buildMenu()`; `featureTemplate` leaves it out (and the separators it would strand) while that feature is off. The window reports the features with `window.kibitz.featuresState` (`reportFeatures`). A key, right-click choice or pane asks `featureOn('<key>')`.
-- The features: `cards` (outline cards, loose cards, cards beside the page), `notesPages` (chapter notes pages), `poetry`, `footnotes`, `formatting` (alignment, Align Book Prose, Other Font…), `penNames` (pen names, binding shelves, the anthology, Duplicate, Reshelve), `covers` (painted covers, Cover Art…), `pages` (Show Pages, two pages, page width), `focus`, `readAloud` (and Look Up), `vim`, `exports` (Manuscript Format, txt/md/html, Import Chapters). Scripts, LitRPG boxes, the tab keys and Fountain/Final Draft import are for everyone.
+- The features: `cards` (outline cards, loose cards, cards beside the page), `notesPages` (chapter notes pages), `poetry`, `footnotes`, `formatting` (alignment, Align Book Prose, Other Font…), `penNames` (pen names, binding shelves, the anthology, Duplicate, Reshelve), `pages` (Show Pages, two pages, page width), `focus`, `readAloud` (and Look Up), `vim`, `exports` (Manuscript Format, txt/md/html, Import Chapters). Scripts, LitRPG boxes, the tab keys and Fountain/Final Draft import are for everyone.
 - The settings in Options: Markdown emphasis (`library.markdownOff`), non-breaking marks, press and hold for accents (Mac), new books open to, chapter titles only (with More exports), the interface and spellcheck languages, the interface size. Menus hold actions; Options holds settings. The page (Night, Paper, Light), Brighter Interface, Typewriter Scrolling, the fonts and drop cap stay in the menus: the writer's eyes decide them while writing.
 - A feature that's off takes Kibitz's defaults (`applyLook`) and never erases the writer's choices: they wait in library.json for its return.
-- Nothing a book already holds is hidden. A footnote, poetry paragraph, bound shelf, painted cover, loose card or chapter notes page with notes on it opens and exports as before, and other pen names stay reachable.
+- Nothing a book already holds is hidden. A footnote, poetry paragraph, bound shelf, loose card or chapter notes page with notes on it opens and exports as before, and other pen names stay reachable.
 - A new library starts with every feature off and Markdown typing off. A library from before 2.0 is set up once (`setupFeatures`): Show More Features on → every feature on (vim keys only if they were on); off → every feature off and simple Kibitz's quiet defaults written in; older still → judged by what it uses.
-- Pocket shows a feature only where its `FEATURES` entry says `pocket: true` (cards, notes pages, poetry, footnotes, pen names, vim, and More exports as txt/md/html; `pocketDesc` is its wording there). The rest need the desktop. Its ⋯ sheet has Options… at the foot, and rows for poetry and the extra exports while those are on. On Pocket, Options lists only its own features, and Turn all on/off leaves the desktop's alone. `npm run test:pocket` runs Pocket's own page with a stand-in for Capacitor's Filesystem.
+The rest need the desktop. Its ⋯ sheet has Options… at the foot, and rows for poetry and the extra exports while those are on.
 - The shortcuts window (`bookShortcutSections`) lists a key only when its feature is on.
 - A new feature gets an entry in `FEATURES` (off for a new library) unless Hugh says it's for everyone. `scripts/features.test.js`, `npm run test:options`.
 
@@ -90,7 +87,7 @@ A book whose `book.json` says `"format": "screenplay"` is a script. Right-click 
 
 ## LitRPG boxes
 
-`[[` typed at the very start of a line makes it a box line: `<p class="litrpg">` (LITRPG BOXES in `app/`, `litrpgKey` from `smartKeys`, so Pocket's typed keys reach it too). No menu item and no feature switch: the brackets are the whole door (Hugh's call, Nov 2026). ⌘Z right after brings the `[[` back.
+No menu item and no feature switch: the brackets are the whole door (Hugh's call, Nov 2026). ⌘Z right after brings the `[[` back.
 
 - Lines in a row are one box. Enter is the box's next line; Enter on the box's empty last line ends it, and that line is prose; ⇧Enter is always another line in the box (a blank one, never the end); an empty line inside a box stays. Backspace at the start of a box's first line makes it prose.
 - Inside a box the smart typing stands aside (quotes, dashes, ellipsis, capitals, Markdown emphasis), and every space is kept, for columns. A box is never the opening paragraph: the drop cap goes to the first prose line (`openingPara`).
@@ -105,7 +102,7 @@ File → Export → Manuscript Format… (MANUSCRIPT FORMAT in `app/`, the pages
 
 - **.docx** (`docxEntries`): the title page is its own section with no header, the story the next one with `pgNumType start=1` and a PAGE field in `header1.xml`; a short story is one section with `titlePg` and an empty first-page header. A `settings.xml` keeps Word out of Compatibility Mode. Saved through `export:save`.
 - **PDF** (`html`): one page for Paged.js, the header in `@page`'s `@top-right` margin box, `@page titlepage` without it; `print:manuscript` lays it out with `renderPaged` (the story's first section is `.pg1`, so it's page 1) and saves it. It shares the print window with the paperback, so each refuses while the other runs. Courier Prime (bundled) goes into the PDF; Word gets Courier New.
-- The dialog remembers the contact block for every book (`library.manuscript`: name, address, phone, email, font, end) and the byline and header for this book (`book.manuscript`, only where they differ from Kibitz's own choice). "Anonymous" is never taken for a byline. Values go into the fields from code, so a quotation mark can't cut one short. It never opens over another dialog or twice. Scripts keep their own PDF; Pocket has no manuscript export (its page doesn't load `manuscript.js`).
+- The dialog remembers the contact block for every book (`library.manuscript`: name, address, phone, email, font, end) and the byline and header for this book (`book.manuscript`, only where they differ from Kibitz's own choice). "Anonymous" is never taken for a byline. Values go into the fields from code, so a quotation mark can't cut one short. It never opens over another dialog or twice.
 - `scripts/manuscript.test.js`; `npm run test:manuscript` (`scripts/manuscript.e2e.js`: the dialog, both files, the .docx read back by Kibitz's import, the PDF's pages read back with `pdftotext` where it's installed).
 
 ## Paperbacks for KDP
@@ -119,15 +116,15 @@ Export → Paperback for KDP… (also on the shelf's right-click Export) writes 
 - The page count is kept even. Chapters open on a right-hand page; blank pages carry no head or number. Page numbers sit at the outside corners (left pages at the left, right pages at the right); the regular PDF keeps them centered.
 - Choices are kept: trim, paper, ISBN and fiction notice in `book.print`; on the pen name, `author.print` holds the back-matter links, `alsoByText` (the writer's own list, one title per line) and `reviewText` (own wording, with `{title}` for the book's title; empty means Kibitz's translated wording). A dedication typed in the dialog becomes the book's own Dedication page.
 - Page 1 is the story's first page (the first `chapter` section, so a prologue). In the paperback that section is `.pg1` and each page's number is set on it after layout. The regular PDF stops counting on `@page front` pages and numbers its contents from the `data-p1` link; pages after page 1 that show no number (a part's title) are `.page.counted`.
-- `scripts/print.test.js` covers the margin bands, hyphenation, the page box and the cover's size. Pocket has no paperback export.
+- `scripts/print.test.js` covers the margin bands, hyphenation, the page box and the cover's size.
 
 ## Snapshots
 
 ⌘S (Ctrl+S; File → Take Snapshot) snapshots the whole book (SNAPSHOTS in `app/`). Kibitz also takes one before the first change of each writing day (`maybeDailySnapshot`, from `scheduleChapterSave` and `snapshotStructure`, built from `savedHTML` so it holds the day's start). No timer, and nothing is taken when nothing changed.
 
-- One folder per snapshot, `book-…/snapshots/<UTC stamp>Z-<kind>-<chapters changed>-<words>-<rand>/`, holding only the chapters that changed since the last snapshot and, written last, `snapshot.json` (order, titles, kinds, a `textHash` of every chapter). Files are written once (`snapshot:list/read/write/remove` in `main.js`, the same four in Pocket's bridge). A chapter's text at a snapshot is in the newest snapshot at or before it holding the file (`snapHolder`).
+- One folder per snapshot, `book-…/snapshots/<UTC stamp>Z-<kind>-<chapters changed>-<words>-<rand>/`, holding only the chapters that changed since the last snapshot and, written last, `snapshot.json` (order, titles, kinds, a `textHash` of every chapter). A chapter's text at a snapshot is in the newest snapshot at or before it holding the file (`snapHolder`).
 - Kinds: `k` ⌘S, kept until deleted; `d` start of a day and `r` just before a restore, which go after 30 days (`snapsToThin`). A snapshot that goes first copies its chapter files into the next one that lacks them, so later snapshots still read whole.
-- The Darlings tab's right-hand pane lists them (and stays open there); picking one shows the book as it was in `#snap-view`, read-only, words gone since marked with the CSS Highlight API (`wordsGone`). Restore This Chapter and Restore Whole Book take an `r` snapshot and a `snapshotStructure` first, so ⌘Z undoes them. A passage can be set aside as a darling from the right-click menu. Pocket takes snapshots but has no list yet.
+- The Darlings tab's right-hand pane lists them (and stays open there); picking one shows the book as it was in `#snap-view`, read-only, words gone since marked with the CSS Highlight API (`wordsGone`). Restore This Chapter and Restore Whole Book take an `r` snapshot and a `snapshotStructure` first, so ⌘Z undoes them. A passage can be set aside as a darling from the right-click menu.
 - The daily backup zip leaves `snapshots/` out. `scripts/snapshots.test.js` covers the names, the fingerprint, thinning, where a chapter's text is and the marks.
 - The snapshot on the page and the list belong to the open book: `openBook` and `backToShelf` clear both (`forgetSnapshots`), another tab only the page (`hideSnapshot`). A snapshot's chapters are `.chapter-body` too, inside `#snap-view` rather than a `.chapter`, so code that walks every `.chapter-body` must pass over them.
 
@@ -135,11 +132,11 @@ Export → Paperback for KDP… (also on the shelf's right-click Export) writes 
 
 How Kibitz looks belongs to each device: `DEVICE_LOOK` in `app/` (page theme, brightness, zoom, type size, page width, typewriter, non-breaking marks, pages view, focus, counters, outline view, vim keys). Every library write also keeps them in this device's `localStorage`; every library read takes them back from there (`applyDeviceLook`). The library's copy is the last device's, which is what a device new to the library starts with. Zoom is per device and per view: the page per mode, the cards, and the shelf (`kibitz.shelfZoom`, ⌘+/− and pinch on the shelf), each in `localStorage`; the page moves in tenths. The desktop also keeps its page theme in `settings.json` for the window's color at launch, and `exportFolder` there, so save dialogs open where the last export went.
 
-Format → Page Width (Regular, Wide, Wider; `PAGE_WIDTHS` in `app/`) sets `--page-wf` and `--page-pad-x`, which `--page-w` and the sheet's side padding in `styles.css` follow. The page also grows a little by itself in a wide window (`--page-w` clamps 680 to 760 px by the window); Pocket's page fills the screen up to 680 px (`pocket.css`).
+Format → Page Width (Regular, Wide, Wider; `PAGE_WIDTHS` in `app/`) sets `--page-wf` and `--page-pad-x`, which `--page-w` and the sheet's side padding in `styles.css` follow.
 
-A book's right-click on the shelf is a small menu (`popMenu`) on the desktop, with the cover's choices one level in; touch keeps the larger cards. Duplicate (`book:duplicate`, and `duplicateBook` in Pocket's bridge) copies the folder under a new id and title.
+A book's right-click on the shelf is a small menu (`popMenu`) on the desktop, with the cover's choices one level in; touch keeps the larger cards.
 
-Pocket makes PDFs through `KibitzPdf`, a native plugin in each project: Android opens its print screen (Save as PDF), iOS draws the pages into a file for the share sheet. A script's title can be set bold, underlined or italic as a whole (`book.titleStyle`, ⌘B ⌘U ⌘I on the title page), and keeps it in the PDF, Fountain and Final Draft.
+A script's title can be set bold, underlined or italic as a whole (`book.titleStyle`, ⌘B ⌘U ⌘I on the title page), and keeps it in the PDF, Fountain and Final Draft.
 
 ## Processes
 
@@ -171,7 +168,6 @@ Kibitz Library/
     darlings.json
     stickies.json
     cover-<ts>.<ext>    writer-chosen image
-    art-<ts>.<ext>      painted image, plus art.json
 ```
 
 App settings and the cover-art API key live in Electron `userData` (`settings.json`, `secrets.json`), not in the library. The key is encrypted with `safeStorage` when the OS allows it. Do not write secrets into the library.
@@ -201,28 +197,9 @@ On a Mac, iCloud ("Optimize Mac Storage") can turn library files into placeholde
 
 Do not replace this with last-write-wins. The comments in `persistChapter` and `refreshFromDisk` explain cases that look redundant and are not.
 
-## Interface language
+## Interface text
 
-Wrap writer-visible strings in `t('English text', { placeholder })`. Use `tk()` for strings translated later, at the point of display. In `index.html`, use `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`, or `data-i18n-ph`.
-
-After adding or changing strings:
-
-```
-node scripts/i18n.js template
-node scripts/i18n.js check fr
-```
-
-`scripts/i18n.js` only scans `app/`, `main.js`, `covers.js`, `index.html`, and Pocket's own `pocket/www/index.html` and `pocket/www/pocket-bridge.js`. A new string in another file will not enter the template until that list includes it. Pocket's page marks its words with the same `data-i18n*` attributes as the desktop's, and its ⋯ sheet and bridge use `t()`.
-
-Details, plural forms, and regional fallback (`fr-CA` → `fr` → English) are in [TRANSLATING.md](TRANSLATING.md). Quotation marks follow the spellcheck language (`QUOTE_STYLES` in `app/`). Import chapter detection is `CHAPTER_WORDS` in `main.js`. Cover small-words are `CONNECTORS` in `covers.js`.
-
-Italian has no spellcheck dictionary: the only Hunspell package on npm is GPL-3.0-only, and Kibitz is MIT. Do not add it.
-
-## Pocket
-
-`pocket/` is a Capacitor app that runs the desktop editor. Its bridge (`pocket/www/pocket-bridge.js`) implements `window.kibitz` against the phone's library folder. Android shares `Documents/Kibitz Library` via sync. iOS uses the app folder, optionally iCloud, with `LibraryHome.swift` locating that folder.
-
-`scripts/pocket-www.js` (run by CI, and by hand before a local build) copies `app/`, `covers.js`, `styles.css`, `i18n.js`, `fonts/`, `locales/`, Hunspell's browser build, and the `SPELL_LANGUAGES` dictionaries from `main.js` into `pocket/www/`. Pocket's checker is `pocket/www/pocket-spell.js`, a module worker with the same messages as `spell-worker.js`. A change to those files changes Pocket. Pocket-only behavior belongs in `pocket-bridge.js` or the native projects, not behind a desktop-only branch scattered through `app/`.
+English (US) only. Writer-visible strings still go through `t('English text', { placeholder })` (`i18n.js`), which fills placeholders and picks English plurals from `locales/en.json`; `index.html` marks words with `data-i18n*`. Quotation marks: `QUOTE_STYLES` in `app/` (English unless a library still names another language). Import chapter detection is `CHAPTER_WORDS` in `main.js`. Cover small-words are `CONNECTORS` in `covers.js`.
 
 ## Commands
 
@@ -242,13 +219,13 @@ npm run package:mac        # macOS build; npm run package calls this
 npm run package:linux      # AppImage via electron-builder; also package, package:mac, package:win, package:all
 ```
 
-Tests use `node:test` and load the window's code (`appSource()`) or `spell-worker.js` inside `vm`. Every push to main and every pull request runs `npm test` and `npm run test:e2e` (every `scripts/*.e2e.js`, each a real Kibitz on a throwaway library) on a Mac (`.github/workflows/tests.yml`); a new e2e file joins by being named `*.e2e.js`. On `v*` tags a Windows smoke test checks the packaged exe boots and creates a library (`.github/workflows/build.yml`). Pocket builds from `.github/workflows/pocket.yml`.
+Tests use `node:test` and load the window's code (`appSource()`) or `spell-worker.js` inside `vm`. Every push to main and every pull request runs `npm test` and `npm run test:e2e` (every `scripts/*.e2e.js`, each a real Kibitz on a throwaway library) on a Mac (`.github/workflows/tests.yml`); a new e2e file joins by being named `*.e2e.js`.
 
 `node scripts/check-romanian-package.js <Resources dir>` compares a packaged app's dictionaries to the source tree. `node scripts/benchmark-spellcheck.js` times the checker. Neither is an npm script.
 
 ## What's New
 
-`whats-new.json` (newest release first, English, `**bold**` and `` `code` `` allowed) is Help → What's New in Kibitz…, and, once at launch after an update, the notes for the releases since the one this device last saw (`kibitz.whatsNewSeen` in localStorage). A fresh install and Pocket skip it. Add the next release's notes before `npm run release`; `scripts/whats-new.test.js` checks the file.
+`whats-new.json` (newest release first, English, `**bold**` and `` `code` `` allowed) is Help → What's New in Kibitz…, and, once at launch after an update, the notes for the releases since the one this device last saw (`kibitz.whatsNewSeen` in localStorage). Add the next release's notes before `npm run release`; `scripts/whats-new.test.js` checks the file.
 
 ## Handing changes to Hugh
 
