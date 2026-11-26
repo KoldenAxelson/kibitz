@@ -39,7 +39,7 @@ function typeAtPageTop(rule) {
   for (let i = 0; i < 10; i++) {
     const was = scrollTop;
     scrollTop -= 158; // Chromium's scroll, inside the keystroke
-    // the frame: NEO's check, then the typewriter, then the paint
+    // the frame: Kibitz's check, then the typewriter, then the paint
     const back = rule({ was, now: scrollTop, glide, caretTop: caretAt(was), caretBottom: caretAt(was) + 19, ...view });
     if (back !== null) scrollTop = back;
     const top = api.typewriterScrollTarget(scrollTop, caretAt(scrollTop), WIN, LINE);

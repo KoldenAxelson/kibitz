@@ -11,7 +11,7 @@
 // layout: the title halfway down page 1 and the text starting under it.
 //
 // Plain JavaScript that also runs in Node (the tests). It knows nothing
-// of NEO: the window hands it a model and gets back a .docx's parts (for
+// of Kibitz: the window hands it a model and gets back a .docx's parts (for
 // export:save) or one HTML page (laid out by Paged.js in main.js and
 // printed as the PDF).
 //
@@ -291,7 +291,7 @@ ${headers.map((h) => `<Relationship Id="${h.id}" Type="http://schemas.openxmlfor
   const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   // a CSS string (a "<" escaped too, so nothing can close the style block)
   const cssString = (s) => '"' + String(s || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/</g, '\\3c ').replace(/[\n\r]+/g, ' ') + '"';
-  // footnotes, numbered through the story by NEO itself (Paged.js's own
+  // footnotes, numbered through the story by Kibitz itself (Paged.js's own
   // counter gave every note on a page that page's last number)
   let fnCount = 0;
   function runsHtml(runs) {
@@ -393,5 +393,5 @@ ${story.join('\n')}
 
   const api = { roundWords, surnameOf, headerText, docxEntries, html, FONTS, PAPER };
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.NeoManuscript = api;
+  else root.KibitzManuscript = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

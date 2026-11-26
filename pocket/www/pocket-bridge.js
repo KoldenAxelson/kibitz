@@ -1,20 +1,20 @@
-/* =========================== NEO POCKET =========================== */
-/* The window.neo doorway, implemented for Android and iOS. Reads and    */
-/* writes the same plain files as desktop NEO, in a NEO Library folder:  */
-/* Android: Documents/NEO Library, shared with the Mac via Syncthing.    */
+/* =========================== Kibitz POCKET =========================== */
+/* The window.kibitz doorway, implemented for Android and iOS. Reads and    */
+/* writes the same plain files as desktop Kibitz, in a Kibitz Library folder:  */
+/* Android: Documents/Kibitz Library, shared with the Mac via Syncthing.    */
 /* iOS: the app's own folder — inside iCloud Drive when the writer has  */
-/* it on (so desktop NEO can point at the same folder), else On My iPad. */
+/* it on (so desktop Kibitz can point at the same folder), else On My iPad. */
 /* Desktop-only powers (email, import) stub out                          */
 /* quietly; writing never does.                                          */
 
 (function () {
-  // The interface language, as in app.js. NeoI18n (i18n.js) loads before this
+  // The interface language, as in app.js. KibitzI18n (i18n.js) loads before this
   // file and app.js chooses the language as it loads, before the writer can
   // see any of these words.
-  const t = (s, vars) => (window.NeoI18n ? window.NeoI18n.t(s, vars) : s);
+  const t = (s, vars) => (window.KibitzI18n ? window.KibitzI18n.t(s, vars) : s);
   const FS = () => window.Capacitor.Plugins.Filesystem;
   const DIR = 'DOCUMENTS';
-  const ROOT = 'NEO Library';
+  const ROOT = 'Kibitz Library';
   const isIOS = () => !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios');
 
   // iOS: HOME is the library folder as a file:// URL, found by the little
@@ -102,10 +102,10 @@
       'display:flex;align-items:center;justify-content:center;padding:40px;text-align:center';
     const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const why = isIOS()
-      ? '<p style="line-height:1.6;margin-top:16px">' + esc(t('Pocket couldn\'t open its NEO Library folder. Force-quit and reopen the app; if it keeps happening, check that iCloud Drive is signed in (Settings → your name → iCloud), or turn it off so Pocket keeps books on the iPad itself.')) + '</p>'
-      : '<p style="line-height:1.6;margin-top:16px">' + esc(t('Pocket can see the NEO Library folder but Android is blocking it from reading files that other apps (like Syncthing) created.')) + '</p>' +
-        '<p style="line-height:1.6;color:#999;margin-top:12px">' + esc(t('The switch is not on the app\'s own Permissions page. Open Android Settings, search for {setting} (or Apps → Special app access → {setting}), turn it on for NEO Pocket, then come back here.')).split('{setting}').join('<b>' + esc(t('All files access')) + '</b>') + '</p>';
-    bd.innerHTML = '<div style="max-width:420px"><h2 style="letter-spacing:5px">NEO POCKET</h2>' + why +
+      ? '<p style="line-height:1.6;margin-top:16px">' + esc(t('Pocket couldn\'t open its Kibitz Library folder. Force-quit and reopen the app; if it keeps happening, check that iCloud Drive is signed in (Settings → your name → iCloud), or turn it off so Pocket keeps books on the iPad itself.')) + '</p>'
+      : '<p style="line-height:1.6;margin-top:16px">' + esc(t('Pocket can see the Kibitz Library folder but Android is blocking it from reading files that other apps (like Syncthing) created.')) + '</p>' +
+        '<p style="line-height:1.6;color:#999;margin-top:12px">' + esc(t('The switch is not on the app\'s own Permissions page. Open Android Settings, search for {setting} (or Apps → Special app access → {setting}), turn it on for Kibitz Pocket, then come back here.')).split('{setting}').join('<b>' + esc(t('All files access')) + '</b>') + '</p>';
+    bd.innerHTML = '<div style="max-width:420px"><h2 style="letter-spacing:5px">Kibitz POCKET</h2>' + why +
       '<p style="font:12px/1.5 monospace;color:#777;margin-top:20px;word-break:break-word">' + String(err && err.message || err || '') + '</p></div>';
     document.body.appendChild(bd);
   }
@@ -211,7 +211,7 @@
   const LETTER = ['US', 'CA', 'MX', 'PH', 'CL', 'CO', 'VE', 'GT', 'CR', 'PA', 'DO', 'PR', 'SV', 'HN', 'NI', 'BZ'];
   const region = (() => { try { return new Intl.Locale(navigator.language).maximize().region || ''; } catch { return ''; } })();
 
-  window.neo = {
+  window.kibitz = {
     paper: LETTER.includes(region) ? 'Letter' : 'A4',
     /* ---------- library ---------- */
     readLibrary: async () => {
@@ -230,7 +230,7 @@
         if (HOME) return window.Capacitor.convertFileSrc(HOME);
         const u = await FS().getUri({ path: ROOT, directory: DIR });
         return window.Capacitor.convertFileSrc(u.uri);
-      } catch { return 'Documents/NEO Library'; }
+      } catch { return 'Documents/Kibitz Library'; }
     },
 
     /* ---------- books ---------- */
@@ -458,14 +458,14 @@
         const Share = window.Capacitor.Plugins.Share;
         if (!Share) throw new Error('Sharing is not available in this build');
         const name = (defaultName || 'book') + '.' + format;
-        // A PDF is laid out by the phone's own printing (NeoPdf, in the
+        // A PDF is laid out by the phone's own printing (KibitzPdf, in the
         // native projects): Android opens its print screen, where Save as
         // PDF is one of the printers; iOS makes the file and hands it to the
         // share sheet. A book gets the desktop's inch of margin; a script
         // lays out its own pages, on US letter as scripts always are.
         if (format === 'pdf') {
           let pdf = null;
-          try { pdf = window.Capacitor.registerPlugin('NeoPdf'); } catch { /* older shell */ }
+          try { pdf = window.Capacitor.registerPlugin('KibitzPdf'); } catch { /* older shell */ }
           if (!pdf) throw new Error(t('This version of Pocket can’t make PDFs yet'));
           const screenplay = print === 'screenplay';
           const html = screenplay ? content : String(content).replace('</head>', '<style>@page { margin: 1in; }</style></head>');
@@ -502,7 +502,7 @@
     importPick: async () => [],
     pathForFile: () => null,
     checkForUpdate: async () => ({ error: true }),
-    pocketLibrary: async () => ({ offer: false }), // (this is NEO Pocket)
+    pocketLibrary: async () => ({ offer: false }), // (this is Kibitz Pocket)
     usePocketLibrary: async () => false,
     openRelease: async () => true,
     fullscreenEscape: async () => false,
@@ -532,9 +532,9 @@
     logError: async (msg) => {
       try {
         let prior = '';
-        try { prior = await readText(p('neo-errors.log')); } catch { /* first entry */ }
+        try { prior = await readText(p('kibitz-errors.log')); } catch { /* first entry */ }
         const line = `[${new Date().toISOString()}] [pocket] ${msg}\n`;
-        await writeText(p('neo-errors.log'), (prior + line).slice(-100000));
+        await writeText(p('kibitz-errors.log'), (prior + line).slice(-100000));
       } catch { console.error(msg); }
       showErrorDetail(msg);
     },
@@ -549,7 +549,7 @@
 
   // Interface language: the same locales/ files as the desktop, picked by
   // the device's language (regional file over its base, English beneath).
-  // Read synchronously here because app.js reads window.neo.i18n as it loads.
+  // Read synchronously here because app.js reads window.kibitz.i18n as it loads.
   function loadLocale() {
     const want = String(navigator.language || 'en').replace('_', '-');
     const base = want.split('-')[0];
@@ -569,12 +569,12 @@
     if (!baseDict && !regional) return { locale: 'en', dict: {}, base: english };
     return { locale: regional ? want : base, dict: { ...(baseDict || {}), ...(regional || {}) }, base: english };
   }
-  try { window.neo.i18n = loadLocale(); } catch { /* English it is */ }
+  try { window.kibitz.i18n = loadLocale(); } catch { /* English it is */ }
 
-  // Spellcheck: desktop NEO's Hunspell and dictionaries (pocket-spell.js),
+  // Spellcheck: desktop Kibitz's Hunspell and dictionaries (pocket-spell.js),
   // in a web worker so the page never waits on a dictionary. The language
   // is the library's (library.json syncs it from the desktop), else the
-  // interface's when NEO has its dictionary, else US English: the same rule
+  // interface's when Kibitz has its dictionary, else US English: the same rule
   // as defaultSpellLanguage() in main.js.
   let spellCodes = null;   // { code: label }, from dict/languages.json
   let spellReady = null;   // { language, ok: Promise<boolean> }
@@ -593,7 +593,7 @@
   function wantedLanguage(codes) {
     const chosen = lib().spellLanguage;
     if (codes[chosen]) return chosen;
-    const ui = String((window.neo.i18n && window.neo.i18n.locale) || 'en');
+    const ui = String((window.kibitz.i18n && window.kibitz.i18n.locale) || 'en');
     if (codes[ui]) return ui;
     if (ui === 'pt' || ui === 'pt-BR') return 'pt-BR';
     const base = ui.split('-')[0];
@@ -645,7 +645,7 @@
     const ready = {
       language,
       ok: spellEngine()({ type: 'load', language, custom }).then((r) => {
-        if (!r.ok) window.neo.logError('spell: ' + language + ' did not load: ' + r.error);
+        if (!r.ok) window.kibitz.logError('spell: ' + language + ' did not load: ' + r.error);
         return !!r.ok;
       })
     };
@@ -667,7 +667,7 @@
   // No right-click on a phone: with spellcheck on, a tap on an underlined
   // word opens the same suggestions (app.js answers the contextmenu event)
   document.addEventListener('click', (e) => {
-    const hl = window.CSS && CSS.highlights && CSS.highlights.get('neo-spell');
+    const hl = window.CSS && CSS.highlights && CSS.highlights.get('kibitz-spell');
     if (!hl || !hl.size || !document.caretRangeFromPoint) return;
     if (!e.target.closest || !e.target.closest('.chapter-body, #aux-editor')) return;
     const sel = window.getSelection();
@@ -683,7 +683,7 @@
   });
 
   // iOS puts a shortcuts bar (bold, italic, mic, ⌘ hints) above its keyboard;
-  // it covers Pocket's own bar, and NEO has its own idea of formatting
+  // it covers Pocket's own bar, and Kibitz has its own idea of formatting
   // the keyboard's colour follows the page theme (body.night comes and goes
   // as the writer switches Night and Paper)
   if (isIOS()) {
@@ -699,7 +699,7 @@
   // color — night, paper or light — instead of the phone's white
   if (!isIOS()) {
     let bars = null;
-    try { bars = window.Capacitor.registerPlugin('NeoBars'); } catch { /* older shell */ }
+    try { bars = window.Capacitor.registerPlugin('KibitzBars'); } catch { /* older shell */ }
     const tellBars = () => {
       if (!bars) return;
       const bg = (el) => getComputedStyle(el).backgroundColor;
@@ -782,7 +782,7 @@
   };
   if (!isIOS()) {
     try {
-      const bars = window.Capacitor.registerPlugin('NeoBars');
+      const bars = window.Capacitor.registerPlugin('KibitzBars');
       bars.keyboard().then((r) => window.pocketHardwareKeyboard(!!(r && r.hardware))).catch(() => {});
     } catch { /* older shell */ }
   }

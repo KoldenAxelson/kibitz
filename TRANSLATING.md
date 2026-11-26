@@ -1,6 +1,6 @@
-# Translating NEO
+# Translating Kibitz
 
-NEO currently speaks:
+Kibitz currently speaks:
 
 | Code | Language | Status |
 |---|---|---|
@@ -24,11 +24,11 @@ NEO currently speaks:
 
 Spellchecking (Edit → Spellcheck Language) covers English, French, Spanish, German, Dutch, Polish, Brazilian Portuguese, Romanian, Russian, Ukrainian, Hungarian, Swedish and Danish. The engine is Hunspell itself, compiled to WebAssembly, so every dictionary loads in well under a second. Italian is left out because the only Hunspell dictionary on npm is GPL-3.0-only, which does not sit well in an MIT app. The Brazilian Portuguese interface starts with the Brazilian dictionary; the European Portuguese interface leaves the choice to the writer, since spellings differ.
 
-Spellcheck starts off on every launch. Choosing a dictionary does not turn it on. If the interface starts in Romanian and the library has no saved spellcheck language, NEO selects and saves Romanian. Explicit dictionary choices survive interface-language changes. Other interface languages keep their existing defaults.
+Spellcheck starts off on every launch. Choosing a dictionary does not turn it on. If the interface starts in Romanian and the library has no saved spellcheck language, Kibitz selects and saves Romanian. Explicit dictionary choices survive interface-language changes. Other interface languages keep their existing defaults.
 
 Romanian lookup accepts standard diacritics, legacy `ş/ţ`, and decomposed Unicode accents without changing manuscript text. Suggestions use standard Romanian spelling. This checks spelling, not grammar: both `sa` and `să` are words. See [the Romanian evaluation](scripts/romanian-spellcheck.md) and [the Portuguese evaluation](scripts/portuguese-spellcheck.md) for performance and licensing details.
 
-The Swedish dictionary (`sv`, **Svenska** in Edit → Spellcheck Language) is Göran Andersson's LibreOffice dictionary, pinned as `dictionary-sv` 4.0.0. Its data is LGPL 3.0, separately from NEO's MIT license. Desktop and Pocket distribute the unmodified `.aff`/`.dic` source files with attribution and the full LGPL/GPL license texts (`licenses/dictionary-sv`). This adds spellchecking only, not a Swedish interface translation.
+The Swedish dictionary (`sv`, **Svenska** in Edit → Spellcheck Language) is Göran Andersson's LibreOffice dictionary, pinned as `dictionary-sv` 4.0.0. Its data is LGPL 3.0, separately from Kibitz's MIT license. Desktop and Pocket distribute the unmodified `.aff`/`.dic` source files with attribution and the full LGPL/GPL license texts (`licenses/dictionary-sv`). This adds spellchecking only, not a Swedish interface translation.
 
 The Ukrainian dictionary is LibreOffice's uk_UA (from the dict_uk project), kept in `dictionaries/uk` under its MPL 1.1 license; the npm `dictionary-uk` package is GPL-3.0 and stays out. A suggestion with an apostrophe (м'ясо) goes onto the page with ’.
 
@@ -36,10 +36,10 @@ The Hungarian dictionary is LibreOffice's Magyar Ispell 1.9, kept in `dictionari
 
 ### Danish
 
-The Danish dictionary (`da`, **Dansk** under Spellcheck language in Options) is Stavekontrolden 2.9.101 (7 June 2026), as LibreOffice ships it, kept in `dictionaries/da`. NEO has no Danish interface: a writer can keep NEO in English (or any language) and spellcheck and type in Danish. Like every spellcheck language, Dansk is picked in Options, is saved as `spellLanguage` in library.json, survives a change of interface language, and does not turn spellcheck on by itself.
+The Danish dictionary (`da`, **Dansk** under Spellcheck language in Options) is Stavekontrolden 2.9.101 (7 June 2026), as LibreOffice ships it, kept in `dictionaries/da`. Kibitz has no Danish interface: a writer can keep Kibitz in English (or any language) and spellcheck and type in Danish. Like every spellcheck language, Dansk is picked in Options, is saved as `spellLanguage` in library.json, survives a change of interface language, and does not turn spellcheck on by itself.
 
 - **Source.** `index.aff` and `index.dic` are `da_DK/da_DK.aff` and `da_DK/da_DK.dic` from [LibreOffice/dictionaries](https://github.com/LibreOffice/dictionaries/tree/cdaeab266e35c0f1ce367629c7f2079c64fe9351/da_DK) at commit `cdaeab266e35c0f1ce367629c7f2079c64fe9351`, byte for byte, renamed only. Their SHA-256 sums are in `dictionaries/da/NOTICE.txt`, and the tests check them. The thesaurus and hyphenation files are left out. (The npm package `dictionary-da` carries the older 2.8.034.)
-- **License.** © Foreningen for frit tilgængelige sprogværktøjer, offered under GPL 2.0, LGPL 2.1 or MPL 1.1. NEO distributes it under MPL 1.1, separately from NEO's MIT license, with the upstream notice (`README_da_DK.txt`), `NOTICE.txt` and the full `MPL-1.1.txt` beside the data, on desktop (`app.asar.unpacked/node_modules/dictionary-da/`) and in Pocket (`dict/da/`).
+- **License.** © Foreningen for frit tilgængelige sprogværktøjer, offered under GPL 2.0, LGPL 2.1 or MPL 1.1. Kibitz distributes it under MPL 1.1, separately from Kibitz's MIT license, with the upstream notice (`README_da_DK.txt`), `NOTICE.txt` and the full `MPL-1.1.txt` beside the data, on desktop (`app.asar.unpacked/node_modules/dictionary-da/`) and in Pocket (`dict/da/`).
 - **Writing.** `i` (in) stays lowercase and a typed `I` (you) stays as typed: turning `i` into `I`, as you type and in the spellcheck's capital check, is English only. Sentences still start with a capital, and the common abbreviations *f.eks., bl.a., dvs., osv., mv., evt., jf., kl., nr., pga., mht., inkl.* don't end one (`CAPS_ABBREV` in `app/`; as with *etc.*, a sentence ending in *osv.* leaves the next capital to the writer). Quotation marks are »…«, one of the forms Danish uses (with „…“ and ”…”); a book already set in „…“ keeps it. `'` is the apostrophe ’.
 - **Compounds.** Hunspell takes compounds it can build from known words, so some typos that make two real words (*skrivebrod*: skrive + brod) pass.
 
@@ -59,7 +59,7 @@ Check that the license block in `index.aff` and `README_da_DK.txt` still offers 
 
 If you speak one of these and something reads oddly, a pull request that fixes a line is the most welcome contribution there is.
 
-NEO's interface can be shown in any language. Each language is a single file in `locales/`, and adding one needs no programming.
+Kibitz's interface can be shown in any language. Each language is a single file in `locales/`, and adding one needs no programming.
 
 ## Add a language
 
@@ -68,11 +68,11 @@ NEO's interface can be shown in any language. Each language is a single file in 
 3. Fill in each empty value with the translation of its English key. Anything left empty simply stays in English, so a partial translation is fine to start with.
 4. Check your work: `node scripts/i18n.js check <code>`. It lists what is missing, and any `{placeholder}` that went astray.
 
-The new language appears in **View → Language** the next time NEO starts.
+The new language appears in **View → Language** the next time Kibitz starts.
 
 ## Regional variants
 
-Language codes follow [BCP 47](https://www.rfc-editor.org/info/bcp47): a language (`fr`), optionally followed by a region (`fr-CA`, `fr-BE`, `fr-CH`). NEO also accepts the POSIX spelling (`fr_CA`) when reading a system or saved setting.
+Language codes follow [BCP 47](https://www.rfc-editor.org/info/bcp47): a language (`fr`), optionally followed by a region (`fr-CA`, `fr-BE`, `fr-CH`). Kibitz also accepts the POSIX spelling (`fr_CA`) when reading a system or saved setting.
 
 A language's base file (`fr.json`) serves every region. A regional file (`fr-CA.json`) holds **only the strings that differ** there, and everything else comes from the base file, then from English:
 
@@ -86,7 +86,7 @@ So `fr-CA.json` is short: in Quebec, "courriel" instead of "e-mail", and no spac
 
 ## The rules of the file
 
-- **Placeholders** in braces, like `{title}` or `{n}`, are filled in by NEO. Keep them, spelled exactly the same; you can move them anywhere in the sentence.
+- **Placeholders** in braces, like `{title}` or `{n}`, are filled in by Kibitz. Keep them, spelled exactly the same; you can move them anywhere in the sentence.
 - **Plurals.** When a string counts something with `{n}`, you can give one form per plural category instead of a single string:
 
   ```json
@@ -96,19 +96,19 @@ So `fr-CA.json` is short: in Quebec, "courriel" instead of "e-mail", and no spac
   The categories are those of your language in [Unicode's plural rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html) (`one`, `few`, `many`, `other`…). `other` is always required.
 - **Numbers** are formatted for the language automatically (`1,234` in English, `1 234` in French).
 - **`&amp;`** appears in a few help strings that are shown as HTML. Keep it as `&amp;` (or rephrase without an ampersand).
-- **Keyboard keys** such as `⌘`, `⇧` or `Ctrl` are added by NEO; translate the words around them.
+- **Keyboard keys** such as `⌘`, `⇧` or `Ctrl` are added by Kibitz; translate the words around them.
 
 ## Typing in each language
 
-While writing, NEO sets the quotation marks of the language being written: the spellcheck language when one is chosen, otherwise NEO's own language. « » for French (with narrow no-break spaces), Spanish, Italian, European Portuguese, Russian and Ukrainian; „ “ for German; „ ” for Polish, Romanian and Hungarian; “ ” for English, Dutch, Brazilian Portuguese and Korean; ” ” for Swedish; » « for Danish. Swedish books set in »…» keep that style, and Danish books set in „…“ keep theirs. The apostrophe is always ’. French also gets a narrow no-break space before ; : ! ? (before : only in Canadian French). The table is `QUOTE_STYLES` in `app/`.
+While writing, Kibitz sets the quotation marks of the language being written: the spellcheck language when one is chosen, otherwise Kibitz's own language. « » for French (with narrow no-break spaces), Spanish, Italian, European Portuguese, Russian and Ukrainian; „ “ for German; „ ” for Polish, Romanian and Hungarian; “ ” for English, Dutch, Brazilian Portuguese and Korean; ” ” for Swedish; » « for Danish. Swedish books set in »…» keep that style, and Danish books set in „…“ keep theirs. The apostrophe is always ’. French also gets a narrow no-break space before ; : ! ? (before : only in Canadian French). The table is `QUOTE_STYLES` in `app/`.
 
-A book that has settled on other guillemets keeps them: in a German novel set in »…«, or Swiss writing in «…», type the first mark by hand and NEO carries on in that style (`bookQuotes` in `app/`).
+A book that has settled on other guillemets keeps them: in a German novel set in »…«, or Swiss writing in «…», type the first mark by hand and Kibitz carries on in that style (`bookQuotes` in `app/`).
 
 Imports recognize chapter headings in all these interface languages (`CHAPTER_WORDS` in `main.js`), and cover titles treat each language's small words like "of" and "the" (`CONNECTORS` in `covers.js`).
 
 ## Fonts in other alphabets
 
-Most fonts NEO bundles (the body fonts on Linux, the drop caps and the cover titles, in `fonts/`) have Latin letters only. For Russian, each has a companion under the same font name in `styles.css` that supplies the Cyrillic letters, so Latin text looks exactly as before. A language with letters of its own needs the same check: every bundled font, companions included, must carry them. Korean has them too: Noto Serif KR for the serif faces, Noto Sans KR for the sans ones, each cut down to Hangul (the syllables, the jamo and CJK punctuation) as one variable file, so every weight comes from it. Hanja still come from the system's fonts.
+Most fonts Kibitz bundles (the body fonts on Linux, the drop caps and the cover titles, in `fonts/`) have Latin letters only. For Russian, each has a companion under the same font name in `styles.css` that supplies the Cyrillic letters, so Latin text looks exactly as before. A language with letters of its own needs the same check: every bundled font, companions included, must carry them. Korean has them too: Noto Serif KR for the serif faces, Noto Sans KR for the sans ones, each cut down to Hangul (the syllables, the jamo and CJK punctuation) as one variable file, so every weight comes from it. Hanja still come from the system's fonts.
 
 Korean also changes how the interface sets its labels (the end of `styles.css`): words are kept whole when a line wraps, the wide letter-spacing of the small labels is narrowed, and Hangul is never slanted into a fake italic.
 

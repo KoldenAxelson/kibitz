@@ -29,7 +29,7 @@
 		<string>vi</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>NEO Pocket</string>
+	<string>Kibitz Pocket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -52,12 +52,12 @@
 	<true/>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.com.hughhowey.neo.pocket</key>
+		<key>iCloud.com.koldenaxelson.kibitz.pocket</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
 			<key>NSUbiquitousContainerName</key>
-			<string>NEO Pocket</string>
+			<string>Kibitz Pocket</string>
 			<key>NSUbiquitousContainerSupportedFolderLevels</key>
 			<string>Any</string>
 		</dict>

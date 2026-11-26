@@ -1,20 +1,20 @@
-# NEO Pocket
+# Kibitz Pocket
 
-The Android and iOS companion to NEO: open a WIP, write, close. The
-manuscript editor is desktop NEO's own code (`app.js` / `styles.css`, copied
+The Android and iOS companion to Kibitz: open a WIP, write, close. The
+manuscript editor is desktop Kibitz's own code (`app.js` / `styles.css`, copied
 in at build time), running in a Capacitor shell with a pocket-sized
-implementation of the `window.neo` bridge (`www/pocket-bridge.js`). Same
+implementation of the `window.kibitz` bridge (`www/pocket-bridge.js`). Same
 plain files as the desktop, no accounts.
 
-- **Android:** files live in `Documents/NEO Library`, shared with the desktop
+- **Android:** files live in `Documents/Kibitz Library`, shared with the desktop
   via Syncthing.
 - **iOS:** files live in the app's own folder. With iCloud Drive on, that's
-  iCloud Drive → NEO Pocket → NEO Library (still local files; Apple carries
+  iCloud Drive → Kibitz Pocket → Kibitz Library (still local files; Apple carries
   changes in the background). On a Mac signed in to the same iCloud, File →
   Library Folder… then offers Use iCloud Drive: one click moves the desktop's
   books into that folder, beside the iPad's, and restarts there. With iCloud
-  Drive off, it's On My iPad → NEO Pocket. Nothing is required on the desktop
-  side: NEO stays local unless the writer chooses that folder.
+  Drive off, it's On My iPad → Kibitz Pocket. Nothing is required on the desktop
+  side: Kibitz stays local unless the writer chooses that folder.
 
 ## Building
 
@@ -22,7 +22,7 @@ Robots build it. Every push to `main` that touches `pocket/`, `app.js`, or
 `styles.css` produces a fresh, signed APK and drops it on the rolling
 **pocket-latest** pre-release:
 
-    https://github.com/hughhowey/neo/releases/download/pocket-latest/neo-pocket.apk
+    https://github.com/KoldenAxelson/kibitz/releases/download/pocket-latest/kibitz-pocket.apk
 
 Bookmark that on the phone. Tap it, open the download, and it installs over
 the previous build — same signing key every time, so no uninstalling and no
@@ -34,7 +34,7 @@ The signing key lives in two repo secrets (`POCKET_KEYSTORE_BASE64`,
 uninstall/reinstall.
 
 First install only: sideload, then grant **All files access**
-(Settings → Apps → NEO Pocket).
+(Settings → Apps → Kibitz Pocket).
 
 Local builds need Android Studio and: `npm install` at the top of the repo,
 `node scripts/pocket-www.js` (copies the editor, fonts, locales, and the
@@ -54,7 +54,7 @@ and an Apple Developer account for a real device. Then:
 
 In Xcode: pick your Team under Signing & Capabilities, add the **iCloud**
 capability with **iCloud Documents** ticked and the container
-`iCloud.com.hughhowey.neo.pocket`, choose an iPad simulator or a plugged-in
+`iCloud.com.koldenaxelson.kibitz.pocket`, choose an iPad simulator or a plugged-in
 iPad, and press Run. After changing `app.js`, `styles.css` or anything in
 `www/`, repeat `node scripts/pocket-www.js` (from the top of the repo) and
 `npx cap copy ios`, then Run again.
@@ -65,9 +65,9 @@ another device wrote before they're read.
 
 To test with real books in the simulator, run Pocket once, then:
 
-    open "$(xcrun simctl get_app_container booted com.hughhowey.neo.pocket data)/Documents"
+    open "$(xcrun simctl get_app_container booted com.koldenaxelson.kibitz.pocket data)/Documents"
 
-and copy a `NEO Library` folder in there (simulators have no iCloud, so this
+and copy a `Kibitz Library` folder in there (simulators have no iCloud, so this
 is the On My iPad path).
 
 ## Status — early alpha

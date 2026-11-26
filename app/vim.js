@@ -8,7 +8,7 @@
 /*  opens in it; letters then                                           */
 /*  move instead of type, and i, a, o and friends go back to writing.   */
 /*  Esc while moving stays put, as in vim. Keys with ⌘ or Ctrl keep     */
-/*  their usual jobs, so none of NEO's shortcuts change.                */
+/*  their usual jobs, so none of Kibitz's shortcuts change.                */
 /*                                                                      */
 /*    h j k l   left, down, up, right      w b e   by word              */
 /*    0 ^ $     start / end of the line    ( )     by sentence          */
@@ -29,7 +29,7 @@ let vimPending = '';       // the g of gg, the [ of [[
 function applyVim() {
   if (!vimEnabled) { vimNav = false; vimVisual = false; }
   document.body.classList.toggle('vim-nav', vimNav);
-  if (window.neo.vimState) window.neo.vimState(vimEnabled); // the View menu's tick
+  if (window.kibitz.vimState) window.kibitz.vimState(vimEnabled); // the View menu's tick
 }
 const vimEditor = (el) => el && el.closest && el.closest('.chapter-body, #aux-editor');
 // With vim keys on, the page rests in moving mode, as vim starts: a book
@@ -243,7 +243,7 @@ function vimKey(e) {
   }
   revealCaret();
 }
-// first in line for keys in the page and the notes, ahead of NEO's own
+// first in line for keys in the page and the notes, ahead of Kibitz's own
 // typing rules, and only while vim keys are on
 window.addEventListener('keydown', (e) => {
   if (!vimEnabled) return;
@@ -324,7 +324,7 @@ document.addEventListener('compositionstart', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || !$('#editor-view').hidden) return;
   if (document.querySelector('.modal-backdrop:not([hidden])')) return;
-  window.neo.fullscreenEscape();
+  window.kibitz.fullscreenEscape();
 });
 
 // ---- full screen keys: ⌘Enter (Ctrl+Enter) everywhere, and F11 off the Mac,
@@ -340,11 +340,11 @@ document.addEventListener('keydown', (e) => {
   if (!isFullScreenKey(e, IS_MAC)) return;
   if (document.querySelector('.modal-backdrop:not([hidden])')) return;
   e.preventDefault();
-  window.neo.fullscreenToggle();
+  window.kibitz.fullscreenToggle();
 });
 
 // ---- carried alignment rules: a new chapter opens set as the story is (#426) ----
-// The alignment most of a chapter's prose is set in: '' for left (NEO's
+// The alignment most of a chapter's prose is set in: '' for left (Kibitz's
 // default), null for a chapter with no prose yet. Breaks, outline ghosts,
 // poetry, flush lines, script lines and empty lines don't count. A tie goes
 // to the later paragraph.
@@ -410,7 +410,7 @@ async function deleteChapterQuiet(chId) {
   renderStickies();
   // book.json lets go of the chapter before its file goes
   await saveMeta();
-  if (book && book.id === bookId) await window.neo.deleteChapter(bookId, chId);
+  if (book && book.id === bookId) await window.kibitz.deleteChapter(bookId, chId);
 }
 
 function focusChapter(chId) {

@@ -1,6 +1,6 @@
-# NEO — notes for agents
+# Kibitz — notes for agents
 
-NEO is a local word processor for books. It is an Electron app made of plain JavaScript, HTML, and CSS. There is no bundler, no framework, and no compile step. `npm start` runs `electron .`.
+Kibitz is a local word processor for books. It is an Electron app made of plain JavaScript, HTML, and CSS. There is no bundler, no framework, and no compile step. `npm start` runs `electron .`.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a feature. The product is opinionated on purpose. A change that helps someone finish a book belongs here. A change that adds a panel, a prompt, or a dependency usually does not.
 
@@ -10,7 +10,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a feature. The product is 
 - Controls stay hidden until hover or keyboard focus.
 - Words are never discarded. Deleting text, unbinding a shelf, or losing a trash operation must leave the words recoverable (Darlings, a sibling chapter, or the system trash). `book:delete` uses `shell.trashItem`. If trash fails, leave the folder and show it.
 - Books are plain files. No database, no proprietary format.
-- The renderer never touches the filesystem. Disk access goes through `window.neo` (`preload.js`) to handlers in `main.js`.
+- The renderer never touches the filesystem. Disk access goes through `window.kibitz` (`preload.js`) to handlers in `main.js`.
 - Do not save UI decoration into chapter HTML. Search highlights, spellcheck underlines, and focus dimming use the CSS Highlight API so they stay out of the file.
 - Do not rewrite a chapter that has not changed. Libraries are synced with iCloud and Syncthing. A timer that writes every chapter on an interval will fight the other device.
 
@@ -19,18 +19,18 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a feature. The product is 
 | File | Role |
 |---|---|
 | `main.js` | Window, menus, every filesystem operation, import parsing, PDF, backups |
-| `preload.js` | The entire renderer API, `window.neo` |
+| `preload.js` | The entire renderer API, `window.kibitz` |
 | `index.html` | Two views: `#bookshelf-view` and `#editor-view`. CSP is `script-src 'self'` |
 | `app/*.js` | The whole UI (the window), one file per area, loaded in order by `index.html` and Pocket's page (`scripts/app-files.js` holds the order). They share one global scope, as one file did |
 | `styles.css` | All styling. Tokens are CSS variables at the top |
-| `covers.js` | Shelf covers in the window: seeded canvas art plus real title type. `window.NeoCovers` |
+| `covers.js` | Shelf covers in the window: seeded canvas art plus real title type. `window.KibitzCovers` |
 | `art.js` | Painted covers in the main process. OpenAI only. Title and author are never sent to the image model |
 | `i18n.js` | `t()` / `tk()`, shared by main and the window. English source text is the key |
 | `spell-worker.js` | Hunspell WASM, forked with `utilityProcess`. Messages: `load`, `check`, `suggest`, `add` |
 | `backup-worker.js` | The day's backup zip, forked with `utilityProcess` by `dailyBackup` so a file that won't come off iCloud never holds the main process |
 | `spell-ro.js` | Romanian diacritics, used by the worker. Does not alter the manuscript |
-| `dictionaries/<code>/` | Dictionaries NEO keeps itself (Hungarian, Danish), each a local `dictionary-<code>` package with its notice and license; see TRANSLATING.md |
-| `manuscript.js` | Standard manuscript format: the word count's rounding, the header's surname, the `.docx`'s parts and the PDF's page, from a model the window hands it. Plain JavaScript that also runs in Node (`window.NeoManuscript`, loaded by `index.html`) |
+| `dictionaries/<code>/` | Dictionaries Kibitz keeps itself (Hungarian, Danish), each a local `dictionary-<code>` package with its notice and license; see TRANSLATING.md |
+| `manuscript.js` | Standard manuscript format: the word count's rounding, the header's surname, the `.docx`'s parts and the PDF's page, from a model the window hands it. Plain JavaScript that also runs in Node (`window.KibitzManuscript`, loaded by `index.html`) |
 | `locales/<code>.json` | One language. Regional files (`fr-CA.json`) hold only the strings that differ |
 | `pocket/` | Capacitor shell. It does not contain its own editor |
 | `print/` | Vendored Paged.js and hyphenation patterns for paperback PDFs |
@@ -41,18 +41,18 @@ The window's files, in load order: `core` (state, helpers, the library), `shelf`
 - A `let` shared between files must stay `let` (lint can't see another file's assignment, so `prefer-const` and `no-unused-vars` are off for `app/`).
 - Tests read the whole window with `require('./app-files').appSource()`.
 
-Menus are built in `buildMenu()` in `main.js`. A menu click sends `{ type, ... }` to the window; `app/menu.js` and the others handle it on `window.neo.onMenu`.
+Menus are built in `buildMenu()` in `main.js`. A menu click sends `{ type, ... }` to the window; `app/menu.js` and the others handle it on `window.kibitz.onMenu`.
 
 ## Features and Options
 
-One NEO for everyone. NEO → Options… (File → Options… off the Mac; FEATURES & OPTIONS in `app/options.js`) turns NEO's features on and off and holds the settings that used to be menu ticks. The features are `FEATURES` in `app/core.js`; `featureOn(key)` asks whether one is on (`library.features`, in library.json, so every device of the library follows it).
+One Kibitz for everyone. Kibitz → Options… (File → Options… off the Mac; FEATURES & OPTIONS in `app/options.js`) turns Kibitz's features on and off and holds the settings that used to be menu ticks. The features are `FEATURES` in `app/core.js`; `featureOn(key)` asks whether one is on (`library.features`, in library.json, so every device of the library follows it).
 
-- A menu item that belongs to a feature carries `feature: '<key>'` in `buildMenu()`; `featureTemplate` leaves it out (and the separators it would strand) while that feature is off. The window reports the features with `window.neo.featuresState` (`reportFeatures`). A key, right-click choice or pane asks `featureOn('<key>')`.
+- A menu item that belongs to a feature carries `feature: '<key>'` in `buildMenu()`; `featureTemplate` leaves it out (and the separators it would strand) while that feature is off. The window reports the features with `window.kibitz.featuresState` (`reportFeatures`). A key, right-click choice or pane asks `featureOn('<key>')`.
 - The features: `cards` (outline cards, loose cards, cards beside the page), `notesPages` (chapter notes pages), `poetry`, `footnotes`, `formatting` (alignment, Align Book Prose, Other Font…), `penNames` (pen names, binding shelves, the anthology, Duplicate, Reshelve), `covers` (painted covers, Cover Art…), `pages` (Show Pages, two pages, page width), `focus`, `readAloud` (and Look Up), `vim`, `exports` (Manuscript Format, txt/md/html, Import Chapters). Scripts, LitRPG boxes, the tab keys and Fountain/Final Draft import are for everyone.
 - The settings in Options: Markdown emphasis (`library.markdownOff`), non-breaking marks, press and hold for accents (Mac), new books open to, chapter titles only (with More exports), the interface and spellcheck languages, the interface size. Menus hold actions; Options holds settings. The page (Night, Paper, Light), Brighter Interface, Typewriter Scrolling, the fonts and drop cap stay in the menus: the writer's eyes decide them while writing.
-- A feature that's off takes NEO's defaults (`applyLook`) and never erases the writer's choices: they wait in library.json for its return.
+- A feature that's off takes Kibitz's defaults (`applyLook`) and never erases the writer's choices: they wait in library.json for its return.
 - Nothing a book already holds is hidden. A footnote, poetry paragraph, bound shelf, painted cover, loose card or chapter notes page with notes on it opens and exports as before, and other pen names stay reachable.
-- A new library starts with every feature off and Markdown typing off. A library from before 2.0 is set up once (`setupFeatures`): Show More Features on → every feature on (vim keys only if they were on); off → every feature off and simple NEO's quiet defaults written in; older still → judged by what it uses.
+- A new library starts with every feature off and Markdown typing off. A library from before 2.0 is set up once (`setupFeatures`): Show More Features on → every feature on (vim keys only if they were on); off → every feature off and simple Kibitz's quiet defaults written in; older still → judged by what it uses.
 - Pocket shows a feature only where its `FEATURES` entry says `pocket: true` (cards, notes pages, poetry, footnotes, pen names, vim, and More exports as txt/md/html; `pocketDesc` is its wording there). The rest need the desktop. Its ⋯ sheet has Options… at the foot, and rows for poetry and the extra exports while those are on. On Pocket, Options lists only its own features, and Turn all on/off leaves the desktop's alone. `npm run test:pocket` runs Pocket's own page with a stand-in for Capacitor's Filesystem.
 - The shortcuts window (`bookShortcutSections`) lists a key only when its feature is on.
 - A new feature gets an entry in `FEATURES` (off for a new library) unless Hugh says it's for everyone. `scripts/features.test.js`, `npm run test:options`.
@@ -94,7 +94,7 @@ A book whose `book.json` says `"format": "screenplay"` is a script. Right-click 
 
 - Lines in a row are one box. Enter is the box's next line; Enter on the box's empty last line ends it, and that line is prose; ⇧Enter is always another line in the box (a blank one, never the end); an empty line inside a box stays. Backspace at the start of a box's first line makes it prose.
 - Inside a box the smart typing stands aside (quotes, dashes, ellipsis, capitals, Markdown emphasis), and every space is kept, for columns. A box is never the opening paragraph: the drop cap goes to the first prose line (`openingPara`).
-- Text pasted into a box keeps its lines and spaces (`pasteIntoBox`); NEO's own copied box lines paste as box lines (`pasteBoxesFromNeo`).
+- Text pasted into a box keeps its lines and spaces (`pasteIntoBox`); Kibitz's own copied box lines paste as box lines (`pasteBoxesFromKibitz`).
 - Face: IBM Plex Mono, bundled as TrueType in `fonts/` (OFL). It's embedded in the PDF and paperback (`exportFontFaces`) and carried as files in the EPUB (`litrpgEpubFonts`, only the styles a box uses). Word gets the `LitRPG` paragraph style in Courier New: a border and gray fill that Word draws as one box over the run of lines. Manuscript Format has the same style (and Courier Prime in its PDF).
 - In the HTML-based exports (PDF, paperback, EPUB) a run of spaces goes out as alternating no-break spaces (`litrpgSpaces`) so no reader collapses a column, and box lines carry `lt-top` / `lt-end` for their edges. Markdown gets a fenced block, plain text the lines as typed.
 - `npm run test:litrpg` (`scripts/litrpg.e2e.js`; `OUT=<folder>` keeps the exported files and a picture of the page).
@@ -105,25 +105,25 @@ File → Export → Manuscript Format… (MANUSCRIPT FORMAT in `app/`, the pages
 
 - **.docx** (`docxEntries`): the title page is its own section with no header, the story the next one with `pgNumType start=1` and a PAGE field in `header1.xml`; a short story is one section with `titlePg` and an empty first-page header. A `settings.xml` keeps Word out of Compatibility Mode. Saved through `export:save`.
 - **PDF** (`html`): one page for Paged.js, the header in `@page`'s `@top-right` margin box, `@page titlepage` without it; `print:manuscript` lays it out with `renderPaged` (the story's first section is `.pg1`, so it's page 1) and saves it. It shares the print window with the paperback, so each refuses while the other runs. Courier Prime (bundled) goes into the PDF; Word gets Courier New.
-- The dialog remembers the contact block for every book (`library.manuscript`: name, address, phone, email, font, end) and the byline and header for this book (`book.manuscript`, only where they differ from NEO's own choice). "Anonymous" is never taken for a byline. Values go into the fields from code, so a quotation mark can't cut one short. It never opens over another dialog or twice. Scripts keep their own PDF; Pocket has no manuscript export (its page doesn't load `manuscript.js`).
-- `scripts/manuscript.test.js`; `npm run test:manuscript` (`scripts/manuscript.e2e.js`: the dialog, both files, the .docx read back by NEO's import, the PDF's pages read back with `pdftotext` where it's installed).
+- The dialog remembers the contact block for every book (`library.manuscript`: name, address, phone, email, font, end) and the byline and header for this book (`book.manuscript`, only where they differ from Kibitz's own choice). "Anonymous" is never taken for a byline. Values go into the fields from code, so a quotation mark can't cut one short. It never opens over another dialog or twice. Scripts keep their own PDF; Pocket has no manuscript export (its page doesn't load `manuscript.js`).
+- `scripts/manuscript.test.js`; `npm run test:manuscript` (`scripts/manuscript.e2e.js`: the dialog, both files, the .docx read back by Kibitz's import, the PDF's pages read back with `pdftotext` where it's installed).
 
 ## Paperbacks for KDP
 
 Export → Paperback for KDP… (also on the shelf's right-click Export) writes a print interior PDF and a cover template PDF beside it. `printPaperback` and `buildPrintHtml` are in `app/print.js` (PRINT BOOK); `makePaperback`, `renderPaged` and `kdpCoverHtml` are in `main.js`, behind `print:paperback`.
 
-- Trims are KDP's four most-used: 5×8, 5.25×8, 5.5×8.5, 6×9 (`PRINT_TRIMS` in `app/`, `KDP_TRIMS` in `main.js`). Paper thickness, page limits and the inside-margin bands (`kdpGutterMin`) come from KDP's help pages; NEO adds a quarter inch to the minimum. If the page count crosses a band, the book is laid out again with the wider margin.
-- Pages are set by Paged.js (`print/paged.polyfill.js`, vendored, MIT) in one offscreen window per export. A hidden window stalls its animation frames; a second offscreen window opened right after one closes fails. The window closes when the export ends. One patch in it is marked `NEO:` (a word hyphenated across a page turn broke a letter late).
+- Trims are KDP's four most-used: 5×8, 5.25×8, 5.5×8.5, 6×9 (`PRINT_TRIMS` in `app/`, `KDP_TRIMS` in `main.js`). Paper thickness, page limits and the inside-margin bands (`kdpGutterMin`) come from KDP's help pages; Kibitz adds a quarter inch to the minimum. If the page count crosses a band, the book is laid out again with the wider margin.
+- Pages are set by Paged.js (`print/paged.polyfill.js`, vendored, MIT) in one offscreen window per export. A hidden window stalls its animation frames; a second offscreen window opened right after one closes fails. The window closes when the export ends. One patch in it is marked `Kibitz:` (a word hyphenated across a page turn broke a letter late).
 - Hyphenation is soft hyphens put in by `hyphenateHtml` in `main.js` with TeX patterns (`print/hyphen/`, ISC), because Chromium only hyphenates on macOS. Only `p.hy` prose is touched; names (capitalised words, except in German) and a paragraph's last word stay whole.
 - Chromium rounds page sizes to 0.01 in; `exactPageBox` rewrites the MediaBox to the exact size in the same number of bytes.
 - The page count is kept even. Chapters open on a right-hand page; blank pages carry no head or number. Page numbers sit at the outside corners (left pages at the left, right pages at the right); the regular PDF keeps them centered.
-- Choices are kept: trim, paper, ISBN and fiction notice in `book.print`; on the pen name, `author.print` holds the back-matter links, `alsoByText` (the writer's own list, one title per line) and `reviewText` (own wording, with `{title}` for the book's title; empty means NEO's translated wording). A dedication typed in the dialog becomes the book's own Dedication page.
+- Choices are kept: trim, paper, ISBN and fiction notice in `book.print`; on the pen name, `author.print` holds the back-matter links, `alsoByText` (the writer's own list, one title per line) and `reviewText` (own wording, with `{title}` for the book's title; empty means Kibitz's translated wording). A dedication typed in the dialog becomes the book's own Dedication page.
 - Page 1 is the story's first page (the first `chapter` section, so a prologue). In the paperback that section is `.pg1` and each page's number is set on it after layout. The regular PDF stops counting on `@page front` pages and numbers its contents from the `data-p1` link; pages after page 1 that show no number (a part's title) are `.page.counted`.
 - `scripts/print.test.js` covers the margin bands, hyphenation, the page box and the cover's size. Pocket has no paperback export.
 
 ## Snapshots
 
-⌘S (Ctrl+S; File → Take Snapshot) snapshots the whole book (SNAPSHOTS in `app/`). NEO also takes one before the first change of each writing day (`maybeDailySnapshot`, from `scheduleChapterSave` and `snapshotStructure`, built from `savedHTML` so it holds the day's start). No timer, and nothing is taken when nothing changed.
+⌘S (Ctrl+S; File → Take Snapshot) snapshots the whole book (SNAPSHOTS in `app/`). Kibitz also takes one before the first change of each writing day (`maybeDailySnapshot`, from `scheduleChapterSave` and `snapshotStructure`, built from `savedHTML` so it holds the day's start). No timer, and nothing is taken when nothing changed.
 
 - One folder per snapshot, `book-…/snapshots/<UTC stamp>Z-<kind>-<chapters changed>-<words>-<rand>/`, holding only the chapters that changed since the last snapshot and, written last, `snapshot.json` (order, titles, kinds, a `textHash` of every chapter). Files are written once (`snapshot:list/read/write/remove` in `main.js`, the same four in Pocket's bridge). A chapter's text at a snapshot is in the newest snapshot at or before it holding the file (`snapHolder`).
 - Kinds: `k` ⌘S, kept until deleted; `d` start of a day and `r` just before a restore, which go after 30 days (`snapsToThin`). A snapshot that goes first copies its chapter files into the next one that lacks them, so later snapshots still read whole.
@@ -133,34 +133,34 @@ Export → Paperback for KDP… (also on the shelf's right-click Export) writes 
 
 ## Per device
 
-How NEO looks belongs to each device: `DEVICE_LOOK` in `app/` (page theme, brightness, zoom, type size, page width, typewriter, non-breaking marks, pages view, focus, counters, outline view, vim keys). Every library write also keeps them in this device's `localStorage`; every library read takes them back from there (`applyDeviceLook`). The library's copy is the last device's, which is what a device new to the library starts with. Zoom is per device and per view: the page per mode, the cards, and the shelf (`neo.shelfZoom`, ⌘+/− and pinch on the shelf), each in `localStorage`; the page moves in tenths. The desktop also keeps its page theme in `settings.json` for the window's color at launch, and `exportFolder` there, so save dialogs open where the last export went.
+How Kibitz looks belongs to each device: `DEVICE_LOOK` in `app/` (page theme, brightness, zoom, type size, page width, typewriter, non-breaking marks, pages view, focus, counters, outline view, vim keys). Every library write also keeps them in this device's `localStorage`; every library read takes them back from there (`applyDeviceLook`). The library's copy is the last device's, which is what a device new to the library starts with. Zoom is per device and per view: the page per mode, the cards, and the shelf (`kibitz.shelfZoom`, ⌘+/− and pinch on the shelf), each in `localStorage`; the page moves in tenths. The desktop also keeps its page theme in `settings.json` for the window's color at launch, and `exportFolder` there, so save dialogs open where the last export went.
 
 Format → Page Width (Regular, Wide, Wider; `PAGE_WIDTHS` in `app/`) sets `--page-wf` and `--page-pad-x`, which `--page-w` and the sheet's side padding in `styles.css` follow. The page also grows a little by itself in a wide window (`--page-w` clamps 680 to 760 px by the window); Pocket's page fills the screen up to 680 px (`pocket.css`).
 
 A book's right-click on the shelf is a small menu (`popMenu`) on the desktop, with the cover's choices one level in; touch keeps the larger cards. Duplicate (`book:duplicate`, and `duplicateBook` in Pocket's bridge) copies the folder under a new id and title.
 
-Pocket makes PDFs through `NeoPdf`, a native plugin in each project: Android opens its print screen (Save as PDF), iOS draws the pages into a file for the share sheet. A script's title can be set bold, underlined or italic as a whole (`book.titleStyle`, ⌘B ⌘U ⌘I on the title page), and keeps it in the PDF, Fountain and Final Draft.
+Pocket makes PDFs through `KibitzPdf`, a native plugin in each project: Android opens its print screen (Save as PDF), iOS draws the pages into a file for the share sheet. A script's title can be set bold, underlined or italic as a whole (`book.titleStyle`, ⌘B ⌘U ⌘I on the title page), and keeps it in the PDF, Fountain and Final Draft.
 
 ## Processes
 
 ```
-index.html + app/    →  preload.js (window.neo)  →  main.js  →  NEO Library
+index.html + app/    →  preload.js (window.kibitz)  →  main.js  →  Kibitz Library
                                                       ↓
                                                spell-worker.js
 ```
 
-The window is created with `contextIsolation: true` and `nodeIntegration: false`. New renderer capabilities are added in three places: an `ipcMain.handle` in `main.js`, a method on `window.neo` in `preload.js`, and the call site in `app/`.
+The window is created with `contextIsolation: true` and `nodeIntegration: false`. New renderer capabilities are added in three places: an `ipcMain.handle` in `main.js`, a method on `window.kibitz` in `preload.js`, and the call site in `app/`.
 
 ## Files on disk
 
-Default library: `~/Documents/NEO Library` (`app.getPath('documents')`). **File → Library Folder…** stores another path in `userData/settings.json` and restarts. NEO does not move existing books.
+Default library: `~/Documents/Kibitz Library` (`app.getPath('documents')`). **File → Library Folder…** stores another path in `userData/settings.json` and restarts. Kibitz does not move existing books.
 
 ```
-NEO Library/
+Kibitz Library/
   library.json          shelves, author, pen names, customWords, spellLanguage
   _catalog.txt          regenerated map of folder → title; edits are ignored
-  neo-errors.log
-  Backups/neo-backup-YYYY-MM-DD.zip    one per day, 14 kept
+  kibitz-errors.log
+  Backups/kibitz-backup-YYYY-MM-DD.zip    one per day, 14 kept
   Exports/              emailed PDF snapshots
   book-<slug>-<id>/
     book.json           metadata and chapterOrder
@@ -197,7 +197,7 @@ The window holds the open book in memory (`chapterHTML`, `book`, `stickies`, `da
 
 Structural undo (`snapshotStructure`, `structuralUndo`, banner STRUCTURAL UNDO) holds `UNDO_DEPTH` (50) actions. An undo puts back only what its action changed: writing made since stays, or, in a chapter the action also touched, goes to Darlings with a toast that says so. What an undo took back goes on `redoStack` (⇧⌘Z, Ctrl+Z's pair; Ctrl+Y off the Mac); any `input` event anywhere, or a new action, empties it. A redo is an undo of the undo, so it keeps the same protections.
 
-On a Mac, iCloud ("Optimize Mac Storage") can turn library files into placeholders: the size is there, the words aren't, and a read waits on iCloud, forever if iCloud is stuck. A synchronous read of one froze the main process at launch, with no window. So `cloudOnlyAmong` spots them (no blocks on disk, then the `dataless` flag), `requestDownload` asks `brctl` for them, and the read handlers wait for them with `afterLocal` without blocking, answering at once when nothing is in iCloud. `readJSON` throws `ECLOUD` for one rather than falling back on `.bak`, and no write goes over a placeholder. The daily backup runs in its own process (`backup-worker.js`), two minutes after launch: it leaves placeholders out and names them, gives each other file 20 seconds, and is ended after 15 minutes. 1.5.1 read every file in the main process at launch, and one stuck file kept NEO from opening, and from updating, which needs NEO open. `scripts/icloud.test.js` plays iCloud with sparse files, and a stuck file with a named pipe. Don't add a direct `readFileSync` of a library file, and never walk the whole library in the main process.
+On a Mac, iCloud ("Optimize Mac Storage") can turn library files into placeholders: the size is there, the words aren't, and a read waits on iCloud, forever if iCloud is stuck. A synchronous read of one froze the main process at launch, with no window. So `cloudOnlyAmong` spots them (no blocks on disk, then the `dataless` flag), `requestDownload` asks `brctl` for them, and the read handlers wait for them with `afterLocal` without blocking, answering at once when nothing is in iCloud. `readJSON` throws `ECLOUD` for one rather than falling back on `.bak`, and no write goes over a placeholder. The daily backup runs in its own process (`backup-worker.js`), two minutes after launch: it leaves placeholders out and names them, gives each other file 20 seconds, and is ended after 15 minutes. 1.5.1 read every file in the main process at launch, and one stuck file kept Kibitz from opening, and from updating, which needs Kibitz open. `scripts/icloud.test.js` plays iCloud with sparse files, and a stuck file with a named pipe. Don't add a direct `readFileSync` of a library file, and never walk the whole library in the main process.
 
 Do not replace this with last-write-wins. The comments in `persistChapter` and `refreshFromDisk` explain cases that look redundant and are not.
 
@@ -216,11 +216,11 @@ node scripts/i18n.js check fr
 
 Details, plural forms, and regional fallback (`fr-CA` → `fr` → English) are in [TRANSLATING.md](TRANSLATING.md). Quotation marks follow the spellcheck language (`QUOTE_STYLES` in `app/`). Import chapter detection is `CHAPTER_WORDS` in `main.js`. Cover small-words are `CONNECTORS` in `covers.js`.
 
-Italian has no spellcheck dictionary: the only Hunspell package on npm is GPL-3.0-only, and NEO is MIT. Do not add it.
+Italian has no spellcheck dictionary: the only Hunspell package on npm is GPL-3.0-only, and Kibitz is MIT. Do not add it.
 
 ## Pocket
 
-`pocket/` is a Capacitor app that runs the desktop editor. Its bridge (`pocket/www/pocket-bridge.js`) implements `window.neo` against the phone's library folder. Android shares `Documents/NEO Library` via sync. iOS uses the app folder, optionally iCloud, with `LibraryHome.swift` locating that folder.
+`pocket/` is a Capacitor app that runs the desktop editor. Its bridge (`pocket/www/pocket-bridge.js`) implements `window.kibitz` against the phone's library folder. Android shares `Documents/Kibitz Library` via sync. iOS uses the app folder, optionally iCloud, with `LibraryHome.swift` locating that folder.
 
 `scripts/pocket-www.js` (run by CI, and by hand before a local build) copies `app/`, `covers.js`, `styles.css`, `i18n.js`, `fonts/`, `locales/`, Hunspell's browser build, and the `SPELL_LANGUAGES` dictionaries from `main.js` into `pocket/www/`. Pocket's checker is `pocket/www/pocket-spell.js`, a module worker with the same messages as `spell-worker.js`. A change to those files changes Pocket. Pocket-only behavior belongs in `pocket-bridge.js` or the native projects, not behind a desktop-only branch scattered through `app/`.
 
@@ -236,19 +236,19 @@ npm run test:e2e           # every end-to-end test, one after another (-- find l
 npm run test:spellcheck    # node --test scripts/spellcheck.test.js
 npm run test:dashes        # node --test scripts/dashes.test.js
 npm run bundle             # Hugh: brings in the newest .bundle from ~/Downloads and pushes main
-npm run try                # Hugh: opens the newest .bundle's NEO on a copy of the library, pushes nothing (-- fresh: an empty library)
+npm run try                # Hugh: opens the newest .bundle's Kibitz on a copy of the library, pushes nothing (-- fresh: an empty library)
 npm run release            # Hugh: next version (x.y.9 → x.(y+1).0), commit, push, tag (npm run release -- 2.0.0 for another)
 npm run package:mac        # macOS build; npm run package calls this
 npm run package:linux      # AppImage via electron-builder; also package, package:mac, package:win, package:all
 ```
 
-Tests use `node:test` and load the window's code (`appSource()`) or `spell-worker.js` inside `vm`. Every push to main and every pull request runs `npm test` and `npm run test:e2e` (every `scripts/*.e2e.js`, each a real NEO on a throwaway library) on a Mac (`.github/workflows/tests.yml`); a new e2e file joins by being named `*.e2e.js`. On `v*` tags a Windows smoke test checks the packaged exe boots and creates a library (`.github/workflows/build.yml`). Pocket builds from `.github/workflows/pocket.yml`.
+Tests use `node:test` and load the window's code (`appSource()`) or `spell-worker.js` inside `vm`. Every push to main and every pull request runs `npm test` and `npm run test:e2e` (every `scripts/*.e2e.js`, each a real Kibitz on a throwaway library) on a Mac (`.github/workflows/tests.yml`); a new e2e file joins by being named `*.e2e.js`. On `v*` tags a Windows smoke test checks the packaged exe boots and creates a library (`.github/workflows/build.yml`). Pocket builds from `.github/workflows/pocket.yml`.
 
 `node scripts/check-romanian-package.js <Resources dir>` compares a packaged app's dictionaries to the source tree. `node scripts/benchmark-spellcheck.js` times the checker. Neither is an npm script.
 
 ## What's New
 
-`whats-new.json` (newest release first, English, `**bold**` and `` `code` `` allowed) is Help → What's New in NEO…, and, once at launch after an update, the notes for the releases since the one this device last saw (`neo.whatsNewSeen` in localStorage). A fresh install and Pocket skip it. Add the next release's notes before `npm run release`; `scripts/whats-new.test.js` checks the file.
+`whats-new.json` (newest release first, English, `**bold**` and `` `code` `` allowed) is Help → What's New in Kibitz…, and, once at launch after an update, the notes for the releases since the one this device last saw (`kibitz.whatsNewSeen` in localStorage). A fresh install and Pocket skip it. Add the next release's notes before `npm run release`; `scripts/whats-new.test.js` checks the file.
 
 ## Handing changes to Hugh
 
@@ -262,4 +262,4 @@ Hugh pushes and releases himself and isn't a git user. Hand him work as a git bu
 - An empty line in a story's text is a blank line in every export (`parasFromHtml(html, { blanks: true })`: a `blank` paragraph, one for a run, none at a chapter's top or end; pages and part titles read without them). What the page shows is what the book gets.
 - Export formats are assembled in `app/` and written by `export:save` in `main.js`. EPUB is a zip built in memory. PDF is printed from temporary HTML.
 - A keyboard shortcut's letter is matched with `keyLetter(e)` in `app/` (the character typed, falling back to the US place for non-Latin layouts), never `e.code` alone: Dvorak, BÉPO and AZERTY writers lose the key otherwise (#546, #536).
-- Errors in the main process are appended to `neo-errors.log` via `logError`. Renderer failures go through `window.neo.logError`. Do not swallow a save failure; `persistChapter` rolls `savedHTML` back so the next flush retries.
+- Errors in the main process are appended to `kibitz-errors.log` via `logError`. Renderer failures go through `window.kibitz.logError`. Do not swallow a save failure; `persistChapter` rolls `savedHTML` back so the next flush retries.

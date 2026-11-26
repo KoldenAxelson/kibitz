@@ -28,7 +28,7 @@ test('the fingerprint tells texts apart', () => {
   assert.notEqual(textHash(''), textHash(' '));
 });
 
-test('NEO\'s own snapshots go after a month; ⌘S ones and the newest stay', () => {
+test('Kibitz\'s own snapshots go after a month; ⌘S ones and the newest stay', () => {
   const now = Date.UTC(2026, 9, 9);
   const s = (daysAgo, kind) => ({ name: kind + daysAgo, at: now - daysAgo * DAY, kind });
   const snaps = [s(90, 'd'), s(60, 'k'), s(45, 'r'), s(29, 'd'), s(1, 'd')];
@@ -73,7 +73,7 @@ const between = (a, b) => app.slice(app.indexOf(a), app.indexOf(b, app.indexOf(a
 function snapPane() {
   const el = (html) => ({ hidden: false, innerHTML: html });
   const els = { '#snap-view': el('<section class="snap-chapter">…</section>'), '#snap-list': el('<button class="snap-item">9:13 AM</button>') };
-  const highlights = new Map([['neo-snap-gone', {}]]);
+  const highlights = new Map([['kibitz-snap-gone', {}]]);
   const CSS = { highlights };
   const ctx = vm.createContext({ $: (sel) => els[sel] || null, CSS, window: { CSS } });
   vm.runInContext('let snapShown = { name: "20261009T121407Z-k-3-84210-x7q2" }; let snapCache = { bookId: "book-one", snaps: [] };\n' +
@@ -88,7 +88,7 @@ test('another tab hides the snapshot on the page; the list stays for the book', 
   assert.equal(pane.state().snapShown, null);
   assert.equal(pane.els['#snap-view'].hidden, true);
   assert.equal(pane.els['#snap-view'].innerHTML, '');
-  assert.equal(pane.highlights.has('neo-snap-gone'), false);
+  assert.equal(pane.highlights.has('kibitz-snap-gone'), false);
   assert.match(pane.els['#snap-list'].innerHTML, /snap-item/);
   assert.equal(pane.state().snapCache.bookId, 'book-one');
 });
@@ -101,7 +101,7 @@ test('a book that closes takes its snapshots along: page, list and cache', () =>
   assert.equal(pane.els['#snap-view'].hidden, true);
   assert.equal(pane.els['#snap-view'].innerHTML, '');
   assert.equal(pane.els['#snap-list'].innerHTML, '');
-  assert.equal(pane.highlights.has('neo-snap-gone'), false);
+  assert.equal(pane.highlights.has('kibitz-snap-gone'), false);
   // openBook and backToShelf both do it
   for (const fn of ['async function openBook(', 'async function backToShelf(']) {
     assert.match(between(fn, '\n}\n'), /forgetSnapshots\(\)/, fn);

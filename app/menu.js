@@ -50,7 +50,7 @@ function applyFonts() {
   const uiZoom = snapZoom(library.uiZoom);
   document.documentElement.style.setProperty('--ui-zoom', uiZoom);
   document.documentElement.classList.toggle('ui-zoomed', uiZoom > 1);
-  if (window.neo.uiZoomState) window.neo.uiZoomState(uiZoom);
+  if (window.kibitz.uiZoomState) window.kibitz.uiZoomState(uiZoom);
   const size = Math.min(EDITOR_SIZE_MAX, Math.max(EDITOR_SIZE_MIN, library.editorFontSize || 17));
   document.documentElement.style.setProperty('--editor-size', size + 'px');
   applyPageZoom();
@@ -76,7 +76,7 @@ async function pickLocalFont() {
       .filter((n) => n && !n.startsWith('.'))
       .sort((a, b) => a.localeCompare(b));
   } catch {}
-  if (!families.length) { toast(t('NEO couldn’t read the fonts on this computer')); return null; }
+  if (!families.length) { toast(t('Kibitz couldn’t read the fonts on this computer')); return null; }
   return new Promise((resolve) => {
     const bd = document.createElement('div');
     bd.className = 'modal-backdrop font-picker';
@@ -295,7 +295,7 @@ function alignBookProse(value) {
   return changes.length;
 }
 
-// Menu accelerators and editor shortcuts, plus NEO's distinct writing gestures.
+// Menu accelerators and editor shortcuts, plus Kibitz's distinct writing gestures.
 // Routine text entry, cursor movement and dialog controls are intentionally omitted.
 function shortcutSections() {
   // with a script open, its keys come first, in place of a book's
@@ -354,7 +354,7 @@ function bookShortcutSections() {
     ] },
     { title: tk('App & files'), rows: [
       [KHELP, tk('Keyboard shortcuts')],
-      [K('⌘S', 'Ctrl+S'), tk('Take a snapshot of the book'), tk('NEO saves as you type; a snapshot keeps the book as it stands now. They’re on the Darlings tab.')],
+      [K('⌘S', 'Ctrl+S'), tk('Take a snapshot of the book'), tk('Kibitz saves as you type; a snapshot keeps the book as it stands now. They’re on the Darlings tab.')],
       [K('⌘,', 'Ctrl+,'), tk('Goals and writing sprints')],
       [K('⌘⇧I', 'Ctrl+Shift+I'), tk('Import manuscripts')],
       [K('⌘E', 'Ctrl+E'), tk('Email a draft to yourself')]
@@ -369,7 +369,7 @@ function bookShortcutSections() {
       [K('⌥⌘←', 'Ctrl+Alt+←'), tk('Go to the previous tab')],
       [['F6', K('⌃Tab', 'Ctrl+Tab')], tk('Move between the page, the chapters, the notes and the bottom bar'), tk('Add Shift to go back. Esc returns to the page. On the shelf: the books, then the header.')],
       ...(IS_MAC ? [
-        ['⌘H', tk('Hide NEO')],
+        ['⌘H', tk('Hide Kibitz')],
         ['⌘⌥H', tk('Hide other apps')]
       ] : [])
     ] },

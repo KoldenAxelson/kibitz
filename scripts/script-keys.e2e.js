@@ -1,6 +1,6 @@
-// End-to-end tests for the typographic dash and ellipsis NEO sets as you type
+// End-to-end tests for the typographic dash and ellipsis Kibitz sets as you type
 // (-- becomes —, ... becomes …) in a book, and that a script keeps what is
-// typed (#460). NEO runs on a throwaway library; each key goes to the page
+// typed (#460). Kibitz runs on a throwaway library; each key goes to the page
 // as a keydown and, where the page leaves it alone, is typed in as the engine
 // would. Run with `npm run test:script-keys`.
 
@@ -15,20 +15,20 @@ const path = require('path');
 // A folder of its own for each run (see words.e2e.js for why earlier runs'
 // folders are the ones removed).
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-script-keys-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-script-keys-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-script-keys-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-script-keys-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));
-// run from scripts/, NEO's window would look for scripts/index.html
+// run from scripts/, Kibitz's window would look for scripts/index.html
 const loadFile = BrowserWindow.prototype.loadFile;
 BrowserWindow.prototype.loadFile = function (file, opts) {
   return loadFile.call(this, path.resolve(__dirname, '..', file), opts);

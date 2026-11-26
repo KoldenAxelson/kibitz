@@ -1,6 +1,6 @@
-// NEO — the day's backup, in a process of its own (main.js: dailyBackup)
+// Kibitz — the day's backup, in a process of its own (main.js: dailyBackup)
 //
-// The backup reads every file in the library. Done in NEO's main process, one
+// The backup reads every file in the library. Done in Kibitz's main process, one
 // file iCloud was slow to hand over (or a sync tool was holding) froze the
 // whole app before its window could open, and every day after, because the
 // backup runs at launch. Here a read that never comes back holds up only this
@@ -19,7 +19,7 @@ const { execFile } = require('child_process');
 
 const FILE_LIMIT_MS = 20000; // one file: as long as iCloud reasonably takes for a chapter
 // (tests: a file with no blocks counts as in iCloud, as their placeholders have no flag)
-const SPARSE_IS_CLOUD = process.env.NEO_TEST_SPARSE_IS_CLOUD === '1';
+const SPARSE_IS_CLOUD = process.env.KIBITZ_TEST_SPARSE_IS_CLOUD === '1';
 const SF_DATALESS = 0x40000000; // macOS: a file whose words are in iCloud, not on this Mac
 
 // a read with a time limit: the read itself can't be cut short, but the backup
@@ -72,7 +72,7 @@ async function backup({ libraryDir, target, keep, fileLimitMs = FILE_LIMIT_MS })
     try { names = await fsp.readdir(dir); } catch (err) { missed.push(`${rel || '.'} (${err.code || err.message})`); return; }
     for (const name of names) {
       if (rel === '' && (name === 'Backups' || name === 'Exports')) continue;
-      // only NEO's own things: a library kept in a busy folder (Dropbox,
+      // only Kibitz's own things: a library kept in a busy folder (Dropbox,
       // Documents) doesn't zip everything else in there every day
       if (rel === '' && !(name.startsWith('book-') || name.startsWith('library.json') || name === '_catalog.txt')) continue;
       // a book's snapshots stay out: they're a history of their own
@@ -106,7 +106,7 @@ async function backup({ libraryDir, target, keep, fileLimitMs = FILE_LIMIT_MS })
   await writeDurable(target, data);
   // the oldest go once there are more than `keep`
   const dir = path.dirname(target);
-  const backups = (await fsp.readdir(dir)).filter((f) => /^neo-backup-.*\.zip$/.test(f)).sort();
+  const backups = (await fsp.readdir(dir)).filter((f) => /^kibitz-backup-.*\.zip$/.test(f)).sort();
   while (backups.length > keep) await fsp.unlink(path.join(dir, backups.shift())).catch(() => {});
   return { missed, away: [...away] };
 }

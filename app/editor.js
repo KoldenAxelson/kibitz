@@ -13,15 +13,15 @@ async function openBook(bookId) {
   // second book opened while this one loads (a double click, a slow cloud
   // read) never ends up with a mix of the two.
   const gen = ++openGeneration;
-  const meta = await window.neo.readBookMeta(bookId);
+  const meta = await window.kibitz.readBookMeta(bookId);
   if (!meta || gen !== openGeneration) return;
   const html = {};
   for (const chId of meta.chapterOrder) {
-    html[chId] = await window.neo.readChapter(bookId, chId);
+    html[chId] = await window.kibitz.readChapter(bookId, chId);
     if (gen !== openGeneration) return;
   }
-  const sideStickies = await window.neo.readJSON(bookId, 'stickies', []);
-  const sideDarlings = await window.neo.readJSON(bookId, 'darlings', []);
+  const sideStickies = await window.kibitz.readJSON(bookId, 'stickies', []);
+  const sideDarlings = await window.kibitz.readJSON(bookId, 'darlings', []);
   if (gen !== openGeneration) return;
   tabPlaces = {}; // a fresh book starts with fresh places
   book = meta;
@@ -35,7 +35,7 @@ async function openBook(bookId) {
   savedHTML = { ...html };
   for (const chId of Object.keys(html)) knowDisk(bookId, chId, html[chId]);
   diskStamps = {};
-  savedMetaSig = metaSig(book); // what disk holds; NEO's own defaults don't count as edits
+  savedMetaSig = metaSig(book); // what disk holds; Kibitz's own defaults don't count as edits
   knownChapters = new Set(book.chapterOrder);
   savedOrder = [...book.chapterOrder];
   stickies = sideStickies;
@@ -182,7 +182,7 @@ function renderChapters() {
     body.setAttribute('aria-multiline', 'true');
     if (chId === solo) body.setAttribute('aria-label', book.title ? shownTitle(book.title) : t('The story'));
     else body.setAttribute('aria-labelledby', head.id);
-    body.spellcheck = false; // NEO runs its own spellcheck pass
+    body.spellcheck = false; // Kibitz runs its own spellcheck pass
     if (!story) body.classList.add('no-cap');
     // a script's lines are set as they print (styles.css, SCREENPLAYS)
     if (isScript()) body.classList.add('script-body', $('#paper').classList.contains('narrow') ? 'sp-narrow' : 'sp-geom', 'no-cap');

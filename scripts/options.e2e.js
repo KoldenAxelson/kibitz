@@ -1,4 +1,4 @@
-// End-to-end tests for NEO's features and the Options window: a library from
+// End-to-end tests for Kibitz's features and the Options window: a library from
 // before 2.0, the window with every feature off, features turned on and off
 // in Options, and the settings that moved there. Run with
 // `npm run test:options`.
@@ -12,15 +12,15 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-options-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-options-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-options-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-options-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const lib = path.join(tmp, 'NEO Library');
+const lib = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(lib);
 // a writer from before the switch who uses nothing behind it
 fs.writeFileSync(path.join(lib, 'library.json'), JSON.stringify({
@@ -46,9 +46,9 @@ const menuLabels = () => {
 };
 const key = (opts) => js(`document.activeElement.dispatchEvent(new KeyboardEvent('keydown', Object.assign({ bubbles: true, cancelable: true }, ${JSON.stringify(opts)})))`);
 const shot = async (name) => {
-  if (!process.env.NEO_SHOTS) return;
+  if (!process.env.KIBITZ_SHOTS) return;
   const img = await wc.capturePage();
-  fs.writeFileSync(path.join(process.env.NEO_SHOTS, name + '.png'), img.toPNG());
+  fs.writeFileSync(path.join(process.env.KIBITZ_SHOTS, name + '.png'), img.toPNG());
 };
 const caretInFirst = () => js(`(() => {
   const id = book.chapterOrder.filter((c) => isStory(c))[0];
@@ -151,7 +151,7 @@ test('no cards beside the page', async () => {
   await shot('simple-page');
 });
 
-test('Markdown asterisks stay asterisks, as simple NEO had them', async () => {
+test('Markdown asterisks stay asterisks, as simple Kibitz had them', async () => {
   assert.equal(await js('markdownOff()'), true);
 });
 

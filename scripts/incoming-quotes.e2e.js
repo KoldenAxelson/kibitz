@@ -7,11 +7,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-incoming-quotes-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-incoming-quotes-'));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   firstRunDone: true, moreFeatures: true, spellLanguage: 'en-us',
   shelves: [{ id: 'shelf-1', name: 'Test', bookIds: [] }]
 }));
@@ -28,7 +28,7 @@ async function main() {
     let win;
     const deadline = Date.now() + 30000;
     while (!(win = BrowserWindow.getAllWindows()[0])) {
-      if (Date.now() > deadline) throw new Error('No NEO window');
+      if (Date.now() > deadline) throw new Error('No Kibitz window');
       await tick();
     }
     const wc = win.webContents;
@@ -52,7 +52,7 @@ async function main() {
         const range = document.createRange(); range.selectNodeContents(body.firstChild); range.collapse(true);
         getSelection().removeAllRanges(); getSelection().addRange(range);
       })()`);
-      // A synthetic paste exercises NEO's real handler, without changing
+      // A synthetic paste exercises Kibitz's real handler, without changing
       // the user's clipboard. Match style uses Electron's native command.
       if (mode === 'match') {
         const previous = clipboard.availableFormats().map((format) => [format, clipboard.readBuffer(format)]);

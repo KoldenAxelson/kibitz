@@ -25,11 +25,11 @@ function book(lib, id, words = 'The stairs went down.') {
 // a Mac: a home with a library in Documents and, if `pocket`, NEO Pocket's
 // iCloud folder (with the iPad's own library in it, if `ipad`)
 function mac({ pocket = true, ipad = false, answers = [0], firstRun = false } = {}) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-library-move-'));
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-library-move-'));
   const home = path.join(base, 'home');
   const userData = path.join(base, 'userData');
   const docs = path.join(home, 'Documents');
-  const lib = path.join(docs, 'NEO Library');
+  const lib = path.join(docs, 'Kibitz Library');
   fs.mkdirSync(userData, { recursive: true });
   book(lib, 'book-wool-1');
   book(lib, 'book-shift-2');
@@ -71,7 +71,7 @@ function mac({ pocket = true, ipad = false, answers = [0], firstRun = false } = 
     dialog: {
       showMessageBoxSync: () => 0,
       showMessageBox: (...a) => { shown.push(a[a.length - 1]); return Promise.resolve({ response: queue.length ? queue.shift() : 0 }); },
-      showOpenDialog: () => Promise.resolve({ canceled: false, filePaths: [path.join(home, 'Dropbox', 'NEO')] })
+      showOpenDialog: () => Promise.resolve({ canceled: false, filePaths: [path.join(home, 'Dropbox', 'Kibitz')] })
     },
     shell: { trashItem: async (p) => { trashed.push(p); fs.rmSync(p, { recursive: true, force: true }); }, openExternal: async (u) => { opened.push(u); } },
     utilityProcess: { fork: () => ({ on() {}, postMessage() {} }) },
@@ -154,7 +154,7 @@ describe('moving the library', { concurrency: 1 }, () => {
     const m = mac({ pocket: false, answers: [0, 0] }); // Choose Folder…, then Move Books
     try {
       await m.run('chooseLibraryFolder()');
-      const dropbox = path.join(m.home, 'Dropbox', 'NEO');
+      const dropbox = path.join(m.home, 'Dropbox', 'Kibitz');
       assert.equal(m.shown[1].message, 'Bring your books along?');
       assert.ok(fs.existsSync(path.join(dropbox, 'book-wool-1', 'book.json')));
       assert.ok(fs.existsSync(path.join(dropbox, 'library.json')));
@@ -169,9 +169,9 @@ describe('moving the library', { concurrency: 1 }, () => {
     try {
       await m.run('chooseLibraryFolder()');
       assert.ok(fs.existsSync(path.join(m.lib, 'book-wool-1')));
-      assert.equal(fs.existsSync(path.join(m.home, 'Dropbox', 'NEO', 'book-wool-1')), false);
+      assert.equal(fs.existsSync(path.join(m.home, 'Dropbox', 'Kibitz', 'book-wool-1')), false);
       assert.equal(m.trashed.length, 0);
-      assert.equal(m.settings().libraryDir, path.join(m.home, 'Dropbox', 'NEO'));
+      assert.equal(m.settings().libraryDir, path.join(m.home, 'Dropbox', 'Kibitz'));
     } finally {
       m.done();
     }
@@ -193,7 +193,7 @@ describe('moving the library', { concurrency: 1 }, () => {
     }
   });
 
-  test('NEO asks once when NEO Pocket\'s folder is on this Mac, and Not Now is remembered', async () => {
+  test('Kibitz asks once when NEO Pocket\'s folder is on this Mac, and Not Now is remembered', async () => {
     const m = mac({ answers: [1] });
     try {
       await m.run('askAboutPocket()');

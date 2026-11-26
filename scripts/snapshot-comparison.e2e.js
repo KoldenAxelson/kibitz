@@ -7,10 +7,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-snapshot-comparison-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-snapshot-comparison-'));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const lib = path.join(tmp, 'NEO Library');
+const lib = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(lib);
 fs.writeFileSync(path.join(lib, 'library.json'), JSON.stringify({ firstRunDone: true, moreFeatures: true,
   shelves: [{ id: 's1', name: 'Test', bookIds: [] }] }));

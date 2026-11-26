@@ -18,9 +18,9 @@
     "one": "{n} word",
     "other": "{n} words"
   },
-  "{n} words · exported from NEO on {date}": {
-    "one": "{n} word · exported from NEO on {date}",
-    "other": "{n} words · exported from NEO on {date}"
+  "{n} words · exported from Kibitz on {date}": {
+    "one": "{n} word · exported from Kibitz on {date}",
+    "other": "{n} words · exported from Kibitz on {date}"
   },
   "{name}: {n} words": {
     "one": "{name}: {n} word",
@@ -46,9 +46,9 @@
     "one": "from {label} · {date} · {n} word",
     "other": "from {label} · {date} · {n} words"
   },
-  "NEO draft — {title} — {n} words — {date}": {
-    "one": "NEO draft — {title} — {n} word — {date}",
-    "other": "NEO draft — {title} — {n} words — {date}"
+  "Kibitz draft — {title} — {n} words — {date}": {
+    "one": "Kibitz draft — {title} — {n} word — {date}",
+    "other": "Kibitz draft — {title} — {n} words — {date}"
   },
   "Sprint complete — {n} words. Well earned.": {
     "one": "Sprint complete — {n} word. Well earned.",

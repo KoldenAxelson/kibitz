@@ -1,6 +1,6 @@
-# Every push to main and every pull request: NEO's tests on a Mac, the
-# computer most NEO writers use. The quick tests (npm test) and then every
-# end-to-end test (npm run test:e2e), each opening a real NEO on a throwaway
+# Every push to main and every pull request: Kibitz's tests on a Mac, the
+# computer most Kibitz writers use. The quick tests (npm test) and then every
+# end-to-end test (npm run test:e2e), each opening a real Kibitz on a throwaway
 # library and typing into it. A pull request shows the result as a green
 # check or a red cross before it's merged. Free for a public repository.
 name: Tests

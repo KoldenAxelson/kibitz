@@ -1,6 +1,6 @@
 'use strict';
 
-// NEO's features and Options: the menu bar with every feature off and on
+// Kibitz's features and Options: the menu bar with every feature off and on
 // (main.js, loaded the way format-menu.test.js does), and how a library from
 // before 2.0 is set up (FEATURES & OPTIONS in app/options.js, with the disk
 // stubbed out).
@@ -41,7 +41,7 @@ function menuBar(platform, more, { script = false, features = null } = {}) {
     setImmediate: (fn) => fn()
   });
   vm.runInContext(source, context, { filename: path.join(root, 'main.js') });
-  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-simple-'));
+  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-simple-'));
   context.library = library;
   vm.runInContext('LIBRARY_DIR = library; LIBRARY_FILE = require("path").join(library, "library.json");', context);
   try {
@@ -113,7 +113,7 @@ describe('the menu bar follows the features', () => {
     });
   }
 
-  test('Options… sits in the NEO menu on a Mac, in File elsewhere', () => {
+  test('Options… sits in the Kibitz menu on a Mac, in File elsewhere', () => {
     const mac = menuBar('darwin', false);
     assert.ok(mac[0].submenu.some((i) => i.label === 'Options…'));
     assert.ok(!menu(mac, 'File').some((i) => i.label === 'Options…'));
@@ -137,7 +137,7 @@ describe('the menu bar follows the features', () => {
     }
   });
 
-  test('a script open in simple NEO keeps its own export and elements', () => {
+  test('a script open in simple Kibitz keeps its own export and elements', () => {
     const template = menuBar('darwin', false, { script: true });
     const exp = Array.from(menu(template, 'File').find((i) => i.label === 'Export').submenu, (i) => i.label);
     assert.deepEqual(exp, ['PDF (.pdf)', 'Fountain (.fountain)', 'Final Draft (.fdx)']);
@@ -163,13 +163,13 @@ function room(library, { metas = {}, key = false, pocket = false } = {}) {
     setTimeout: (fn) => fn(),
     isBound: (s) => !!(s && s.binding && s.binding.bound),
     snapZoom: (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v) * 10) / 10 : 1),
-    NeoI18n: { getLocale: () => 'en' },
+    KibitzI18n: { getLocale: () => 'en' },
     shelfMeta: async (id) => metas[id] || { id },
     isScript: (m) => !!m && m.format === 'screenplay',
     hasPainting: (m) => !!(m.coverArt && m.coverArt.status === 'done' && m.coverArt.file),
     coverProvider: () => 'openai',
     writeLibrary: async () => log.push('write'),
-    window: { neo: { hasSecret: async () => key, featuresState: (on) => log.push('menu ' + Object.values(on).filter(Boolean).length) } }
+    window: { kibitz: { hasSecret: async () => key, featuresState: (on) => log.push('menu ' + Object.values(on).filter(Boolean).length) } }
   });
   vm.runInContext(featuresSrc + app.slice(from, to), ctx);
   return ctx;
@@ -184,7 +184,7 @@ describe('a library from before 2.0', () => {
     const ctx = room({ shelves: [shelf([])] });
     await ctx.setupFeatures();
     assert.ok(allOff(ctx.library));
-    assert.equal(ctx.library.markdownOff, true, 'Markdown typing starts off, as simple NEO had it');
+    assert.equal(ctx.library.markdownOff, true, 'Markdown typing starts off, as simple Kibitz had it');
     assert.equal(ctx.library.moreFeatures, undefined);
   });
 
@@ -202,7 +202,7 @@ describe('a library from before 2.0', () => {
     assert.ok(allOn(withVim.library));
   });
 
-  test('Show More Features off: nothing on, and what simple NEO showed is what they keep', async () => {
+  test('Show More Features off: nothing on, and what simple Kibitz showed is what they keep', async () => {
     const ctx = room({ firstRunDone: true, moreFeatures: false, vimKeys: true, nbspMarks: true, uiZoom: 1.3, shelves: [] });
     await ctx.setupFeatures();
     assert.ok(allOff(ctx.library));
@@ -247,7 +247,7 @@ describe('a library from before 2.0', () => {
     for (const f of ctx.FEATURES) assert.equal(ctx.featureOn(f.key), !!f.pocket, f.key);
   });
 });
-// ---- Brighter Interface: the writer's choice holds in simple NEO too ----
+// ---- Brighter Interface: the writer's choice holds in simple Kibitz too ----
 const brightFrom = app.indexOf('const brightAside = ');
 const brightTo = app.indexOf('function applyBright()');
 assert.ok(brightFrom > 0 && brightTo > brightFrom, 'the brightness code is where the test expects it');

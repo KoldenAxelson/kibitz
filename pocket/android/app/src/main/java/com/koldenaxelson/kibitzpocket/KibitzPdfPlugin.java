@@ -1,4 +1,4 @@
-package com.hughhowey.neopocket;
+package com.koldenaxelson.kibitzpocket;
 
 import android.content.Context;
 import android.print.PrintAttributes;
@@ -18,8 +18,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 // Android's print screen opens on it. "Save as PDF" is one of the printers
 // there (a real printer works too), and the writer picks where it goes.
 // See exportSave in pocket-bridge.js.
-@CapacitorPlugin(name = "NeoPdf")
-public class NeoPdfPlugin extends Plugin {
+@CapacitorPlugin(name = "KibitzPdf")
+public class KibitzPdfPlugin extends Plugin {
     // the WebView must outlive the call: printing reads from it until the
     // print screen is closed, so it's kept until the next PDF replaces it
     private WebView printView;
@@ -27,7 +27,7 @@ public class NeoPdfPlugin extends Plugin {
     @PluginMethod
     public void print(PluginCall call) {
         final String html = call.getString("html", "");
-        final String name = call.getString("name", "NEO");
+        final String name = call.getString("name", "Kibitz");
         final boolean letter = Boolean.TRUE.equals(call.getBoolean("letter", false));
         getActivity().runOnUiThread(() -> {
             final WebView web = new WebView(getContext());

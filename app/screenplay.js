@@ -41,7 +41,7 @@ function spBareName(t) {
   return String(t || '').replace(/\s*\^\s*$/, '').replace(/\s*\([^)]*\)?\s*$/, '').trim().toUpperCase();
 }
 // Fountain's transition: capitals ending in TO:, or a fade out (the usual
-// ones also as typed, "Cut to:", since NEO capitalizes a line's first word)
+// ones also as typed, "Cut to:", since Kibitz capitalizes a line's first word)
 function spLooksLikeTransition(t) {
   const s = String(t || '').trim();
   if (SP_TRANSITIONS.includes(s.toUpperCase())) return true;
@@ -266,7 +266,7 @@ function spToFountain(lines, title = {}) {
 // Fountain (or a plain-text script) into lines: [{type, text}], the text
 // keeping Fountain's *emphasis* for the caller to set. The title page is
 // left out; notes, boneyard, sections, synopses and page breaks too.
-// A speaker's (CONT'D) is NEO's to draw: one typed in, or carried in from
+// A speaker's (CONT'D) is Kibitz's to draw: one typed in, or carried in from
 // Final Draft or a PDF, comes off the name
 const spDropContd = (t) => String(t || '').replace(/\s*\(\s*cont(?:['’]?d|inued)\s*\)\s*$/i, '').trim();
 // lines a PDF's text carries that aren't the script: page numbers, (MORE),
@@ -507,7 +507,7 @@ const SP_NAMES = {
 const spKey = (n) => K('⌘' + n, 'Ctrl+' + n);
 // the screen's own marks on a script's lines, never saved
 const SP_SCREEN_ATTRS = ['data-pg', 'data-fill', 'data-contd', 'data-ghost', 'data-ghost-empty', 'data-scene-note'];
-// characters NEO guessed from a line in capitals, and headings it made of
+// characters Kibitz guessed from a line in capitals, and headings it made of
 // INT./EXT.: either goes back to action when the guess turns out wrong
 const spGuessed = new WeakSet();
 const spDismissed = new WeakMap(); // a line → its text when Esc sent its suggestion away
@@ -682,7 +682,7 @@ function scriptKey(e, body) {
       return true;
     }
     const prev = p.previousElementSibling;
-    // an empty speech under a name NEO guessed: it was action after all
+    // an empty speech under a name Kibitz guessed: it was action after all
     if (!p.textContent.trim() && spType(p) === 'dialogue' && prev && spType(prev) === 'character' && spGuessed.has(prev)) {
       e.preventDefault();
       spSetClass(prev, 'action');
@@ -1024,9 +1024,9 @@ function spHighlightScene() {
   $$('#nav-list .sp-scene').forEach((el, k) => el.classList.toggle('current', k + 1 === n));
 }
 function spReportState() {
-  if (!window.neo.scriptState) return;
+  if (!window.kibitz.scriptState) return;
   const on = !!book && isScript() && !$('#editor-view').hidden;
-  window.neo.scriptState({ book: !!book && !$('#editor-view').hidden, on, element: on ? spShownElement || 'action' : null, underline: on && spUnderlineOn(), contd: on && spContdOn() });
+  window.kibitz.scriptState({ book: !!book && !$('#editor-view').hidden, on, element: on ? spShownElement || 'action' : null, underline: on && spUnderlineOn(), contd: on && spContdOn() });
 }
 // the Format menu's two script-style items, and Page Break Here
 function spToggleStyle(key) {
@@ -1044,16 +1044,16 @@ function spToggleStyle(key) {
 let spContextLine = null;
 document.addEventListener('contextmenu', (e) => {
   spContextLine = null;
-  if (!book || !isScript() || !window.neo.scriptContext) return;
+  if (!book || !isScript() || !window.kibitz.scriptContext) return;
   const body = e.target.closest && e.target.closest('.chapter-body.script-body');
-  if (!body) { window.neo.scriptContext(null); return; }
+  if (!body) { window.kibitz.scriptContext(null); return; }
   const at = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
   let el = at ? at.startContainer : e.target;
   if (el && el.nodeType === Node.TEXT_NODE) el = el.parentElement;
   const p = el && el.closest ? el.closest('p') : null;
   // (the first line of a script already starts its first page)
   spContextLine = p && body.contains(p) && spParas()[0] !== p ? p : null;
-  window.neo.scriptContext(spContextLine ? { pageBreak: spContextLine.hasAttribute('data-newpage') } : null);
+  window.kibitz.scriptContext(spContextLine ? { pageBreak: spContextLine.hasAttribute('data-newpage') } : null);
 }, true);
 function spTogglePageBreak() {
   const p = spContextLine;
@@ -1101,7 +1101,7 @@ function renderScriptNav() {
     const row = item.querySelector('.n-row');
     row.draggable = true;
     row.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('application/x-neo-scene', String(k));
+      e.dataTransfer.setData('application/x-kibitz-scene', String(k));
       item.classList.add('dragging');
       $('#nav-pane').classList.add('open');
     });
@@ -1132,7 +1132,7 @@ function renderScriptNav() {
   const list = $('#nav-list');
   if (!list) return;
   list.addEventListener('dragover', (e) => {
-    if (!e.dataTransfer.types.includes('application/x-neo-scene')) return;
+    if (!e.dataTransfer.types.includes('application/x-kibitz-scene')) return;
     e.preventDefault();
     const ind = navDropInd();
     let placed = false;
@@ -1143,7 +1143,7 @@ function renderScriptNav() {
     if (!placed) list.appendChild(ind);
   });
   list.addEventListener('drop', (e) => {
-    const from = e.dataTransfer.getData('application/x-neo-scene');
+    const from = e.dataTransfer.getData('application/x-kibitz-scene');
     if (from === '') return;
     e.preventDefault();
     const ind = list.querySelector('.nav-drop-ind');
@@ -1205,7 +1205,7 @@ async function deleteSceneToDarlings(cell, quiet = false) {
       await writeSidecar(book.id, 'darlings', darlings);
     } catch {
       darlings.shift();
-      toast(t('NEO couldn’t save to Darlings, so the scene stays where it was'));
+      toast(t('Kibitz couldn’t save to Darlings, so the scene stays where it was'));
       return;
     }
     renderDarlings();
@@ -1216,7 +1216,7 @@ async function deleteSceneToDarlings(cell, quiet = false) {
   syncChapter(body, chId);
   clearTimeout(saveTimers[chId]);
   persistChapter(chId).then(() => saveMeta())
-    .catch((err) => window.neo.logError('scene delete: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('scene delete: ' + (err && err.message || err)));
   breakRun++;
   spRepaginate();
   renderNav();
@@ -1285,7 +1285,7 @@ function spEditorMode() {
   // the pane stays open beside a script, unless the writer unpinned it there
   if (!NO_HOVER) {
     let kept = {};
-    try { kept = JSON.parse(localStorage.getItem('neo-pinned-panes') || '{}'); } catch { /* nothing kept */ }
+    try { kept = JSON.parse(localStorage.getItem('kibitz-pinned-panes') || '{}'); } catch { /* nothing kept */ }
     pinPane('nav', on ? kept.scriptNav !== false : !!kept.nav, on ? 'scriptNav' : 'nav');
   }
 }
@@ -1329,7 +1329,7 @@ function spPaste(e, body, chId) {
 // lower one into it. When the upper line goes entirely (a shot selected and
 // deleted, an empty line Backspaced away from below), what's left is the
 // lower line, so it stays what it was: a scene heading stays a heading, and
-// its card keeps its note. NEO makes that cut itself; ⌘Z puts it back.
+// its card keeps its note. Kibitz makes that cut itself; ⌘Z puts it back.
 document.addEventListener('beforeinput', (e) => {
   const body = e.target && e.target.closest ? e.target.closest('.script-body') : null;
   if (!body || e.defaultPrevented || !/^delete(Content|Word|SoftLine|HardLine|ByCut)/.test(e.inputType || '')) return;
@@ -1443,10 +1443,10 @@ async function importScript(r, shelf) {
   if (!parsed.lines.length) return false;
   const tp = parsed.title || {};
   const title = tp.title || r.name;
-  const meta = await window.neo.createBook({ author: tp.author || displayAuthor(), title });
+  const meta = await window.kibitz.createBook({ author: tp.author || displayAuthor(), title });
   const chId = 'ch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   const html = parsed.lines.map((l) => `<p${l.type === 'action' ? '' : ` class="sp-${l.type}"`}${l.newPage ? ' data-newpage=""' : ''}>${l.runs.map((x) => runHtml(x)).join('') || '<br>'}</p>`).join('');
-  await window.neo.writeChapter(meta.id, chId, html);
+  await window.kibitz.writeChapter(meta.id, chId, html);
   meta.title = title;
   meta.format = 'screenplay';
   meta.chapterOrder = [chId];
@@ -1463,7 +1463,7 @@ async function importScript(r, shelf) {
   return true;
 }
 
-// ---- out of NEO: the PDF, as the industry prints a script, and Fountain ----
+// ---- out of Kibitz: the PDF, as the industry prints a script, and Fountain ----
 // The script's lines for the exports: each with its element, its runs of
 // bold/italic/underline, and (CONT'D) where the screen shows it
 function spExportLines() {
@@ -1624,19 +1624,19 @@ async function spExport(format) {
     if (format === 'pdf') payload = { format: 'pdf', defaultName, content: await spPdfHtml(), print: 'screenplay' };
     else if (format === 'fdx') payload = { format: 'fdx', defaultName, content: spToFdx(spExportLines(), { ...spTitleFields(), underlineHeadings: spUnderlineOn() }) };
     else payload = { format: 'fountain', defaultName, content: spFountain() };
-    const saved = await window.neo.exportSave(payload);
+    const saved = await window.kibitz.exportSave(payload);
     if (saved) toast(t('Exported: {file}', { file: saved.split('/').pop() }));
   } catch (err) {
-    window.neo.logError('export ' + format + ': ' + (err && err.stack || err));
+    window.kibitz.logError('export ' + format + ': ' + (err && err.stack || err));
     toast(t('Couldn’t export: {error}', { error: plainError(err) }), 8000);
   }
 }
 
 // ---- the shelf: a new script, and its tile ----
 async function createScriptOnShelf(shelf) {
-  const meta = await window.neo.createBook({ author: displayAuthor() });
+  const meta = await window.kibitz.createBook({ author: displayAuthor() });
   const chId = 'ch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
-  await window.neo.writeChapter(meta.id, chId, '<p><br></p>');
+  await window.kibitz.writeChapter(meta.id, chId, '<p><br></p>');
   meta.format = 'screenplay';
   meta.chapterOrder = [chId];
   meta.credit = t('Written by');

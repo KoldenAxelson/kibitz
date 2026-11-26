@@ -184,11 +184,11 @@ function pasteIntoBox(body, chId, html, text) {
   }
   syncChapter(body, chId);
 }
-// NEO's own copied paragraphs with boxes among them: box lines keep their
+// Kibitz's own copied paragraphs with boxes among them: box lines keep their
 // class and spaces, the rest is cleaned like any paste. The paragraphs go in
 // whole between the two halves of the caret's line (the engine's own paste
 // would run the last one into the words after the caret); ⌘Z takes them out.
-function pasteBoxesFromNeo(body, chId, html) {
+function pasteBoxesFromKibitz(body, chId, html) {
   const holder = new DOMParser().parseFromString(html, 'text/html').body;
   const lines = [...holder.querySelectorAll('p')].map((p) => {
     const box = p.classList.contains('litrpg');

@@ -1,4 +1,4 @@
-// End-to-end tests for starting a script in simple NEO (Show More Features
+// End-to-end tests for starting a script in simple Kibitz (Show More Features
 // off): a right-click on the shelf's + offers New Script (#494, #504), and a
 // script page the browser left with no line comes back to one, so Return
 // works again (#502). Run with `npm run test:new-script`.
@@ -12,16 +12,16 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-new-script-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-new-script-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-new-script-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-new-script-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: false, pageTheme: 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));

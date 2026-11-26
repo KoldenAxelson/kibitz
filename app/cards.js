@@ -14,7 +14,7 @@
 /*  A script's cards are its scenes (book.sceneNotes holds their notes). */
 /* ================================================================== */
 
-// (simple NEO's Outline is the list; the cards are behind Show More Features)
+// (simple Kibitz's Outline is the list; the cards are behind Show More Features)
 const outlineCardsOn = () => !!book && (isScript() || (featureOn('cards') && (library.outlineView || 'cards') === 'cards'));
 const chapterBodyEl = (chId) => document.querySelector(`.chapter[data-id="${chId}"] .chapter-body`);
 const newSectionId = () => 'sec-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -75,8 +75,8 @@ const pagesDirty = new Set();
 const pagesOn = () => pagedEnabled && !isScript();
 const pageZoomRange = () => ({ min: pagesOn() ? PAGES_ZOOM_MIN : PAGE_ZOOM_RANGE.min, max: PAGE_ZOOM_RANGE.max });
 const CARD_ZOOM_RANGE = { min: 0.55, max: 1.5 };
-const CARD_ZOOM_KEY = 'neo.cardZoom';
-const pageZoomKey = () => 'neo.pageZoom.' + (isScript() ? 'script' : 'novel');
+const CARD_ZOOM_KEY = 'kibitz.cardZoom';
+const pageZoomKey = () => 'kibitz.pageZoom.' + (isScript() ? 'script' : 'novel');
 
 /** The stored zoom, or the fallback, always inside the range. Split out so a test can hold it. */
 function resolveStoredZoom(raw, fallback, min, max) {
@@ -97,7 +97,7 @@ function rememberZoom(key, value) {
 
 // ---- zoom rules: the interface size steps by a tenth, 90% to 300% ----
 // One rule for every reader: the View menu's commands, the message they send,
-// and a size an older NEO saved between steps (1.25 lands on 1.3). A direction
+// and a size an older Kibitz saved between steps (1.25 lands on 1.3). A direction
 // of 0 resets to 100%.
 const UI_ZOOM_RANGE = { min: 0.9, max: 3 };
 function snapZoom(value, fallback = 1) {
@@ -136,7 +136,7 @@ function applyPageWidth() {
   const w = PAGE_WIDTHS[key];
   document.documentElement.style.setProperty('--page-wf', w.f);
   document.documentElement.style.setProperty('--page-pad-x', w.pad + 'px');
-  if (window.neo.pageWidthState) window.neo.pageWidthState(key);
+  if (window.kibitz.pageWidthState) window.kibitz.pageWidthState(key);
   fitSpread();
   queuePages(true);
 }
@@ -148,7 +148,7 @@ function setPageWidth(value) {
 
 function applyPaged() {
   fitSpread();
-  if (window.neo.pagesState) window.neo.pagesState({ paged: pagedEnabled, twoUp: twoPageEnabled }); // the Format menu's ticks
+  if (window.kibitz.pagesState) window.kibitz.pagesState({ paged: pagedEnabled, twoUp: twoPageEnabled }); // the Format menu's ticks
   queuePages(true);
 }
 
@@ -236,7 +236,7 @@ function cardZoom() { return readStoredZoom(CARD_ZOOM_KEY, library.cardZoom || 1
 // The shelf has a size of its own (#336): bigger covers without the page's
 // type growing. ⌘+ and ⌘− (Ctrl), a pinch or Ctrl-scroll, and ⌘0 on the
 // shelf, in steps of a tenth, kept on this device.
-const SHELF_ZOOM_KEY = 'neo.shelfZoom';
+const SHELF_ZOOM_KEY = 'kibitz.shelfZoom';
 const SHELF_ZOOM_RANGE = { min: 0.8, max: 2 };
 const shelfZoom = () => readStoredZoom(SHELF_ZOOM_KEY, 1, SHELF_ZOOM_RANGE);
 const shelfShowing = () => !$('#bookshelf-view').hidden;
@@ -1141,7 +1141,7 @@ async function deleteSectionToDarlings(chId, segIdx, quiet = false) {
       await writeSidecar(book.id, 'darlings', darlings);
     } catch {
       darlings.shift();
-      toast(t('NEO couldn’t save to Darlings, so the section stays where it was'));
+      toast(t('Kibitz couldn’t save to Darlings, so the section stays where it was'));
       return;
     }
     renderDarlings();
@@ -1152,7 +1152,7 @@ async function deleteSectionToDarlings(chId, segIdx, quiet = false) {
   syncChapter(body, chId);
   clearTimeout(saveTimers[chId]);
   persistChapter(chId).then(() => saveMeta())
-    .catch((err) => window.neo.logError('section delete: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('section delete: ' + (err && err.message || err)));
   renderBoard();
   updateCounters();
   if (seg.words && !quiet) toast(t('Section removed — its words are in Darlings, or {key} to undo', { key: KZ }));
@@ -1241,7 +1241,7 @@ function moveSection(fromCh, segIdx, to) {
     clearTimeout(saveTimers[fromCh]);
     clearTimeout(saveTimers[to.ch]);
     persistChapter(to.ch).then(() => persistChapter(fromCh))
-      .catch((err) => window.neo.logError('move section: ' + (err && err.message || err)));
+      .catch((err) => window.kibitz.logError('move section: ' + (err && err.message || err)));
   }
   repointStickies(seg.ps, to.ch);
   scheduleMetaSave();
@@ -1286,7 +1286,7 @@ function sectionToChapter(chId, segIdx) {
   // chapter it came out of: a failed save never leaves the words nowhere
   clearTimeout(saveTimers[chId]);
   persistChapter(newId, html).then(() => saveMeta()).then(() => persistChapter(chId))
-    .catch((err) => window.neo.logError('section to chapter: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('section to chapter: ' + (err && err.message || err)));
   renderChapters();
   renderStickies();
   updateCounters();
@@ -1336,10 +1336,10 @@ async function writtenSectionToLoose(chId, seg) {
   (book.looseCards = book.looseCards || []).push(card);
   // the card that holds the words is on disk before the chapter loses them
   let stamp = null;
-  try { stamp = await writeBookMeta(book.id, book); } catch (err) { window.neo.logError('section to loose: ' + (err && err.message || err)); }
+  try { stamp = await writeBookMeta(book.id, book); } catch (err) { window.kibitz.logError('section to loose: ' + (err && err.message || err)); }
   if (typeof stamp !== 'string') {
     book.looseCards = book.looseCards.filter((c) => c !== card);
-    toast(t('NEO couldn’t save the card, so the section stays where it was'));
+    toast(t('Kibitz couldn’t save the card, so the section stays where it was'));
     return;
   }
   book.modified = stamp;
@@ -1349,7 +1349,7 @@ async function writtenSectionToLoose(chId, seg) {
   syncChapter(body, chId);
   clearTimeout(saveTimers[chId]);
   saveMeta().then(() => persistChapter(chId))
-    .catch((err) => window.neo.logError('section to loose: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('section to loose: ' + (err && err.message || err)));
   renderLooseCards();
   renderBoard();
   updateCounters();
@@ -1381,7 +1381,7 @@ function looseToSection(looseId, to) {
     // the chapter with the words is saved before the card leaves book.json
     clearTimeout(saveTimers[to.ch]);
     persistChapter(to.ch).then(() => saveMeta())
-      .catch((err) => window.neo.logError('loose to section: ' + (err && err.message || err)));
+      .catch((err) => window.kibitz.logError('loose to section: ' + (err && err.message || err)));
     renderLooseCards();
     updateCounters();
     return;
@@ -1436,7 +1436,7 @@ async function joinChapter(chId, intoCh) {
   orderSectionNotes(intoCh);
   syncChapter(into, intoCh);
   // the words are safe in the other chapter before this one's file goes
-  try { await persistChapter(intoCh); } catch (err) { window.neo.logError('join: ' + (err && err.message || err)); return null; }
+  try { await persistChapter(intoCh); } catch (err) { window.kibitz.logError('join: ' + (err && err.message || err)); return null; }
   if (book.chapterTitles) delete book.chapterTitles[chId];
   await foldNotesPage(chId, intoCh);
   await deleteChapterQuiet(chId);
@@ -2194,7 +2194,7 @@ async function removeLooseCard(id, quiet = false) {
       await writeSidecar(book.id, 'darlings', darlings);
     } catch {
       darlings.shift();
-      toast(t('NEO couldn’t save to Darlings, so the card stays'));
+      toast(t('Kibitz couldn’t save to Darlings, so the card stays'));
       return;
     }
     renderDarlings();
@@ -2219,10 +2219,10 @@ function canSetChapterAside(chId) {
 // book.json with the card in it, or the card taken back out and false
 async function saveHeldCard(card) {
   let stamp = null;
-  try { stamp = await writeBookMeta(book.id, book); } catch (err) { window.neo.logError('loose card: ' + (err && err.message || err)); }
+  try { stamp = await writeBookMeta(book.id, book); } catch (err) { window.kibitz.logError('loose card: ' + (err && err.message || err)); }
   if (typeof stamp !== 'string') {
     book.looseCards = (book.looseCards || []).filter((c) => c !== card);
-    toast(t('NEO couldn’t save the card, so the writing stays where it was'));
+    toast(t('Kibitz couldn’t save the card, so the writing stays where it was'));
     return false;
   }
   book.modified = stamp;
@@ -2272,7 +2272,7 @@ function looseToChapter(looseId, index) {
   book.looseCards = book.looseCards.filter((c) => c.id !== looseId);
   // the chapter's file is written before book.json lets the card go
   persistChapter(chId).then(() => saveMeta())
-    .catch((err) => window.neo.logError('loose to chapter: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('loose to chapter: ' + (err && err.message || err)));
   renderChapters();
   renderLooseCards();
   updateCounters();
@@ -2304,7 +2304,7 @@ async function sceneToLoose(cell) {
   syncChapter(body, chId);
   clearTimeout(saveTimers[chId]);
   persistChapter(chId).then(() => saveMeta())
-    .catch((err) => window.neo.logError('scene to loose: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('scene to loose: ' + (err && err.message || err)));
   breakRun++;
   spRepaginate();
   renderNav();
@@ -2338,7 +2338,7 @@ function heldSceneBack(card, before) {
   syncChapter(dest, chId);
   clearTimeout(saveTimers[chId]);
   persistChapter(chId).then(() => saveMeta())
-    .catch((err) => window.neo.logError('loose to scene: ' + (err && err.message || err)));
+    .catch((err) => window.kibitz.logError('loose to scene: ' + (err && err.message || err)));
   breakRun++;
   spRepaginate();
   renderNav();
@@ -2663,7 +2663,7 @@ const auxQueue = {};
 function auxRead(bookId, kind) {
   const key = bookId + '/' + kind;
   const seq = auxSeq[key] || 0;
-  return window.neo.readAux(bookId, kind).then((html) => {
+  return window.kibitz.readAux(bookId, kind).then((html) => {
     if ((auxSeq[key] || 0) === seq) auxBase[key] = html;
     return html;
   });
@@ -2683,12 +2683,12 @@ function flushAux() {
     auxQueue[key] = run.catch(() => {});
     run.catch((err) => {
       job.inFlight = false;
-      window.neo.logError('notes save: ' + (err && err.message || err));
+      window.kibitz.logError('notes save: ' + (err && err.message || err));
     });
   }
 }
 function saveAuxJob(key, job) {
-  return window.neo.writeAux(job.bookId, job.kind, job.html, auxBase[key]).then((r) => {
+  return window.kibitz.writeAux(job.bookId, job.kind, job.html, auxBase[key]).then((r) => {
     auxBase[key] = job.html;
     auxSeq[key] = (auxSeq[key] || 0) + 1;
     if (auxPending[key] === job) delete auxPending[key];
@@ -2707,7 +2707,7 @@ async function refreshOpenAux() {
   const key = bookId + '/' + kind;
   if (auxDirty || auxPending[key] || auxBase[key] === undefined) return;
   const seq = auxSeq[key] || 0;
-  const html = await window.neo.readAux(bookId, kind);
+  const html = await window.kibitz.readAux(bookId, kind);
   if (ed.dataset.book !== bookId || ed.dataset.kind !== kind || auxDirty || auxPending[key]) return;
   if ((auxSeq[key] || 0) !== seq || html === auxBase[key]) return;
   auxBase[key] = html;
@@ -2742,13 +2742,13 @@ function writeSidecar(bookId, name, data) {
 function runSidecar(key, job) {
   job.inFlight = true;
   const json = JSON.stringify(job.data);
-  return Promise.resolve().then(() => window.neo.writeJSON(job.bookId, job.name, job.data)).then((r) => {
+  return Promise.resolve().then(() => window.kibitz.writeJSON(job.bookId, job.name, job.data)).then((r) => {
     if (sidecarPending[key] === job) delete sidecarPending[key];
     sidecarBase[key] = json;
     return r;
   }, (err) => {
     job.inFlight = false;
-    window.neo.logError('save ' + job.name + ': ' + (err && err.message || err));
+    window.kibitz.logError('save ' + job.name + ': ' + (err && err.message || err));
     throw err;
   });
 }
@@ -2804,7 +2804,7 @@ async function savedBeforeLettingGo(chId) {
     await persistChapter(chId);
     return true;
   } catch {
-    toast(t('NEO couldn’t save the chapter, so the passage stays in Darlings too'));
+    toast(t('Kibitz couldn’t save the chapter, so the passage stays in Darlings too'));
     return false;
   }
 }

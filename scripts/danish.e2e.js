@@ -3,7 +3,7 @@
 // "i" (in) stays lowercase and a typed "I" (you) stays as typed, while
 // sentences still start with a capital and f.eks. doesn't end one; the
 // Danish dictionary underlines a misspelling and nothing else; English keeps
-// its "i" → "I". NEO runs on a throwaway library, and the keys arrive as the
+// its "i" → "I". Kibitz runs on a throwaway library, and the keys arrive as the
 // writer types them. Run with `npm run test:danish`.
 
 'use strict';
@@ -17,21 +17,21 @@ const path = require('path');
 // A folder of its own for each run (see words.e2e.js for why earlier runs'
 // folders are the ones removed).
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-danish-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-danish-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-danish-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-danish-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const libraryFile = path.join(tmp, 'NEO Library', 'library.json');
+const libraryFile = path.join(tmp, 'Kibitz Library', 'library.json');
 fs.mkdirSync(path.dirname(libraryFile));
 fs.writeFileSync(libraryFile, JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));
-// run from scripts/, NEO's window would look for scripts/index.html
+// run from scripts/, Kibitz's window would look for scripts/index.html
 const loadFile = BrowserWindow.prototype.loadFile;
 BrowserWindow.prototype.loadFile = function (file, opts) {
   return loadFile.call(this, path.resolve(__dirname, '..', file), opts);
@@ -106,7 +106,7 @@ async function underlined(n) {
     await tick(100);
     words = await js(`(() => {
       const p = document.querySelector('.chapter-body').children[${n}];
-      const hl = CSS.highlights.get('neo-spell');
+      const hl = CSS.highlights.get('kibitz-spell');
       return hl ? [...hl].filter((r) => p.contains(r.startContainer)).map((r) => r.toString()) : [];
     })()`);
     if (words.length) break;
@@ -120,7 +120,7 @@ const test = (name, fn) => tests.push({ name, fn });
 test('Dansk is picked with the interface left in English, and saved with the library', async () => {
   await pickSpellLanguage('Dansk', 'da');
   assert.equal(JSON.parse(fs.readFileSync(libraryFile, 'utf8')).spellLanguage, 'da');
-  assert.equal(await js('NeoI18n.getLocale()'), 'en');
+  assert.equal(await js('KibitzI18n.getLocale()'), 'en');
 });
 
 test('Danish "i" stays small, a typed "I" stays, sentences still start with a capital', async () => {

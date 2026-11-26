@@ -77,7 +77,7 @@ function restoreCaret(caret) {
 
 // Back where the writer left off, on this device or the other one: the caret
 // at its letter, a third of the way down the window. A position from an
-// older NEO (the scroll alone) gets the scroll.
+// older Kibitz (the scroll alone) gets the scroll.
 function resumePosition(pos) {
   if (!book || !pos || !book.chapterOrder.includes(pos.chapterId)) return false;
   const body = document.querySelector(`.chapter[data-id="${pos.chapterId}"] .chapter-body`);
@@ -113,7 +113,7 @@ document.addEventListener('pointerdown', (e) => {
   if (e.target && e.target.closest && e.target.closest('#chapters')) lastHereActivity = Date.now();
 }, true);
 
-// The engine's undo history must never replay against a document NEO has
+// The engine's undo history must never replay against a document Kibitz has
 // rearranged by hand — clear it whenever such a rearrangement happens.
 function resetNativeUndo() {
   const caret = captureCaret();
@@ -463,7 +463,7 @@ async function toggleReadAloud() {
       if (!reading || reading.gen !== gen) return;
       const r = readRange(item.p, item.a, item.b);
       if (!r || !window.Highlight || !CSS.highlights) return;
-      CSS.highlights.set('neo-speak', new Highlight(r));
+      CSS.highlights.set('kibitz-speak', new Highlight(r));
       // keep the sentence on screen
       const sc = $('#paper-scroll');
       const box = r.getBoundingClientRect();
@@ -489,7 +489,7 @@ function stopReadAloud(leaveCaret) {
   reading = null;
   readGen++;
   try { window.speechSynthesis.cancel(); } catch { /* nothing speaking */ }
-  if (window.CSS && CSS.highlights) CSS.highlights.delete('neo-speak');
+  if (window.CSS && CSS.highlights) CSS.highlights.delete('kibitz-speak');
   if (leaveCaret && was && was.item && was.item.p.isConnected) {
     const ed = was.item.p.closest('.chapter-body, #aux-editor');
     const pt = pointAt(was.item.p, was.item.a);

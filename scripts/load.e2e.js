@@ -1,4 +1,4 @@
-// NEO opens without a single uncaught error: on the shelf, then with a book
+// Kibitz opens without a single uncaught error: on the shelf, then with a book
 // open, then back. The window's code is many files that load one after
 // another; a timer, an observer or an event that fires between two of them
 // and calls into one not yet loaded throws here. Run with
@@ -12,11 +12,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-load-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-load-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, pageTheme: 'night', nbspMarks: true,
   features: { cards: true, notesPages: true, poetry: true, footnotes: true, formatting: true, penNames: true, covers: true, pages: true, focus: true, readAloud: true, vim: false, exports: true },
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
@@ -59,10 +59,10 @@ async function main() {
     await tick(600);
     try {
       assert.deepEqual(errors, []);
-      console.log('ok   NEO opens, opens a book and goes back with no uncaught error');
+      console.log('ok   Kibitz opens, opens a book and goes back with no uncaught error');
     } catch (err) {
       failed++;
-      console.log('FAIL NEO opens, opens a book and goes back with no uncaught error\n     ' + errors.join('\n     '));
+      console.log('FAIL Kibitz opens, opens a book and goes back with no uncaught error\n     ' + errors.join('\n     '));
     }
     console.log(`\n${1 - failed} passed, ${failed} failed`);
   } catch (err) {

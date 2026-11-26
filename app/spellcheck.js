@@ -4,7 +4,7 @@
 /*  SPELLCHECK PASS + TYPEWRITER SCROLLING                             */
 /* ================================================================== */
 
-/* NEO's own spellcheck pass: a bundled dictionary (via the main process),
+/* Kibitz's own spellcheck pass: a bundled dictionary (via the main process),
    squiggles painted with the CSS Highlight API — the same machinery as
    search — and a right-click menu for suggestions. Chapters scan lazily
    as the caret reaches them. */
@@ -66,7 +66,7 @@ async function spellScanEl(el, key) {
   }
   const unknown = [...words].filter((w) => !spellCache.has(w));
   if (unknown.length) {
-    const res = await window.neo.spellCheckWords(unknown);
+    const res = await window.kibitz.spellCheckWords(unknown);
     for (const w of unknown) spellCache.set(w, res[w] !== false);
   }
   if (!spellOn) return; // toggled off while we were checking
@@ -157,7 +157,7 @@ function rebuildSpellHighlight() {
   if (!spellOn) return;
   const hl = new Highlight();
   for (const list of spellRanges.values()) for (const r of list) hl.add(r);
-  CSS.highlights.set('neo-spell', hl);
+  CSS.highlights.set('kibitz-spell', hl);
 }
 
 function scanSpellingIn(el, key) {
@@ -196,7 +196,7 @@ function toggleSpellcheck() {
     capsRanges.clear();
     scanSpellingHere();
   } else {
-    CSS.highlights.delete('neo-spell');
+    CSS.highlights.delete('kibitz-spell');
     spellRanges = new Map();
     capsRanges.clear();
     document.querySelector('.spell-menu')?.remove();
@@ -212,7 +212,7 @@ const SPELL_LANGUAGE_NAMES = {
   nl: t('Dutch'), pl: t('Polish'), 'pt-BR': t('Brazilian Portuguese'), ro: t('Romanian'), ru: t('Russian'), uk: t('Ukrainian'), hu: t('Hungarian'), sv: t('Swedish'), da: t('Danish')
 };
 async function changeSpellLanguage(code) {
-  const ok = await window.neo.setSpellLanguage(code);
+  const ok = await window.kibitz.setSpellLanguage(code);
   if (!ok) { toast(t('That dictionary would not load')); return; }
   library.spellLanguage = code;
   await writeLibrary(library);
@@ -221,7 +221,7 @@ async function changeSpellLanguage(code) {
     spellScanned = new Set();
     spellRanges = new Map();
     capsRanges.clear();
-    CSS.highlights.delete('neo-spell');
+    CSS.highlights.delete('kibitz-spell');
     scanSpellingHere();
   }
   toast(t('Spellcheck: {lang}', { lang: SPELL_LANGUAGE_NAMES[code] || code }));
@@ -280,7 +280,7 @@ document.addEventListener('contextmenu', async (e) => {
   const key = editor.id === 'aux-editor'
     ? 'aux-' + (editor.dataset.kind || 'notes')
     : (chEl ? chEl.dataset.id : null);
-  const sugg = await window.neo.spellSuggest(word);
+  const sugg = await window.kibitz.spellSuggest(word);
   showSpellMenu(e.clientX, e.clientY, word, sugg, {
     replace: (s) => {
       const sel = window.getSelection();
@@ -288,7 +288,7 @@ document.addEventListener('contextmenu', async (e) => {
       r.setStart(node, a); r.setEnd(node, b);
       sel.removeAllRanges(); sel.addRange(r);
       // a dictionary suggests its apostrophe straight (м'ясо); on the page
-      // it's ’, as NEO types it
+      // it's ’, as Kibitz types it
       document.execCommand('insertText', false, s.replace(/(?<=[\p{L}\p{M}])'(?=[\p{L}\p{M}])/gu, '’'));
       if (key) spellScanEl(spellElFor(key), key);
     },
@@ -296,7 +296,7 @@ document.addEventListener('contextmenu', async (e) => {
       library.customWords = library.customWords || [];
       if (!library.customWords.includes(word)) library.customWords.push(word);
       await writeLibrary(library);
-      await window.neo.spellLearn(word);
+      await window.kibitz.spellLearn(word);
       // Learning also accepts equivalent Unicode spellings. Recheck cached
       // failures so those variants lose their underlines in every editor.
       spellCache.clear();
@@ -386,7 +386,7 @@ function lookUpWord(text) {
 // Safari and Books show (#179). The listener runs in the bubble phase, after the spellcheck menu,
 // and stands down when any other menu already answered the right-click.
 document.addEventListener('contextmenu', (e) => {
-  if (window.neo.platform !== 'darwin' || e.defaultPrevented || !featureOn('readAloud')) return;
+  if (window.kibitz.platform !== 'darwin' || e.defaultPrevented || !featureOn('readAloud')) return;
   const editor = e.target.closest && e.target.closest('.chapter-body, #aux-editor');
   if (!editor) return;
   const sel = window.getSelection();
@@ -394,7 +394,7 @@ document.addEventListener('contextmenu', (e) => {
   if (!word) return;
   e.preventDefault();
   popMenu(e.clientX, e.clientY, [{ label: t('Look Up “{word}”', { word }), value: 'lookup' }]).then((choice) => {
-    if (choice === 'lookup') window.neo.lookUpText();
+    if (choice === 'lookup') window.kibitz.lookUpText();
   });
 });
 
@@ -405,7 +405,7 @@ document.addEventListener('contextmenu', (e) => {
 // needs none, and a fixed 60vh left an empty scroll under it from line one.
 function applyTypewriter() {
   document.body.classList.toggle('typewriter', typewriterEnabled);
-  if (window.neo.typewriterState) window.neo.typewriterState(typewriterEnabled); // the Format menu's tick
+  if (window.kibitz.typewriterState) window.kibitz.typewriterState(typewriterEnabled); // the Format menu's tick
   typewriterRoom();
 }
 function typewriterRoom() {
@@ -435,7 +435,7 @@ function typewriterRoom() {
 new ResizeObserver(() => typewriterRoom()).observe($('#chapters'));
 window.addEventListener('resize', typewriterRoom);
 function applyNbspMarks() {
-  if (window.neo.nbspMarksState) window.neo.nbspMarksState(nbspMarksEnabled); // the Format menu's tick
+  if (window.kibitz.nbspMarksState) window.kibitz.nbspMarksState(nbspMarksEnabled); // the Format menu's tick
   paintNonBreakingMarks();
 }
 function toggleNbspMarks() {
@@ -480,7 +480,7 @@ function typewriterScrollTarget(scrollTop, caretTop, windowHeight, lineHeight) {
 // Pages view it measures a line that a page break carried to the next page
 // at the top of its paragraph, back on the page before, and scrolls up to
 // that while the caret sits in plain view; the typewriter then glided the
-// page back, and every letter at the top of a page bobbed it (#453). NEO
+// page back, and every letter at the top of a page bobbed it (#453). Kibitz
 // keeps the caret in sight itself, so a scroll like that goes back. Given
 // the scrollTop when the letter went in (was) and now, where the typewriter
 // is gliding (glide, or null), the caret's top and bottom in the window as
@@ -523,7 +523,7 @@ document.addEventListener('selectionchange', () => {
 
 // Chromium's scroll comes after the input event, inside the same keystroke,
 // so the page is checked in the next frame, before it is painted. (On the
-// window, so NEO's own input handlers, revealCaret among them, have run.)
+// window, so Kibitz's own input handlers, revealCaret among them, have run.)
 window.addEventListener('input', (e) => {
   if (!pagesOn() || currentTab !== 'manuscript') return;
   if (!e.target.closest || !e.target.closest('.chapter-body')) return;
@@ -589,7 +589,7 @@ function applyBright() {
   reportViewState();
 }
 function reportViewState() {
-  if (!window.neo.viewState || !library) return;
+  if (!window.kibitz.viewState || !library) return;
   const payload = {
     focus: focusLevel,
     pageTheme: library.pageTheme || 'night',
@@ -601,14 +601,14 @@ function reportViewState() {
   const key = JSON.stringify(payload);
   if (key === viewStateSent) return;
   viewStateSent = key;
-  window.neo.viewState(payload);
+  window.kibitz.viewState(payload);
 }
 
 function applyFocus() {
   reportViewState();
   document.body.classList.toggle('focus-mode', focusLevel !== 'off');
   if (focusLevel === 'off') {
-    if (window.CSS && CSS.highlights) CSS.highlights.delete('neo-focus');
+    if (window.CSS && CSS.highlights) CSS.highlights.delete('kibitz-focus');
   } else updateFocus();
 }
 function setFocus(level) {
@@ -691,8 +691,8 @@ function updateFocus() {
   if (isBreakPara(p)) r = null;
   else if (focusLevel === 'sentence') r = sentenceRange(p);
   else if (focusLevel === 'paragraph') { r = document.createRange(); r.selectNodeContents(p); }
-  if (r) CSS.highlights.set('neo-focus', new Highlight(r));
-  else CSS.highlights.delete('neo-focus');
+  if (r) CSS.highlights.set('kibitz-focus', new Highlight(r));
+  else CSS.highlights.delete('kibitz-focus');
   // highlights can't reach the drop cap (it isn't text), so it gets a class
   // on its chapter body (a class on the body itself is never saved)
   document.querySelectorAll('.chapter-body.focus-cap').forEach((b) => b.classList.remove('focus-cap'));
@@ -797,7 +797,7 @@ function openCoverArt() {
   bd.innerHTML = `
     <div class="modal" style="width:540px">
       <h2 style="font-size:17px">${t('Cover art')}</h2>
-      <p>${t('Every book gets a cover on the shelf: an abstract with the title set in type. With an OpenAI key, NEO can also read a story once it passes {n} words and paint a cover from the text. Paintings stay on your shelf — exports never include them.', { n: PAINT_AT })}</p>
+      <p>${t('Every book gets a cover on the shelf: an abstract with the title set in type. With an OpenAI key, Kibitz can also read a story once it passes {n} words and paint a cover from the text. Paintings stay on your shelf — exports never include them.', { n: PAINT_AT })}</p>
       <div class="stats-row">
         <select id="ca-provider" hidden>${provOptions}</select>
         <label class="st-check"><input id="ca-auto" type="checkbox"${cs.auto === false ? '' : ' checked'}/> ${t('paint at {n} words', { n: PAINT_AT })}</label>
@@ -817,7 +817,7 @@ function openCoverArt() {
             </select>
           </label>
         </div>
-        <p class="soft" style="font-size:12px;margin:0 0 6px">${t('Leave blank for NEO’s defaults. Names drift; if a provider retires one, NEO tries its own list before giving up.')}</p>
+        <p class="soft" style="font-size:12px;margin:0 0 6px">${t('Leave blank for Kibitz’s defaults. Names drift; if a provider retires one, Kibitz tries its own list before giving up.')}</p>
       </details>
       <div style="text-align:right;margin-top:14px">
         <button class="m-cancel btn-quiet" style="margin-right:10px">${t('Cancel')}</button>
@@ -839,7 +839,7 @@ function openCoverArt() {
     bd.querySelector('#ca-imodel').value = (models[id] && models[id].image) || '';
     bd.querySelector('#ca-imodel').placeholder = p.image;
     bd.querySelector('#ca-quality-wrap').style.display = p.quality ? '' : 'none';
-    const has = await window.neo.hasSecret(id);
+    const has = await window.kibitz.hasSecret(id);
     if (sel.value !== id) return;
     note.textContent = has
       ? t('A {name} key is saved, encrypted, outside your library folder. Paste a new one to replace it, or type “{remove}” to forget it.', { name: p.name, remove: t('remove') })
@@ -852,9 +852,9 @@ function openCoverArt() {
   bd.querySelector('.m-ok').onclick = async () => {
     const id = sel.value, p = COVER_PROVIDERS[id];
     const k = key.value.trim();
-    if (k === 'remove' || k === t('remove')) await window.neo.setSecret(id, '');
+    if (k === 'remove' || k === t('remove')) await window.kibitz.setSecret(id, '');
     else if (k && !looksLikeKey(k)) { toast(t('That doesn’t look like an API key ({name} keys look like {hint}) — not saved', { name: p.name, hint: p.keyHint }), 6000); return; }
-    else if (k) await window.neo.setSecret(id, k);
+    else if (k) await window.kibitz.setSecret(id, k);
     models[id] = {
       text: bd.querySelector('#ca-tmodel').value.trim() || undefined,
       image: bd.querySelector('#ca-imodel').value.trim() || undefined
@@ -867,7 +867,7 @@ function openCoverArt() {
     };
     await writeLibrary(library);
     done();
-    if (!(await window.neo.hasSecret(id))) toast(t('Saved. Add a {name} key to start painting.', { name: p.name }), 5000);
+    if (!(await window.kibitz.hasSecret(id))) toast(t('Saved. Add a {name} key to start painting.', { name: p.name }), 5000);
   };
   bd.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(); } });
   key.focus();
@@ -877,7 +877,7 @@ function openCoverArt() {
 // or 13:00 where the language's hour is a bare number
 function hourLabel(h) {
   if (h === 0) return t('midnight');
-  const loc = NeoI18n.getLocale();
+  const loc = KibitzI18n.getLocale();
   if (loc.startsWith('en')) {
     if (h === 12) return t('noon');
     return h < 12 ? t('{h} am', { h: String(h) }) : t('{h} pm', { h: String(h - 12) });

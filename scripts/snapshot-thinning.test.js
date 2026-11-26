@@ -66,7 +66,7 @@ function loadMain() {
 const main = loadMain();
 
 function snapshotWithFiles(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-thin-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-thin-'));
   main.pointAt(dir);
   const book = main.call('book:create', { title: 'Salt Roads' });
   const snapDir = path.join(dir, book.id, 'snapshots', '20261001T000000Z-d-1-10-aaaa');
@@ -104,7 +104,7 @@ describe('preload.js forwards every snapshot argument', () => {
     const calls = [];
     let api = null;
     const electron = {
-      contextBridge: { exposeInMainWorld: (key, value) => { if (key === 'neo') api = value; } },
+      contextBridge: { exposeInMainWorld: (key, value) => { if (key === 'kibitz') api = value; } },
       ipcRenderer: { sendSync: () => null, invoke: (...args) => { calls.push(args); return Promise.resolve(null); } },
       webUtils: {}
     };
@@ -131,7 +131,7 @@ const NOW = Date.UTC(2026, 9, 28);
 const OLD = NOW - 40 * DAY;
 
 // an in-memory snapshot library: files[name][file] = text
-function fakeNeo(library, faults = {}) {
+function fakeKibitz(library, faults = {}) {
   const log = [];
   return {
     log,
@@ -175,9 +175,9 @@ const NEWEST = '20261027T000000Z-k-1-10-cccc';
 describe('thinSnapshots copies verified text forward, then removes the source', { concurrency: 1 }, () => {
   test('an empty chapter is copied as empty and the source goes', async () => {
     const library = { [OLD_SNAP]: { 'ch-a.html': '', 'ch-b.html': '<p>B1</p>' }, [NEW_SNAP]: { 'ch-b.html': '<p>B2</p>' }, [NEWEST]: { 'ch-b.html': '<p>B3</p>' } };
-    const neo = fakeNeo(library);
+    const kibitz = fakeKibitz(library);
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await thinSnapshots(neo, 'book-x', list, NOW);
+    await thinSnapshots(kibitz, 'book-x', list, NOW);
     assert.equal(library[OLD_SNAP], undefined);
     assert.equal(library[NEW_SNAP]['ch-a.html'], '');
     assert.equal(list.length, 2);
@@ -185,9 +185,9 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
 
   test('an unreadable chapter aborts before anything is written or removed', async () => {
     const library = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>', 'ch-b.html': '<p>B1</p>' }, [NEW_SNAP]: { 'ch-c.html': '<p>C</p>' }, [NEWEST]: {} };
-    const neo = fakeNeo(library, { read: (name, file) => name === OLD_SNAP && file === 'ch-b.html' });
+    const kibitz = fakeKibitz(library, { read: (name, file) => name === OLD_SNAP && file === 'ch-b.html' });
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await assert.rejects(thinSnapshots(neo, 'book-x', list, NOW), { code: 'EACCES' });
+    await assert.rejects(thinSnapshots(kibitz, 'book-x', list, NOW), { code: 'EACCES' });
     assert.ok(library[OLD_SNAP], 'the source snapshot is still there');
     assert.equal(library[OLD_SNAP]['ch-b.html'], '<p>B1</p>');
     assert.equal(library[NEW_SNAP]['ch-b.html'], undefined, 'nothing empty was written forward');
@@ -197,14 +197,14 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
     const library = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: {}, [NEWEST]: {} };
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
     list[0].files.add('ch-ghost.html'); // listed, but gone from disk
-    await assert.rejects(thinSnapshots(fakeNeo(library), 'book-x', list, NOW), { code: 'ENOENT' });
+    await assert.rejects(thinSnapshots(fakeKibitz(library), 'book-x', list, NOW), { code: 'ENOENT' });
     assert.ok(library[OLD_SNAP]);
   });
 
   test('a write that throws aborts and keeps the source', async () => {
     const library = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: {}, [NEWEST]: {} };
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await assert.rejects(thinSnapshots(fakeNeo(library, { write: () => true }), 'book-x', list, NOW), /disk full/);
+    await assert.rejects(thinSnapshots(fakeKibitz(library, { write: () => true }), 'book-x', list, NOW), /disk full/);
     assert.ok(library[OLD_SNAP]);
     assert.equal(list.length, 3);
   });
@@ -212,7 +212,7 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
   test('a copy that does not read back intact aborts and keeps the source', async () => {
     const library = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: {}, [NEWEST]: {} };
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await assert.rejects(thinSnapshots(fakeNeo(library, { corrupt: () => true }), 'book-x', list, NOW), /did not copy/);
+    await assert.rejects(thinSnapshots(fakeKibitz(library, { corrupt: () => true }), 'book-x', list, NOW), /did not copy/);
     assert.ok(library[OLD_SNAP]);
   });
 
@@ -220,13 +220,13 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
     // the next snapshot's own ch-a (changed since) is the one readers see from there on
     const other = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: { 'ch-a.html': '<p>own change</p>' }, [NEWEST]: {} };
     const list = snaps(other, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await thinSnapshots(fakeNeo(other), 'book-x', list, NOW);
+    await thinSnapshots(fakeKibitz(other), 'book-x', list, NOW);
     assert.equal(other[OLD_SNAP], undefined);
     assert.equal(other[NEW_SNAP]['ch-a.html'], '<p>own change</p>');
 
     const same = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEWEST]: {} };
     const list2 = snaps(same, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
-    await thinSnapshots(fakeNeo(same), 'book-x', list2, NOW);
+    await thinSnapshots(fakeKibitz(same), 'book-x', list2, NOW);
     assert.equal(same[OLD_SNAP], undefined, 'a chapter already there lets the source go');
   });
 
@@ -234,7 +234,7 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
     const library = { [OLD_SNAP]: { 'ch-a.html': '<p>A1</p>' }, [NEW_SNAP]: { 'ch-a.html': '<p>own</p>' }, [NEWEST]: {} };
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
     list[1].files.clear(); // another device's file, not in the listing we took
-    await thinSnapshots(fakeNeo(library), 'book-x', list, NOW);
+    await thinSnapshots(fakeKibitz(library), 'book-x', list, NOW);
     assert.equal(library[OLD_SNAP], undefined);
     assert.equal(library[NEW_SNAP]['ch-a.html'], '<p>own</p>');
   });
@@ -248,7 +248,7 @@ describe('thinSnapshots copies verified text forward, then removes the source', 
     const list = snaps(library, [[OLD_SNAP, OLD, 'd'], [NEW_SNAP, OLD + 20 * DAY, 'd'], [NEWEST, NOW, 'k']]);
     // first pass dies on ch-b's write, after ch-a has been copied
     let failing = true;
-    const flaky = fakeNeo(library, { write: (name, file) => failing && name === NEW_SNAP && file === 'ch-c.html' });
+    const flaky = fakeKibitz(library, { write: (name, file) => failing && name === NEW_SNAP && file === 'ch-c.html' });
     await assert.rejects(thinSnapshots(flaky, 'book-x', list, NOW), /disk full/);
     assert.ok(library[OLD_SNAP], 'source kept after the interruption');
     assert.equal(library[NEW_SNAP]['ch-a.html'], '<p>A1</p>', 'the copy made so far is intact');

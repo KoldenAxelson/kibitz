@@ -28,7 +28,7 @@ function updateCounters() {
   // cache for the bookshelf progress bar
   if (book.wordCount !== total) {
     // only a true crossing earns a painting — a story that was already long
-    // before NEO could paint keeps its abstract until the writer asks
+    // before Kibitz could paint keeps its abstract until the writer asks
     const before = typeof book.wordCount === 'number' ? book.wordCount : total;
     book.wordCount = total;
     scheduleMetaSave();
@@ -248,7 +248,7 @@ $('#paper-scroll').addEventListener('scroll', () => {
 /*  SAVING                                                             */
 /* ================================================================== */
 
-// One door for chapter writes, so NEO always knows what is on disk. That
+// One door for chapter writes, so Kibitz always knows what is on disk. That
 // knowledge is what lets it write only what changed (a library shared over
 // iCloud or Syncthing must not be re-written every twenty seconds) and, in
 // refreshFromDisk, tell another device's edits from its own.
@@ -272,11 +272,11 @@ function persistChapter(chId, html) {
   // device wrote it since, the write stops and hands that text back, which
   // is kept as its own chapter before this device's words go on
   const run = async () => {
-    let r = await window.neo.writeChapter(bookId, chId, html, diskKnown[key]);
+    let r = await window.kibitz.writeChapter(bookId, chId, html, diskKnown[key]);
     for (let tries = 0; r && typeof r.conflict === 'string' && tries < 3; tries++) {
       knowDisk(bookId, chId, r.conflict);
       if (worthKeeping(bookId, chId, r.conflict, html)) await keepOtherDeviceVersion(bookId, chId, r.conflict);
-      r = await window.neo.writeChapter(bookId, chId, html, r.conflict);
+      r = await window.kibitz.writeChapter(bookId, chId, html, r.conflict);
     }
     if (r && typeof r.conflict === 'string') throw new Error('chapter keeps changing on disk');
     knowDisk(bookId, chId, html);
@@ -313,7 +313,7 @@ function worthKeeping(bookId, chId, disk, mine) {
 // right after, titled to say where it came from. Works for a book that has
 // since been closed too, straight on disk.
 function twinChapterTitle(title) {
-  const when = new Date().toLocaleTimeString(NeoI18n.getLocale(), { hour: 'numeric', minute: '2-digit' });
+  const when = new Date().toLocaleTimeString(KibitzI18n.getLocale(), { hour: 'numeric', minute: '2-digit' });
   return ((title || '') + ' ' + t('from other device, {time}', { time: when })).trim();
 }
 async function keepOtherDeviceVersion(bookId, chId, disk) {
@@ -337,8 +337,8 @@ async function keepOtherDeviceVersion(bookId, chId, disk) {
     toast(t('This chapter also changed on another device. That version is saved as the chapter after it.'), 8000);
     return;
   }
-  await window.neo.writeChapter(bookId, twinId, disk);
-  const meta = await window.neo.readBookMeta(bookId);
+  await window.kibitz.writeChapter(bookId, twinId, disk);
+  const meta = await window.kibitz.readBookMeta(bookId);
   if (!meta || !Array.isArray(meta.chapterOrder)) return;
   const idx = meta.chapterOrder.indexOf(chId);
   meta.chapterOrder.splice(idx < 0 ? meta.chapterOrder.length : idx + 1, 0, twinId);
@@ -365,7 +365,7 @@ function scheduleChapterSave(chId) {
 }
 
 // book.json minus the parts every device changes constantly, and minus
-// empty defaults (NEO fills in chapterTitles: {} and friends after opening;
+// empty defaults (Kibitz fills in chapterTitles: {} and friends after opening;
 // the file on disk may not have them yet — same book either way)
 function metaSig(m) {
   if (!m) return '';
@@ -440,7 +440,7 @@ function flushAllSaves(e) {
   const tabScroll = writing ? undefined : $('#paper-scroll').scrollTop;
   const newSpot = spot.chapterId !== prev.chapterId || spot.pIdx !== prev.pIdx;
   const newLetter = newSpot || spot.off !== prev.off;
-  // the regular tick while writing saves a new paragraph; leaving NEO (a
+  // the regular tick while writing saves a new paragraph; leaving Kibitz (a
   // blur, the app going to the background, closing) saves the exact letter
   const newTab = tab !== (prev.tab || 'manuscript') || (!writing && Math.abs((prev.tabScroll || 0) - tabScroll) > 40);
   const moved = newSpot || newTab || (e !== 'tick' && newLetter) || Math.abs((prev.scroll || 0) - scroll) > 40;
@@ -465,7 +465,7 @@ function flushAllSaves(e) {
 
 // ⌘S takes a snapshot of the book: the chapters that changed since the last
 // snapshot, plus the book's shape (order, titles, kinds) and a fingerprint of
-// every chapter. NEO takes one on its own before the first change of each
+// every chapter. Kibitz takes one on its own before the first change of each
 // writing day. They're listed in the right-hand pane on the Darlings tab;
 // picking one shows the book as it was, read-only, with what has gone since
 // marked, and brings a chapter or the whole book back.
@@ -477,7 +477,7 @@ function flushAllSaves(e) {
 // that holds the file. The name carries what the list shows:
 //   20261009T121400Z-k-3-84210-x7q2   when (UTC) · kind · chapters changed · words
 // k: taken with ⌘S (kept until deleted) · d: the start of a writing day ·
-// r: just before a snapshot was brought back. NEO's own (d, r) go after 30
+// r: just before a snapshot was brought back. Kibitz's own (d, r) go after 30
 // days; a snapshot that goes hands its chapters on to the next one first.
 const SNAP_KEPT = 'k';
 const SNAP_KEEP_DAYS = 30;
@@ -503,7 +503,7 @@ function textHash(str) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36) + ':' + str.length;
 }
-// NEO's own snapshots older than a month go, by their names alone (so every
+// Kibitz's own snapshots older than a month go, by their names alone (so every
 // device picks the same ones); ⌘S snapshots and the newest one stay
 function snapsToThin(snaps, now) {
   const newest = snaps.reduce((a, s) => (!a || s.at > a.at ? s : a), null);
@@ -516,7 +516,7 @@ function snapsToThin(snaps, now) {
 // a chapter keeps its own version, which is what readers see from there on.
 // Any failure stops the pass with the source still in place, so the next
 // snapshot tries again.
-async function thinSnapshots(neo, bookId, snaps, now) {
+async function thinSnapshots(kibitz, bookId, snaps, now) {
   if (snaps.uncertain) return; // see loadSnaps
   for (const gone of snapsToThin(snaps, now)) {
     const i = snaps.findIndex((s) => s.name === gone);
@@ -524,13 +524,13 @@ async function thinSnapshots(neo, bookId, snaps, now) {
     if (i < 0 || !next) continue;
     for (const f of snaps[i].files) {
       if (!f.endsWith('.html') || next.files.has(f)) continue;
-      const text = await neo.snapshotRead(bookId, snaps[i].name, f);
-      if ((await neo.snapshotWrite(bookId, next.name, f, text)) === false) { next.files.add(f); continue; } // already there: its own
-      const copy = await neo.snapshotRead(bookId, next.name, f);
+      const text = await kibitz.snapshotRead(bookId, snaps[i].name, f);
+      if ((await kibitz.snapshotWrite(bookId, next.name, f, text)) === false) { next.files.add(f); continue; } // already there: its own
+      const copy = await kibitz.snapshotRead(bookId, next.name, f);
       if (copy !== text) throw new Error(`snapshot thinning: ${f} did not copy to ${next.name} intact`);
       next.files.add(f);
     }
-    await neo.snapshotRemove(bookId, gone);
+    await kibitz.snapshotRemove(bookId, gone);
     snaps.splice(i, 1);
   }
 }
@@ -591,15 +591,15 @@ function snapHolderEl(html) {
 }
 const htmlWords = (html) => countWords(plainText(snapHolderEl(html)));
 const htmlParas = (html) => [...snapHolderEl(html).children].map((p) => p.textContent);
-const snapsCan = () => !!(window.neo && window.neo.snapshotWrite);
-const logSnap = (err) => window.neo.logError('snapshot: ' + ((err && err.message) || err));
+const snapsCan = () => !!(window.kibitz && window.kibitz.snapshotWrite);
+const logSnap = (err) => window.kibitz.logError('snapshot: ' + ((err && err.message) || err));
 
 // The book's snapshots, oldest first: { name, at, kind, changed, words, files: Set }.
 // Only finished ones (snapshot.json written).
 let snapCache = null;
 async function loadSnaps(bookId, fresh) {
   if (!fresh && snapCache && snapCache.bookId === bookId) return snapCache.snaps;
-  const raw = await window.neo.snapshotList(bookId);
+  const raw = await window.kibitz.snapshotList(bookId);
   const snaps = [];
   for (const r of raw || []) {
     const s = parseSnapName(r.name);
@@ -620,14 +620,14 @@ async function loadSnaps(bookId, fresh) {
   for (const s of snaps) {
     if (seconds.get(s.at) < 2) continue;
     try {
-      const meta = JSON.parse(await window.neo.snapshotRead(bookId, s.name, 'snapshot.json'));
+      const meta = JSON.parse(await window.kibitz.snapshotRead(bookId, s.name, 'snapshot.json'));
       const at = Date.parse(meta.at);
       if (!Number.isFinite(at) || Math.floor(at / 1000) !== s.at / 1000) { uncertain = true; continue; }
       s.at = at;
       s.meta = meta;
     } catch (err) {
       uncertain = true;
-      window.neo.logError('snapshot time ' + s.name + ': ' + (err && err.message || err));
+      window.kibitz.logError('snapshot time ' + s.name + ': ' + (err && err.message || err));
     }
   }
   if (uncertain) snaps.uncertain = true;
@@ -637,7 +637,7 @@ async function loadSnaps(bookId, fresh) {
 }
 async function snapMeta(bookId, s) {
   if (!s.meta) {
-    try { s.meta = JSON.parse(await window.neo.snapshotRead(bookId, s.name, 'snapshot.json')); } catch { s.meta = null; }
+    try { s.meta = JSON.parse(await window.kibitz.snapshotRead(bookId, s.name, 'snapshot.json')); } catch { s.meta = null; }
   }
   return s.meta;
 }
@@ -685,18 +685,18 @@ async function takeSnapshotNow(kind, htmlOf, { ifNoneToday }) {
     order.every((c) => (lastMeta.chapterTitles || {})[c] === titles[c] && (lastMeta.chapterKinds || {})[c] === kinds[c]);
   if (!changed.length && sameShape && (kind !== SNAP_KEPT || last.kind === SNAP_KEPT)) return { snap: last, same: true };
   const name = snapName(now, kind, changed.length, total);
-  for (const c of changed) await window.neo.snapshotWrite(bookId, name, c + '.html', texts[c]);
+  for (const c of changed) await window.kibitz.snapshotWrite(bookId, name, c + '.html', texts[c]);
   const meta = { v: 1, at: new Date(now).toISOString(), kind, title: book.title || '', chapterOrder: order, chapterTitles: titles, chapterKinds: kinds, hashes, words, changed, total };
-  await window.neo.snapshotWrite(bookId, name, 'snapshot.json', JSON.stringify(meta, null, 1));
+  await window.kibitz.snapshotWrite(bookId, name, 'snapshot.json', JSON.stringify(meta, null, 1));
   const snap = parseSnapName(name);
   snap.at = now;
   snap.files = new Set([...changed.map((c) => c + '.html'), 'snapshot.json']);
   snap.meta = meta;
   snaps.push(snap);
-  // NEO's own old ones go, each handing its chapters on to the next first. A
+  // Kibitz's own old ones go, each handing its chapters on to the next first. A
   // failure leaves them where they are; the next snapshot tries again.
   try {
-    await thinSnapshots(window.neo, bookId, snaps, now);
+    await thinSnapshots(window.kibitz, bookId, snaps, now);
   } catch (err) {
     logSnap(err);
   }
@@ -728,18 +728,18 @@ async function snapshotNow() {
       : t('Snapshot taken, {time}: {n} chapters changed. It’s on the Darlings tab.', { time, n: r.snap.changed }), 4000);
   } catch (err) {
     logSnap(err);
-    toast(t('NEO couldn’t take a snapshot. Your book itself is saved as usual.'), 6000);
+    toast(t('Kibitz couldn’t take a snapshot. Your book itself is saved as usual.'), 6000);
   }
 }
 
-const snapTime = (at) => new Date(at).toLocaleTimeString(NeoI18n.getLocale(), { hour: 'numeric', minute: '2-digit' });
+const snapTime = (at) => new Date(at).toLocaleTimeString(KibitzI18n.getLocale(), { hour: 'numeric', minute: '2-digit' });
 function snapWhen(at) {
   const d = new Date(at);
   const today = new Date();
   const time = snapTime(at);
   if (d.toDateString() === today.toDateString()) return t('today at {time}', { time });
   if (d.toDateString() === new Date(today.getTime() - 86400000).toDateString()) return t('yesterday at {time}', { time });
-  return d.toLocaleDateString(NeoI18n.getLocale(), { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' }) + ', ' + time;
+  return d.toLocaleDateString(KibitzI18n.getLocale(), { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' }) + ', ' + time;
 }
 function snapWhy(kind) {
   if (kind === SNAP_KEPT) return t('Taken by you');
@@ -753,7 +753,7 @@ let snapShown = null; // the snapshot on the page, or null for the darlings
 // the snapshot on the page goes, and its marks with it
 function hideSnapshot() {
   snapShown = null;
-  if (window.CSS && CSS.highlights) CSS.highlights.delete('neo-snap-gone');
+  if (window.CSS && CSS.highlights) CSS.highlights.delete('kibitz-snap-gone');
   const v = $('#snap-view');
   if (v) { v.hidden = true; v.innerHTML = ''; }
 }
@@ -825,7 +825,7 @@ async function renderSnapList() {
       list.appendChild(g);
       lastGroup = group;
     }
-    const when = group === t('Earlier') ? new Date(s.at).toLocaleDateString(NeoI18n.getLocale(), { month: 'short', day: 'numeric' }) + ', ' + snapTime(s.at) : snapTime(s.at);
+    const when = group === t('Earlier') ? new Date(s.at).toLocaleDateString(KibitzI18n.getLocale(), { month: 'short', day: 'numeric' }) + ', ' + snapTime(s.at) : snapTime(s.at);
     const what = i === 0 ? t('The whole book') : s.changed ? t('{n} chapters changed since previous snapshot', { n: s.changed }) : t('No chapters changed since previous snapshot');
     const on = snapShown && snapShown.name === s.name;
     const b = item(s.kind === SNAP_KEPT ? 'snap-k' : 'snap-a', when, snapWhy(s.kind) + ' · ' + what, on, () => showSnapshot(s.name));
@@ -914,7 +914,7 @@ async function snapshotBook(bookId, name) {
   const chapters = [];
   for (const chId of meta.chapterOrder) {
     const at = snapHolder(snaps, i, chId);
-    chapters.push({ chId, html: at ? await window.neo.snapshotRead(bookId, at.name, chId + '.html') : '' });
+    chapters.push({ chId, html: at ? await window.kibitz.snapshotRead(bookId, at.name, chId + '.html') : '' });
   }
   return { snap: snaps[i], meta, chapters };
 }
@@ -924,7 +924,7 @@ async function showSnapshot(name) {
   const bookId = book.id;
   const got = await snapshotBook(bookId, name).catch((err) => { logSnap(err); return null; });
   if (!book || book.id !== bookId || currentTab !== 'darlings') return;
-  if (!got) { toast(t('NEO couldn’t read that snapshot.')); return; }
+  if (!got) { toast(t('Kibitz couldn’t read that snapshot.')); return; }
   const { snap, meta, chapters } = got;
   const shape = { ...book, chapterOrder: meta.chapterOrder, chapterTitles: meta.chapterTitles || {}, chapterKinds: meta.chapterKinds || {} };
   const label = (chId) => chapterHeading(chId, shape) || chapterName(chId, shape);
@@ -933,7 +933,7 @@ async function showSnapshot(name) {
   $('#aux-title').textContent = t('Your book as it was');
   v.hidden = false;
   v.innerHTML = '';
-  if (window.CSS && CSS.highlights) CSS.highlights.delete('neo-snap-gone');
+  if (window.CSS && CSS.highlights) CSS.highlights.delete('kibitz-snap-gone');
   // which chapters differ from the book today
   const diff = [];
   for (const ch of chapters) {
@@ -999,7 +999,7 @@ async function showSnapshot(name) {
       ranges.push(...wordRanges(p, new Set(g)));
     });
   }
-  if (ranges.length && window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('neo-snap-gone', new Highlight(...ranges));
+  if (ranges.length && window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('kibitz-snap-gone', new Highlight(...ranges));
   renderSnapList();
   // to the first chapter that differs
   const first = diff.length && v.querySelector(`.snap-chapter[data-id="${diff[0].chId}"]`);
@@ -1041,7 +1041,7 @@ async function restoreSnapshot(chId) {
     await takeSnapshot('r');
   } catch (err) {
     logSnap(err); // never replace words that couldn't be kept
-    toast(t('NEO couldn’t snapshot the book as it is now, so nothing was changed.'), 6000);
+    toast(t('Kibitz couldn’t snapshot the book as it is now, so nothing was changed.'), 6000);
     return;
   }
   const { meta, chapters, snap } = shown;
@@ -1072,7 +1072,7 @@ async function restoreSnapshot(chId) {
   for (const c of chId ? [chId] : book.chapterOrder) await persistChapter(c);
   await saveMeta();
   // chapters added since: out of the book, their words in the snapshot just taken
-  for (const c of gone) { delete chapterHTML[c]; await window.neo.deleteChapter(book.id, c); }
+  for (const c of gone) { delete chapterHTML[c]; await window.kibitz.deleteChapter(book.id, c); }
   showDarlingsAgain();
   switchTab('manuscript');
   renderChapters();
@@ -1098,8 +1098,8 @@ document.addEventListener('keydown', (e) => {
 
 /* ================================================================== */
 /*  REFRESH — picking up what another device wrote                     */
-/*  A library shared over iCloud or Syncthing changes underneath NEO.  */
-/*  Whenever NEO comes back into view it looks again: a chapter that   */
+/*  A library shared over iCloud or Syncthing changes underneath Kibitz.  */
+/*  Whenever Kibitz comes back into view it looks again: a chapter that   */
 /*  changed on disk and not here is simply adopted; one that changed   */
 /*  in both places keeps the local text on the page and lands the      */
 /*  other device's version in a new chapter right after it, so that    */
@@ -1138,12 +1138,12 @@ async function refreshFromDisk() {
   if (refreshing || shelfExport) return;
   refreshing = true;
   bookMetaCache.clear(); // whatever another device wrote, the next redraw reads
-  refreshOpenAux().catch((err) => window.neo.logError('notes refresh: ' + (err && err.message || err)));
+  refreshOpenAux().catch((err) => window.kibitz.logError('notes refresh: ' + (err && err.message || err)));
   try {
     if (!book) {
       if (library && !$('#bookshelf-view').hidden) {
         const gen = libraryGeneration;
-        const lib = applyDeviceLook(await window.neo.readLibrary());
+        const lib = applyDeviceLook(await window.kibitz.readLibrary());
         // a change made here while that read was out (a new shelf, a rename)
         // is newer than what came back: taking it would undo the change,
         // and the next save would make that stick. Look again next time.
@@ -1159,13 +1159,13 @@ async function refreshFromDisk() {
       return;
     }
     const bookId = book.id;
-    if (window.neo.refreshBook) await window.neo.refreshBook(bookId);
-    const meta = await window.neo.readBookMeta(bookId);
+    if (window.kibitz.refreshBook) await window.kibitz.refreshBook(bookId);
+    const meta = await window.kibitz.readBookMeta(bookId);
     if (!book || book.id !== bookId || !meta) return;
 
     // First read everything that changed; the page is left alone until it is
     // all in. (Deciding chapter by chapter between reads let a keystroke land
-    // on a page that no longer matched what NEO held, and reopening the book
+    // on a page that no longer matched what Kibitz held, and reopening the book
     // for a new book.json dropped whatever was typed while it loaded.)
     const theirs = metaSig(meta) !== savedMetaSig && Array.isArray(meta.chapterOrder);
     const sigHere = metaSig(book);
@@ -1174,15 +1174,15 @@ async function refreshFromDisk() {
     if (theirs) {
       for (const chId of meta.chapterOrder) {
         if (chapterHTML[chId] !== undefined) continue;
-        incoming[chId] = await window.neo.readChapter(bookId, chId);
+        incoming[chId] = await window.kibitz.readChapter(bookId, chId);
         if (!book || book.id !== bookId) return;
       }
     }
     // file times first, so only chapters that changed on disk are re-read
     // (a whole novel crossing the bridge every half minute is a hiccup)
     let stamps = null;
-    if (window.neo.chapterStamps) {
-      try { stamps = await window.neo.chapterStamps(bookId); } catch { stamps = null; }
+    if (window.kibitz.chapterStamps) {
+      try { stamps = await window.kibitz.chapterStamps(bookId); } catch { stamps = null; }
     }
     const fresh = [];
     for (const chId of [...book.chapterOrder]) {
@@ -1190,7 +1190,7 @@ async function refreshFromDisk() {
       const st = stamps ? stamps[chId] : undefined;
       if (st !== undefined && st === diskStamps[chId]) continue;
       const before = savedHTML[chId];
-      const disk = await window.neo.readChapter(bookId, chId);
+      const disk = await window.kibitz.readChapter(bookId, chId);
       if (!book || book.id !== bookId) return;
       fresh.push({ chId, st, before, disk });
     }
@@ -1201,7 +1201,7 @@ async function refreshFromDisk() {
     for (const name of ['stickies', 'darlings']) {
       const key = bookId + '/' + name;
       if (sidecarPending[key] || (name === 'stickies' && saveTimers.stickies)) continue; // ours is on its way
-      const remote = await window.neo.readJSON(bookId, name, null);
+      const remote = await window.kibitz.readJSON(bookId, name, null);
       if (!book || book.id !== bookId) return;
       if (Array.isArray(remote)) sides[name] = remote;
     }
@@ -1233,7 +1233,7 @@ async function refreshFromDisk() {
           // Saved here, and not in their list. They took it out (they say
           // so, or its file is gone from the disk): it goes. Otherwise their
           // book.json was written without ever having heard of it (both
-          // devices added a chapter while apart, or an older NEO saved over
+          // devices added a chapter while apart, or an older Kibitz saved over
           // the list): a chapter with words in it stays in the book.
           if (!hasWords(chapterHTML[chId]) || theirRemoved.has(chId) || (stamps && stamps[chId] === undefined)) return;
         }
@@ -1407,7 +1407,7 @@ async function refreshFromDisk() {
   }
 }
 window.addEventListener('focus', () => setTimeout(refreshFromDisk, 300));
-// and a quiet look every half minute while NEO is on screen, for the writer
+// and a quiet look every half minute while Kibitz is on screen, for the writer
 // who left both machines open
 setInterval(() => { if (document.visibilityState === 'visible') refreshFromDisk(); }, 30000);
 document.addEventListener('visibilitychange', () => {
@@ -1416,7 +1416,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('beforeunload', flushAllSaves);
-// flush whenever focus leaves NEO, and every 20 seconds
+// flush whenever focus leaves Kibitz, and every 20 seconds
 window.addEventListener('blur', () => { if (book) flushAllSaves(); });
 setInterval(() => { if (book) flushAllSaves('tick'); }, 20000);
 

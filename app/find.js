@@ -36,8 +36,8 @@ function closeSearch() {
   searchState = { matches: [], idx: -1, query: '' };
   searchFromVim = false;
   if (window.CSS && CSS.highlights) {
-    CSS.highlights.delete('neo-search');
-    CSS.highlights.delete('neo-search-current');
+    CSS.highlights.delete('kibitz-search');
+    CSS.highlights.delete('kibitz-search-current');
   }
 }
 
@@ -69,8 +69,8 @@ function paintHighlights() {
   searchState.matches.forEach((m, i) => {
     (i === searchState.idx ? cur : all).add(m.range);
   });
-  CSS.highlights.set('neo-search', all);
-  CSS.highlights.set('neo-search-current', cur);
+  CSS.highlights.set('kibitz-search', all);
+  CSS.highlights.set('kibitz-search-current', cur);
 }
 
 // Find searches the tab you're in: the whole manuscript, first chapter to
@@ -230,7 +230,7 @@ function replaceCurrent() {
   try {
     chapter = m.range.startContainer.parentElement.closest('.chapter');
     snapshotStructure('replace');
-    breakRun++; // the engine never saw this change: ⌘Z goes to NEO's undo
+    breakRun++; // the engine never saw this change: ⌘Z goes to Kibitz's undo
     replaceRange(m.range, rep);
   } catch {
     runSearch();
@@ -317,7 +317,7 @@ async function addImportedBooks(results, shelf) {
     }
     // title/byline harvested from the document beat the filename;
     // passing the title in gives the book folder a readable name too
-    const meta = await window.neo.createBook({
+    const meta = await window.kibitz.createBook({
       author: r.author || displayAuthor(),
       title: r.title || r.name
     });
@@ -330,7 +330,7 @@ async function addImportedBooks(results, shelf) {
     meta.chapterTitles = {};
     for (const ch of r.chapters) {
       const chId = 'ch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
-      await window.neo.writeChapter(meta.id, chId, importedChapterHTML(ch));
+      await window.kibitz.writeChapter(meta.id, chId, importedChapterHTML(ch));
       if (ch.title) meta.chapterTitles[chId] = ch.title;
       if (ch.role) meta[ch.role] = chId;
       meta.chapterOrder.push(chId);
@@ -389,7 +389,7 @@ async function importChaptersIntoBook(results, beforeId) {
       await persistChapter(chId);
     }
   } catch (err) {
-    window.neo.logError('import chapters: ' + (err && err.message || err));
+    window.kibitz.logError('import chapters: ' + (err && err.message || err));
     for (const chId of ids) delete chapterHTML[chId];
     undoStack.pop();
     toast(t('Couldn’t import the chapters: {error}', { error: String(err && err.message || err) }), 6000);
@@ -411,12 +411,12 @@ async function importChaptersIntoBook(results, beforeId) {
 // Outline) become chapters before `beforeId`
 async function importDroppedChapters(files, beforeId) {
   const paths = [...files]
-    .map((f) => { try { return window.neo.pathForFile(f); } catch { return null; } })
+    .map((f) => { try { return window.kibitz.pathForFile(f); } catch { return null; } })
     .filter((p) => p && /\.(docx|txt|md)$/i.test(p));
   if (!paths.length) { toast(t('No .docx, .txt, or .md files in that drop')); return; }
   const bookId = book.id;
   toast(t('Importing…'));
-  const results = await window.neo.importFiles(paths);
+  const results = await window.kibitz.importFiles(paths);
   if (book && book.id === bookId) await importChaptersIntoBook(results, beforeId);
 }
 
@@ -424,7 +424,7 @@ async function importDroppedChapters(files, beforeId) {
 async function importChapters() {
   if (!book || isScript() || $('#editor-view').hidden) return;
   const bookId = book.id;
-  const results = await window.neo.importPick({ chapters: true });
+  const results = await window.kibitz.importPick({ chapters: true });
   if (!results.length || !book || book.id !== bookId) return;
   const at = currentChapterId ? book.chapterOrder.indexOf(currentChapterId) + 1 : book.chapterOrder.length;
   await importChaptersIntoBook(results, book.chapterOrder[at]);
@@ -444,7 +444,7 @@ function importedEmphasis(text) {
 }
 
 async function importBooks() {
-  const results = await window.neo.importPick();
+  const results = await window.kibitz.importPick();
   if (results.length) await addImportedBooks(results, shelvesFor(currentAuthor().id)[0] || library.shelves[0]);
 }
 

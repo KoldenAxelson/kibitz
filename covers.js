@@ -1,18 +1,18 @@
-/* NEO — cover art
+/* Kibitz — cover art
  *
  * Every book on the shelf gets a cover in two layers that the shelf composites
  * live: an ART layer (a seeded abstract painted on a canvas, or an image the
- * writer chose, or one NEO painted from the text) and a TYPE layer (title and
+ * writer chose, or one Kibitz painted from the text) and a TYPE layer (title and
  * author set in one of several templates). Because the type is real text, it
  * never smears the way image models render lettering, and a renamed book
  * re-sets its cover for free.
  *
- * Loaded before app/; exposes window.NeoCovers.
+ * Loaded before app/; exposes window.KibitzCovers.
  */
 
 'use strict';
 
-const NeoCovers = (() => {
+const KibitzCovers = (() => {
   // Tiles are 104×150 CSS px. Paint at 2× so retina shelves stay crisp.
   const W = 208;
   const H = 300;
@@ -285,13 +285,13 @@ const NeoCovers = (() => {
 
   const TEMPLATES = [
     // face: css font shorthand family; weight; caps; anchor: where the block sits
-    { id: 'stack',  family: 'NEO Anton',    weight: 400, caps: true,  anchor: 'top',    lead: 0.9,  max: 46, minLines: 1, maxLines: 4, connectors: 'small' },
-    { id: 'bebas',  family: 'NEO Bebas',    weight: 400, caps: true,  anchor: 'center', lead: 0.88, max: 48, minLines: 1, maxLines: 4, connectors: 'small' },
-    { id: 'black',  family: 'NEO Playfair', weight: 900, caps: false, anchor: 'center', lead: 0.98, max: 40, minLines: 1, maxLines: 3, connectors: 'italic' },
-    { id: 'fat',    family: 'NEO Abril',    weight: 400, caps: false, anchor: 'bottom', lead: 0.98, max: 40, minLines: 1, maxLines: 3, connectors: 'italic' },
-    { id: 'cinzel', family: 'NEO Cinzel',   weight: 900, caps: true,  anchor: 'center', lead: 1.05, max: 30, minLines: 1, maxLines: 4, connectors: 'small', frame: true },
-    { id: 'band',   family: 'NEO Josefin',  weight: 700, caps: true,  anchor: 'center', lead: 1.0,  max: 30, minLines: 1, maxLines: 3, connectors: 'inline', band: true },
-    { id: 'oswald', family: 'NEO Oswald',   weight: 700, caps: true,  anchor: 'top',    lead: 0.95, max: 40, minLines: 1, maxLines: 4, connectors: 'small', rule: true }
+    { id: 'stack',  family: 'Kibitz Anton',    weight: 400, caps: true,  anchor: 'top',    lead: 0.9,  max: 46, minLines: 1, maxLines: 4, connectors: 'small' },
+    { id: 'bebas',  family: 'Kibitz Bebas',    weight: 400, caps: true,  anchor: 'center', lead: 0.88, max: 48, minLines: 1, maxLines: 4, connectors: 'small' },
+    { id: 'black',  family: 'Kibitz Playfair', weight: 900, caps: false, anchor: 'center', lead: 0.98, max: 40, minLines: 1, maxLines: 3, connectors: 'italic' },
+    { id: 'fat',    family: 'Kibitz Abril',    weight: 400, caps: false, anchor: 'bottom', lead: 0.98, max: 40, minLines: 1, maxLines: 3, connectors: 'italic' },
+    { id: 'cinzel', family: 'Kibitz Cinzel',   weight: 900, caps: true,  anchor: 'center', lead: 1.05, max: 30, minLines: 1, maxLines: 4, connectors: 'small', frame: true },
+    { id: 'band',   family: 'Kibitz Josefin',  weight: 700, caps: true,  anchor: 'center', lead: 1.0,  max: 30, minLines: 1, maxLines: 3, connectors: 'inline', band: true },
+    { id: 'oswald', family: 'Kibitz Oswald',   weight: 700, caps: true,  anchor: 'top',    lead: 0.95, max: 40, minLines: 1, maxLines: 4, connectors: 'small', rule: true }
   ];
 
   // a word's lookup form: lowercase letters, accents stripped (é → e, ё → е)
@@ -306,7 +306,7 @@ const NeoCovers = (() => {
     'και', 'κι', 'η',
     'σε', 'στο', 'στη', 'στην', 'στον', 'στους', 'στις',
     'με', 'για', 'απο', 'προς', 'ως', 'που',
-    // small words of the other languages NEO speaks, so their titles set as
+    // small words of the other languages Kibitz speaks, so their titles set as
     // gracefully as English ones (accents are stripped before the lookup)
     'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'en', 'au', 'aux', 'sur', 'pour', 'par', 'dans', 'ou', 'avec', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses', // fr
     'el', 'los', 'las', 'del', 'y', 'una', 'con', 'por', 'sin', 'mi', 'tu', 'su', // es
@@ -326,7 +326,7 @@ const NeoCovers = (() => {
   const SAMPLE = 'Aя';
   const ready = (typeof document !== 'undefined' && document.fonts)
     ? Promise.all(TEMPLATES.map((t) => document.fonts.load(`${t.weight} 20px "${t.family}"`, SAMPLE)))
-        .then(() => document.fonts.load('italic 900 20px "NEO Playfair"', SAMPLE))
+        .then(() => document.fonts.load('italic 900 20px "Kibitz Playfair"', SAMPLE))
         .catch(() => null)
     : Promise.resolve();
 
@@ -341,7 +341,7 @@ const NeoCovers = (() => {
   // are balanced into the template's maximum number of lines by character count.
   function breakLines(title, t) {
     const words = title.trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return [{ text: (typeof NeoI18n !== 'undefined' ? NeoI18n.t('Untitled') : 'Untitled'), small: false }];
+    if (!words.length) return [{ text: (typeof KibitzI18n !== 'undefined' ? KibitzI18n.t('Untitled') : 'Untitled'), small: false }];
     const isConn = (w) => CONNECTORS.has(connKey(w));
     let lines;
     if (words.length <= t.maxLines) {
@@ -480,7 +480,7 @@ const NeoCovers = (() => {
   // The shelf composites art and type with CSS; exports need one picture.
   // This draws the same plan — same art, same lines, same ink — onto a
   // canvas the size of a KDP cover. `imageUrl` (optional) is the writer's
-  // own cover image; the abstract is used otherwise. NEO's paintings are
+  // own cover image; the abstract is used otherwise. Kibitz's paintings are
   // never passed here: they are for the shelf, not for files that travel.
   function renderFull(meta, opts = {}) {
     const OW = opts.width || 1600, OH = opts.height || 2560;
@@ -546,7 +546,7 @@ const NeoCovers = (() => {
     const x = left ? PAD : TILE_W / 2;
     let y = top;
     for (const ln of planned.lines) {
-      ctx.font = `${ln.italic ? 'italic ' : ''}${ln.italic ? 900 : t.weight} ${ln.size}px "${ln.italic ? 'NEO Playfair' : t.family}"`;
+      ctx.font = `${ln.italic ? 'italic ' : ''}${ln.italic ? 900 : t.weight} ${ln.size}px "${ln.italic ? 'Kibitz Playfair' : t.family}"`;
       ctx.fillStyle = ink;
       if (!t.band) { ctx.shadowColor = light ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.3)'; ctx.shadowBlur = 6 * s; ctx.shadowOffsetY = 1 * s; }
       const spacing = ln.small ? (t.id === 'bebas' ? 3 : t.id === 'cinzel' ? 2.5 : 2) : (t.id === 'band' ? 0.8 : t.id === 'cinzel' ? 0.5 : t.id === 'stack' ? 0.3 : t.id === 'bebas' ? 0.5 : 0);
@@ -563,12 +563,12 @@ const NeoCovers = (() => {
     if (author) {
       const longAu = author.length > 16;
       let auSize = longAu ? 6.5 : AU;
-      ctx.font = `600 ${auSize}px "NEO Josefin"`;
+      ctx.font = `600 ${auSize}px "Kibitz Josefin"`;
       try { ctx.letterSpacing = (longAu ? 0.8 : 1.6) + 'px'; } catch { /* older engines */ }
       let aw = ctx.measureText(author).width;
       if (aw > AVAIL_W) { // the shelf wraps a long name; here it steps down to fit
         auSize = Math.max(4.5, auSize * AVAIL_W / aw);
-        ctx.font = `600 ${auSize}px "NEO Josefin"`;
+        ctx.font = `600 ${auSize}px "Kibitz Josefin"`;
         aw = ctx.measureText(author).width;
       }
       const ay = t.anchor === 'top' ? TILE_H - 9 - AU : y + AU_GAP;

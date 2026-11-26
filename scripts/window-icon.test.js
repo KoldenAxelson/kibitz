@@ -32,7 +32,7 @@ function windowOn(platform) {
   }
   BrowserWindow.getFocusedWindow = () => null;
   BrowserWindow.getAllWindows = () => [];
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-window-icon-'));
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-window-icon-'));
   const electron = {
     app: { commandLine: { appendSwitch() {} }, getPath: () => userData, getLocale: () => 'en', requestSingleInstanceLock: () => true, whenReady: () => ({ then() {} }), on() {} },
     ipcMain: { on() {}, handle() {} },
@@ -60,7 +60,7 @@ function windowOn(platform) {
 }
 
 describe('the window\'s icon', () => {
-  test('on Linux the window is given NEO\'s icon, and the file is there', () => {
+  test('on Linux the window is given Kibitz\'s icon, and the file is there', () => {
     const options = windowOn('linux');
     assert.equal(options.icon, path.join(root, 'build', 'icon.png'));
     assert.ok(fs.statSync(options.icon).size > 0);

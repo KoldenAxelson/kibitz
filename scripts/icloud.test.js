@@ -1,7 +1,7 @@
 'use strict';
 
 // Files iCloud has taken off a Mac ("Optimize Mac Storage") are placeholders:
-// a read waits on iCloud, forever when iCloud is stuck, and NEO froze at
+// a read waits on iCloud, forever when iCloud is stuck, and Kibitz froze at
 // launch with no window. The real main.js runs against a temporary library,
 // with iCloud played by the test: a "placeholder" is a sparse file (a size and
 // no blocks on disk, as a placeholder looks), and "downloading" one writes its
@@ -37,7 +37,7 @@ function loadMain() {
     // the backup's own process: the real backup-worker.js, as a Node child
     utilityProcess: {
       fork: (file) => {
-        const child = require('node:child_process').fork(file, [], { env: { ...process.env, NEO_TEST_SPARSE_IS_CLOUD: '1' } });
+        const child = require('node:child_process').fork(file, [], { env: { ...process.env, KIBITZ_TEST_SPARSE_IS_CLOUD: '1' } });
         return {
           on: (ev, fn) => child.on(ev, ev === 'exit' ? (code) => fn(code || 0) : fn),
           postMessage: (m) => child.send(m),
@@ -98,7 +98,7 @@ function sendToICloud(file) {
 }
 
 function libraryWithBook() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-icloud-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-icloud-'));
   main.pointAt(dir);
   const lib = main.call('library:read');
   const book = main.call('book:create', { title: 'Salt Roads' });
@@ -121,7 +121,7 @@ describe('files still in iCloud', { concurrency: 1 }, () => {
     assert.equal(main.call('book:readMeta', book.id).title, 'Salt Roads');
   });
 
-  test('a chapter in iCloud is waited for without holding NEO up, then read', async () => {
+  test('a chapter in iCloud is waited for without holding Kibitz up, then read', async () => {
     const { book, bookDir } = libraryWithBook();
     const file = path.join(bookDir, 'chapters', 'ch-aaa.html');
     const words = fs.readFileSync(file, 'utf8');
@@ -185,8 +185,8 @@ describe('files still in iCloud', { concurrency: 1 }, () => {
   });
 
   // a file that never answers (a named pipe: a read of one waits for ever, as
-  // a stuck iCloud file does) once held NEO's whole main process, at launch
-  test('a file that never answers is left out of the backup, and NEO goes on meanwhile', async () => {
+  // a stuck iCloud file does) once held Kibitz's whole main process, at launch
+  test('a file that never answers is left out of the backup, and Kibitz goes on meanwhile', async () => {
     const { dir, bookDir } = libraryWithBook();
     const stuck = path.join(bookDir, 'stickies.json');
     fs.rmSync(stuck, { force: true });

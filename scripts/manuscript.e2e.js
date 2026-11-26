@@ -1,8 +1,8 @@
 // End-to-end test for File → Export → Manuscript Format…, on a throwaway
-// library: the dialog starts from what NEO knows (the author's name, the
+// library: the dialog starts from what Kibitz knows (the author's name, the
 // Email Draft address, the book's byline, the header from them), the
 // header's name follows the byline until it's changed by hand, Save as Word
-// writes a .docx that NEO's own import reads back, Save as PDF writes the
+// writes a .docx that Kibitz's own import reads back, Save as PDF writes the
 // pages with the header on every page but the title page, and what was
 // typed is kept for next time (the details for every book, the byline for
 // this one). Run with `npm run test:manuscript` (under xvfb-run without a
@@ -18,15 +18,15 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-manuscript-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-manuscript-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-manuscript-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-manuscript-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const LIB = path.join(tmp, 'NEO Library');
+const LIB = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(LIB);
 fs.writeFileSync(path.join(LIB, 'library.json'), JSON.stringify({
   authorName: 'Mary Ann Evans', emailAddress: 'mary@example.com', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night', hintShown: true,
@@ -54,16 +54,16 @@ const val = (k) => js(`${D}.querySelector('[data-k="${k}"]').value`);
 const setVal = (k, v) => js(`(() => { const el = ${D}.querySelector('[data-k="${k}"]'); el.value = ${JSON.stringify(v)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
 const has = (cmd) => { try { execFileSync(cmd, ['-v'], { stdio: 'ignore' }); return true; } catch (err) { return err.code !== 'ENOENT'; } };
 async function shot(name) {
-  if (!process.env.NEO_TEST_SHOTS) return;
+  if (!process.env.KIBITZ_TEST_SHOTS) return;
   const img = await wc.capturePage();
-  fs.writeFileSync(path.join(process.env.NEO_TEST_SHOTS, name + '.png'), img.toPNG());
+  fs.writeFileSync(path.join(process.env.KIBITZ_TEST_SHOTS, name + '.png'), img.toPNG());
 }
 
 const STORY = 'The tide came in over the stones, and the gulls rose. The harbor light turned.';
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
 
-test('the dialog starts from what NEO knows', async () => {
+test('the dialog starts from what Kibitz knows', async () => {
   await js(`(() => { window.__ms = doExport('manuscript'); })()`);
   await until(() => js(`!!${D}`));
   assert.equal(await val('name'), 'Mary Ann Evans');
@@ -91,7 +91,7 @@ test('the dialog starts from what NEO knows', async () => {
   assert.equal(await js(`library.manuscript === undefined`), true);
 });
 
-test('Save as Word: the .docx, which NEO\'s own import reads back', async () => {
+test('Save as Word: the .docx, which Kibitz\'s own import reads back', async () => {
   const to = path.join(tmp, 'curse-manuscript.docx');
   dialog.showSaveDialog = async () => ({ canceled: false, filePath: to });
   await js(`(() => { window.__ms = doExport('manuscript'); })()`);
@@ -114,8 +114,8 @@ test('Save as Word: the .docx, which NEO\'s own import reads back', async () => 
   assert.ok(doc.includes('>#<'), 'the scene break');
   assert.ok(!doc.includes('All rights reserved'), 'the copyright page left out');
   assert.ok(doc.includes('>END<'));
-  // NEO's own Word import reads it back: the story's words are all there
-  const back = await js(`window.neo.importFiles([${JSON.stringify(to)}])`);
+  // Kibitz's own Word import reads it back: the story's words are all there
+  const back = await js(`window.kibitz.importFiles([${JSON.stringify(to)}])`);
   const text = JSON.stringify(back);
   assert.ok(text.includes('The tide came in over the stones'), text.slice(0, 300));
   // kept: the details for every book, the byline for this one
@@ -172,11 +172,11 @@ test('Save as PDF: the title page, then the story from page 1 under the header',
     assert.ok(all.includes('#') && /\bEND\b/.test(all));
     const fonts = execFileSync('pdffonts', [to]).toString();
     assert.match(fonts, /CourierPrime/, 'Courier Prime set in the file');
-    if (process.env.NEO_TEST_SHOTS && has('pdftoppm')) execFileSync('pdftoppm', ['-r', '40', '-png', '-l', '4', to, path.join(process.env.NEO_TEST_SHOTS, 'manuscript-pdf')]);
+    if (process.env.KIBITZ_TEST_SHOTS && has('pdftoppm')) execFileSync('pdftoppm', ['-r', '40', '-png', '-l', '4', to, path.join(process.env.KIBITZ_TEST_SHOTS, 'manuscript-pdf')]);
   } else console.log('     (pdftotext not here: the pages\' text not read back)');
   assert.equal(JSON.parse(fs.readFileSync(path.join(LIB, 'library.json'), 'utf8')).manuscript.font, 'courier');
   let errors = '';
-  try { errors = fs.readFileSync(path.join(LIB, 'neo-errors.log'), 'utf8'); } catch { /* none */ }
+  try { errors = fs.readFileSync(path.join(LIB, 'kibitz-errors.log'), 'utf8'); } catch { /* none */ }
   assert.equal(errors, '');
 });
 
@@ -195,7 +195,7 @@ async function main() {
       '# Low Water', ...Array.from({ length: 30 }, () => many(3))].join('\n\n'));
     await js(`(async () => {
       document.getElementById('firstrun').hidden = true;
-      const results = await window.neo.importFiles([${JSON.stringify(md)}]);
+      const results = await window.kibitz.importFiles([${JSON.stringify(md)}]);
       await addImportedBooks(results, library.shelves[0]);
       const ids = library.shelves[0].bookIds;
       await openBook(ids[ids.length - 1]);

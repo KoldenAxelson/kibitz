@@ -4,7 +4,7 @@
 /*  EDITOR — typing                                                    */
 /* ================================================================== */
 
-// a drag that began on NEO's own page (moving words within the book)
+// a drag that began on Kibitz's own page (moving words within the book)
 let dragFromInside = false;
 document.addEventListener('dragstart', () => { dragFromInside = true; }, true);
 document.addEventListener('dragend', () => { dragFromInside = false; }, true);
@@ -76,7 +76,7 @@ function wireChapterBody(body, chId) {
   });
   // Text dragged in from another app (a browser, Word) is cleaned the same
   // way as a paste, instead of landing with its fonts, colours and links.
-  // A drag within NEO's own pages is left to the engine.
+  // A drag within Kibitz's own pages is left to the engine.
   body.addEventListener('drop', (e) => {
     if (dragFromInside || isScript() || !e.dataTransfer || (e.dataTransfer.files && e.dataTransfer.files.length)) return;
     const types = [...(e.dataTransfer.types || [])];
@@ -98,8 +98,8 @@ function wireChapterBody(body, chId) {
     // into a LitRPG box: line for line, every space kept
     const into = caretBlock(body);
     if (into && into.classList.contains('litrpg')) { pasteIntoBox(body, chId, html, text); return; }
-    // a box copied from NEO stays a box
-    if (html && /<p\b[^>]*\bclass="[^"]*\blitrpg\b/.test(html) && pasteBoxesFromNeo(body, chId, html)) {
+    // a box copied from Kibitz stays a box
+    if (html && /<p\b[^>]*\bclass="[^"]*\blitrpg\b/.test(html) && pasteBoxesFromKibitz(body, chId, html)) {
       reconcileMarks();
       return;
     }
@@ -160,7 +160,7 @@ function wireChapterBody(body, chId) {
   body.addEventListener('keydown', (e) => {
     // An input method mid-word owns the keys. Its marker (keyCode 229) also
     // rides on Enter with nothing being composed, as on GNOME (Wayland, IBus),
-    // where it kept ⇧Enter and ⌘⇧Enter from ever reaching NEO.
+    // where it kept ⇧Enter and ⌘⇧Enter from ever reaching Kibitz.
     if (composing || e.isComposing || (e.keyCode === 229 && e.key !== 'Enter')) return;
     // count consecutive Enters — the double/triple rhythm works mid-sentence
     if (e.key === 'Enter' && !e.shiftKey) enterRun++;
@@ -286,7 +286,7 @@ function wireChapterBody(body, chId) {
     if (ghost && e.inputType && e.inputType.startsWith('insert')) selectGhost(ghost);
     writeOverGhost();
   });
-  // NEO's own typing aids (smart quotes, capitals) write without a
+  // Kibitz's own typing aids (smart quotes, capitals) write without a
   // beforeinput: a key that types a letter over a ghost selects it whole and
   // makes it prose first (an input method's first key reads Process)
   body.addEventListener('keydown', (e) => {
@@ -392,7 +392,7 @@ function emptyChapterBackspace(e, body, chId) {
 }
 
 // ⌘B / ⌘I applied by hand: the engine's native handling scrolls the
-// selection "into view" and mis-measures NEO's transformed page column,
+// selection "into view" and mis-measures Kibitz's transformed page column,
 // throwing the reader to the top of the screen. Style, don't scroll.
 // The letter a shortcut's key stands for: the character it types, so ⌘B
 // is B on Dvorak, BÉPO and AZERTY wherever their B sits (#546, #536); on a
@@ -548,7 +548,7 @@ function caretRect() {
 // line stays at the height it had in the window, so the page doesn't jump:
 // caretHeight() before the change, keepCaretHeight(it) after.
 // (The browser's own scroll anchoring is paused meanwhile: it moves the page
-// to make up for what changed above the window, after NEO has already put
+// to make up for what changed above the window, after Kibitz has already put
 // the line back, and the page landed a line or two off.)
 function caretHeight() {
   const sc = $('#paper-scroll');
@@ -562,7 +562,7 @@ function keepCaretHeight(was) {
   const sc = $('#paper-scroll');
   const rect = caretRect();
   if (was != null && rect) sc.scrollTop += rect.top - sc.getBoundingClientRect().top - was;
-  // anchoring back on once the page has settled where NEO put it
+  // anchoring back on once the page has settled where Kibitz put it
   clearTimeout(caretHeight.t);
   caretHeight.t = setTimeout(() => { sc.style.overflowAnchor = ''; }, 300);
 }
@@ -670,8 +670,8 @@ function chapterStartBackspace(e, body, chId) {
     await persistChapter(prevId);
     if (!book || book.id !== bookId) return;
     await saveMeta();
-    await window.neo.deleteChapter(bookId, chId);
-  })().catch((err) => window.neo.logError('merge: ' + (err && err.message || err)));
+    await window.kibitz.deleteChapter(bookId, chId);
+  })().catch((err) => window.kibitz.logError('merge: ' + (err && err.message || err)));
   renderChapters();
   renderStickies();
   restoreCaret({ chId: prevId, pIdx: prevCount, off: 0, scroll: keepScroll });
@@ -802,7 +802,7 @@ function guardMarkerDelete(e, body, chId) {
 
   // Case 0: joining two lines where the upper one ends in a footnote's
   // number. The engine only drops the line's trailing <br> there and leaves
-  // the lines apart, so NEO joins them itself.
+  // the lines apart, so Kibitz joins them itself.
   const block = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node).closest('.chapter-body > p');
   if (block && !block.classList.contains('scene-break') && !block.classList.contains('ghost')) {
     const edge = document.createRange();
@@ -883,7 +883,7 @@ function guardMarkerDelete(e, body, chId) {
 
 // The engine wraps text in style-carrying spans during merges and splits
 // ("<span style='text-indent...'>"). They corrupt later edits — unwrap them,
-// keeping only NEO's own marks.
+// keeping only Kibitz's own marks.
 function stripJunkSpans(el) {
   for (const s of [...el.querySelectorAll('span:not(.ph-mark):not(.fn)')]) {
     while (s.firstChild) s.before(s.firstChild);
@@ -900,7 +900,7 @@ function stripJunkSpans(el) {
 // caret is, even mid-sentence. Enter three times: the chapter splits here.
 let enterRun = 0;
 // break operations live outside the engine's undo history; while the most
-// recent edits are breaks, ⌘Z routes to NEO's structural undo, one per press
+// recent edits are breaks, ⌘Z routes to Kibitz's structural undo, one per press
 let breakRun = 0;
 
 // was: the caret's height in the window before the *** above it went

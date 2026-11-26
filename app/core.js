@@ -1,4 +1,4 @@
-/* =============================== NEO =============================== */
+/* =============================== Kibitz =============================== */
 
 'use strict';
 
@@ -6,15 +6,15 @@
 // The English text is the key: t('Cancel') shows the translation when the
 // chosen language has one, and the English original otherwise.
 (() => {
-  const l = (window.neo && window.neo.i18n) || {};
-  NeoI18n.setLocale(l.locale || 'en', l.dict || {}, l.base || {});
+  const l = (window.kibitz && window.kibitz.i18n) || {};
+  KibitzI18n.setLocale(l.locale || 'en', l.dict || {}, l.base || {});
 })();
-const { t, fmtNum, fmtDate } = NeoI18n;
+const { t, fmtNum, fmtDate } = KibitzI18n;
 
 // index.html marks its words with data-i18n (text), data-i18n-title,
 // data-i18n-placeholder and data-i18n-ph (the empty-field hints)
 function applyStaticI18n(root = document) {
-  document.documentElement.lang = NeoI18n.getLocale();
+  document.documentElement.lang = KibitzI18n.getLocale();
   root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.textContent.replace(/\s+/g, ' ').trim()); });
   root.querySelectorAll('[data-i18n-title]').forEach((el) => { if (el.title) el.title = t(el.title); });
   root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.placeholder); });
@@ -65,7 +65,7 @@ const BACK_KINDS = ['epilogue', 'acknowledgments', 'about'];
 function chapterKind(chId, meta = book) {
   const k = meta && meta.chapterKinds && meta.chapterKinds[chId];
   if (k && CHAPTER_KINDS.includes(k)) return k;
-  // NEO 1.0 kept a prologue and an epilogue as roles of the first and last
+  // Kibitz 1.0 kept a prologue and an epilogue as roles of the first and last
   // chapters (a book not opened since reads that way until it is)
   const order = (meta && meta.chapterOrder) || [];
   if (order.length >= 2) {
@@ -162,7 +162,7 @@ function soloStory(meta = book) {
   const story = meta.chapterOrder.filter((c) => isStory(c, meta) || chapterKind(c, meta) === 'part');
   return story.length === 1 && chapterKind(story[0], meta) === 'chapter' ? story[0] : null;
 }
-// NEO 1.0's roles become kinds the first time a book opens here, and a kind
+// Kibitz 1.0's roles become kinds the first time a book opens here, and a kind
 // whose entry is gone is let go
 function settleChapterKinds() {
   let changed = false;
@@ -226,17 +226,17 @@ function writeLibrary(lib = library) {
   rememberDeviceLook(lib);
   libraryGeneration++;
   libraryWritesPending++;
-  return new Promise((resolve) => resolve(window.neo.writeLibrary(lib)))
+  return new Promise((resolve) => resolve(window.kibitz.writeLibrary(lib)))
     .finally(() => { libraryWritesPending--; });
 }
 
-// How NEO looks is each device's own: dark on the iPad, light on the PC.
+// How Kibitz looks is each device's own: dark on the iPad, light on the PC.
 // These settings are kept on the device as well as in library.json. The
 // library's copy is the last device's, so a device opening the library for
 // the first time starts out the way the writer last had it, and from then on
 // keeps its own.
 const DEVICE_LOOK = ['pageTheme', 'uiBright', 'uiBrightAside', 'uiZoom', 'editorFontSize', 'typewriter', 'nbspMarks', 'focus', 'posMode', 'outlineView', 'vimKeys', 'pagedView', 'twoPageView', 'pageWidth'];
-const DEVICE_LOOK_KEY = 'neo-device-look';
+const DEVICE_LOOK_KEY = 'kibitz-device-look';
 const EDITOR_SIZE_MIN = 8;
 const EDITOR_SIZE_MAX = 22;
 function deviceLookOf(lib) {
@@ -285,7 +285,7 @@ const NO_HOVER = !!(window.matchMedia && window.matchMedia('(hover: none)').matc
 // NEO Pocket (the Android and iOS shell)
 const IS_POCKET = !!window.Capacitor;
 
-// NEO's features, each turned on or off in Options (library.features, kept
+// Kibitz's features, each turned on or off in Options (library.features, kept
 // in library.json, so every device of the library follows the writer's
 // choice). A feature that's off keeps its menu items, keys and right-click
 // choices out of sight. Nothing a book already holds is hidden: a footnote,
@@ -376,8 +376,8 @@ const KHELP = K('⌘/', 'Ctrl+/');
 // it). Touch screens scroll with a finger and never show them.
 function showScrollbar(el, ms = 1200) {
   el.classList.add('show-scrollbar');
-  clearTimeout(el._neoSbHide);
-  if (ms) el._neoSbHide = setTimeout(() => { if (!el._neoSbHeld && !el._neoSbNear) el.classList.remove('show-scrollbar'); }, ms);
+  clearTimeout(el._kibitzSbHide);
+  if (ms) el._kibitzSbHide = setTimeout(() => { if (!el._kibitzSbHeld && !el._kibitzSbNear) el.classList.remove('show-scrollbar'); }, ms);
 }
 document.addEventListener('scroll', (e) => {
   const el = e.target;
@@ -403,17 +403,17 @@ document.addEventListener('mousemove', (e) => {
     sbFrame = 0;
     const el = scrollbarUnder(e);
     if (el === sbNear) return;
-    if (sbNear) { sbNear._neoSbNear = false; showScrollbar(sbNear); }
+    if (sbNear) { sbNear._kibitzSbNear = false; showScrollbar(sbNear); }
     sbNear = el;
-    if (el) { el._neoSbNear = true; showScrollbar(el, 0); }
+    if (el) { el._kibitzSbNear = true; showScrollbar(el, 0); }
   });
 }, { passive: true });
 document.addEventListener('mousedown', (e) => {
   const el = scrollbarUnder(e);
   if (!el) return;
-  el._neoSbHeld = true;
+  el._kibitzSbHeld = true;
   showScrollbar(el, 0);
-  const up = () => { el._neoSbHeld = false; showScrollbar(el); window.removeEventListener('mouseup', up, true); };
+  const up = () => { el._kibitzSbHeld = false; showScrollbar(el); window.removeEventListener('mouseup', up, true); };
   window.addEventListener('mouseup', up, true);
 }, true);
 
@@ -574,7 +574,7 @@ document.addEventListener('mousedown', (e) => {
 if (IS_MAC && !IS_POCKET) document.body.classList.add('mac-bar');
 function showWindowTitle() {
   const title = book ? (book.title || t('Untitled')) : '';
-  document.title = title ? title + ' — NEO' : 'NEO';
+  document.title = title ? title + ' — Kibitz' : 'Kibitz';
   const strip = IS_MAC && !IS_POCKET && document.querySelector('#dragstrip'); // the desktop's page only
   if (strip) strip.textContent = title;
 }

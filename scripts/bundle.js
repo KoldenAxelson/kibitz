@@ -37,13 +37,13 @@ say(`Using ${path.basename(file)}`);
 const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
 if (branch !== 'main') stop(`You're on "${branch}", not main. Type: git checkout main   then try again.`);
 const changed = git('status', '--porcelain', '--untracked-files=no');
-if (changed) stop('Some NEO files have changes that aren\'t committed yet:\n' + changed + '\nAsk Claude what to do with them first.');
+if (changed) stop('Some Kibitz files have changes that aren\'t committed yet:\n' + changed + '\nAsk Claude what to do with them first.');
 say('Getting the latest from GitHub…');
 try { git('pull', '--ff-only'); } catch { stop('Couldn\'t get the latest from GitHub cleanly. Ask Claude to take a look.'); }
 
 // the bundle must fit on top of what's here
 try { git('bundle', 'verify', file); } catch {
-  stop('This bundle doesn\'t fit the NEO you have. It may be an old one. Ask Claude for a fresh bundle.');
+  stop('This bundle doesn\'t fit the Kibitz you have. It may be an old one. Ask Claude for a fresh bundle.');
 }
 const heads = git('bundle', 'list-heads', file).split('\n').filter(Boolean);
 if (!heads.length) stop('This bundle is empty.');

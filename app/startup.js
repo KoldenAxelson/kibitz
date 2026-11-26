@@ -6,7 +6,7 @@
 
 let errorToastShown = false;
 function reportError(msg) {
-  window.neo.logError(msg);
+  window.kibitz.logError(msg);
   if (!errorToastShown) {
     errorToastShown = true;
     toast(t('Something hiccuped — your words are safe, and the details were logged'));
@@ -65,7 +65,7 @@ installLinuxBodyFonts();
 /* ================================================================== */
 /*  ACCESSIBILITY: keyboard, screen readers, system settings           */
 /* ================================================================== */
-// NEO stays quiet by design; these make the quiet parts reachable. The
+// Kibitz stays quiet by design; these make the quiet parts reachable. The
 // system's own settings decide the rest: "Increase contrast" turns on the
 // Brighter Interface, "Reduce motion" stills the fades and slides.
 
@@ -256,7 +256,7 @@ loadLibrary().then(() => {
 });
 
 // The look the features and settings govern: at launch, and again whenever
-// Options turns a feature on or off. A feature that's off takes NEO's
+// Options turns a feature on or off. A feature that's off takes Kibitz's
 // defaults and leaves the writer's own choices in the library for its return.
 function applyLook() {
   applyFonts(); // the interface size and brightness
