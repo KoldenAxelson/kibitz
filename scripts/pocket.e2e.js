@@ -15,9 +15,9 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 require('./pocket-www.js'); // the shared editor, copied into pocket/www as the robot build does
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-pocket-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-pocket-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
-const lib = path.join(tmp, 'docs', 'NEO Library');
+const lib = path.join(tmp, 'docs', 'Kibitz Library');
 fs.mkdirSync(lib, { recursive: true });
 const ALL = { cards: true, notesPages: true, poetry: true, footnotes: true, formatting: true, penNames: true, covers: true, pages: true, focus: true, readAloud: true, vim: false, exports: true };
 fs.writeFileSync(path.join(lib, 'library.json'), JSON.stringify({

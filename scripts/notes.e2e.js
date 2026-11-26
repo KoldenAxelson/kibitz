@@ -11,15 +11,15 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-notes-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-notes-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-notes-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-notes-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const lib = path.join(tmp, 'NEO Library');
+const lib = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(lib);
 fs.writeFileSync(path.join(lib, 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
@@ -132,14 +132,14 @@ test('editing the outline note there changes the chapter\'s outline note', async
   assert.match(await js(`document.getElementById('notes-outline').textContent`), /Teo stays behind/);
 });
 
-test('screenshot (NEO_SHOT=file.png)', async () => {
-  if (!process.env.NEO_SHOT) return;
+test('screenshot (KIBITZ_SHOT=file.png)', async () => {
+  if (!process.env.KIBITZ_SHOT) return;
   await js(`(() => { pinPane('nav', true); pinPane('side', true); })()`);
   await tick(500);
-  fs.writeFileSync(process.env.NEO_SHOT, (await wc.capturePage()).toPNG());
+  fs.writeFileSync(process.env.KIBITZ_SHOT, (await wc.capturePage()).toPNG());
   await js(`(() => { document.body.classList.add('light'); })()`);
   await tick(300);
-  fs.writeFileSync(process.env.NEO_SHOT.replace(/\.png$/, '-light.png'), (await wc.capturePage()).toPNG());
+  fs.writeFileSync(process.env.KIBITZ_SHOT.replace(/\.png$/, '-light.png'), (await wc.capturePage()).toPNG());
   await js(`(() => { document.body.classList.remove('light'); pinPane('nav', false); pinPane('side', false); })()`);
 });
 

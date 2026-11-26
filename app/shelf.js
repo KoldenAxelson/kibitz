@@ -16,10 +16,10 @@ function coverUrl(meta) {
 }
 
 async function loadLibrary() {
-  libraryDirPath = await window.neo.libraryPath();
+  libraryDirPath = await window.kibitz.libraryPath();
   applyShelfZoom();
-  library = applyDeviceLook(await window.neo.readLibrary());
-  // A first shelf is named in the language NEO had when it was made. If the
+  library = applyDeviceLook(await window.kibitz.readLibrary());
+  // A first shelf is named in the language Kibitz had when it was made. If the
   // writer never renamed it, it follows a change of language.
   const DEFAULT_SHELF = 'Works in Progress';
   const own = t(DEFAULT_SHELF);
@@ -28,7 +28,7 @@ async function loadLibrary() {
   for (const s of untouched) s.name = own;
   if (untouched.length) await writeLibrary(library);
   await setupFeatures();
-  if (window.neo.writingStyleState) window.neo.writingStyleState(library.writingStyle);
+  if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
   const existing = !!library.firstRunDone;
   if (!existing) {
     showFirstRun();
@@ -41,12 +41,12 @@ function showFirstRun() {
   const fr = $('#firstrun');
   fr.hidden = false;
   // a Mac where NEO Pocket already keeps books in iCloud Drive: open those
-  // instead of starting a new library (NEO restarts in that folder)
-  if (window.neo.pocketLibrary) {
-    window.neo.pocketLibrary().then((p) => {
+  // instead of starting a new library (Kibitz restarts in that folder)
+  if (window.kibitz.pocketLibrary) {
+    window.kibitz.pocketLibrary().then((p) => {
       if (!p || !p.offer) return;
       $('#fr-pocket').hidden = false;
-      $('#fr-pocket-btn').onclick = () => { window.neo.usePocketLibrary(); };
+      $('#fr-pocket-btn').onclick = () => { window.kibitz.usePocketLibrary(); };
     }).catch(() => {});
   }
   let picked = { body: Object.keys(BODY_FONTS)[0] || 'Georgia', dropcap: 'literary' };
@@ -58,7 +58,7 @@ function showFirstRun() {
       const pen = $('#fr-pen').value.trim();
       library.penNames = pen ? [pen] : [];
       library.writingStyle = btn.dataset.style;
-      if (window.neo.writingStyleState) window.neo.writingStyleState(library.writingStyle);
+      if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
       $('#fr-step1').hidden = true;
       $('#fr-step2').hidden = false;
       buildFontStep();
@@ -122,8 +122,8 @@ function showFirstRun() {
       await writeLibrary(library);
     } catch (err) {
       library.firstRunDone = false;
-      window.neo.logError('first run: ' + ((err && err.message) || err));
-      note.textContent = t('NEO can\'t save in {dir}. File → Library Folder… lets you choose a folder it can write to; then press Start writing again.', { dir: libraryDirPath });
+      window.kibitz.logError('first run: ' + ((err && err.message) || err));
+      note.textContent = t('Kibitz can\'t save in {dir}. File → Library Folder… lets you choose a folder it can write to; then press Start writing again.', { dir: libraryDirPath });
       note.hidden = false;
       return;
     }
@@ -135,7 +135,7 @@ function showFirstRun() {
 }
 
 // Pen names: each author owns a set of shelves. Books all live in the one
-// NEO Library folder on disk regardless of name — switching or deleting a
+// Kibitz Library folder on disk regardless of name — switching or deleting a
 // pen name never touches files.
 function currentAuthor() {
   if (!library.authors || !library.authors.length) {
@@ -163,20 +163,20 @@ function displayAuthor() {
 const bookMetaCache = new Map();
 async function shelfMeta(bookId) {
   if (bookMetaCache.has(bookId)) return bookMetaCache.get(bookId);
-  const meta = await window.neo.readBookMeta(bookId);
+  const meta = await window.kibitz.readBookMeta(bookId);
   if (meta) bookMetaCache.set(bookId, meta);
   return meta;
 }
 // Saves a book's meta and drops the cached copy. This used to be done by
-// replacing window.neo.writeBookMeta, but on desktop that object is
+// replacing window.kibitz.writeBookMeta, but on desktop that object is
 // read-only, so the assignment threw and app.js stopped loading.
 function writeBookMeta(bookId, meta, known) {
   bookMetaCache.delete(bookId);
-  return window.neo.writeBookMeta(bookId, meta, known);
+  return window.kibitz.writeBookMeta(bookId, meta, known);
 }
 
 async function renderShelves() {
-  await NeoCovers.ready; // display faces, so titles measure true
+  await KibitzCovers.ready; // display faces, so titles measure true
   const view = $('#bookshelf-view');
   const keepScroll = view.scrollTop; // re-rendering must not move the page
   $('#author-chip').textContent = displayAuthor();
@@ -188,7 +188,7 @@ async function renderShelves() {
   if (!wrap.dataset.dndWired) {
     wrap.dataset.dndWired = '1';
     wrap.addEventListener('dragover', (e) => {
-    if (!e.dataTransfer.types.includes('application/x-neo-shelf')) return;
+    if (!e.dataTransfer.types.includes('application/x-kibitz-shelf')) return;
     e.preventDefault();
     let ind = wrap.querySelector('.shelf-drop-ind');
     if (!ind) {
@@ -207,7 +207,7 @@ async function renderShelves() {
       if (!placed) wrap.appendChild(ind);
     });
     wrap.addEventListener('drop', async (e) => {
-      const shelfId = e.dataTransfer.getData('application/x-neo-shelf');
+      const shelfId = e.dataTransfer.getData('application/x-kibitz-shelf');
       if (!shelfId) return;
       e.preventDefault();
       const ind = wrap.querySelector('.shelf-drop-ind');
@@ -247,7 +247,7 @@ async function renderShelves() {
     grip.title = t('Drag to reorder shelves');
     grip.draggable = true;
     grip.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('application/x-neo-shelf', shelf.id);
+      e.dataTransfer.setData('application/x-kibitz-shelf', shelf.id);
       sec.classList.add('dragging');
     });
     grip.addEventListener('dragend', () => {
@@ -342,7 +342,7 @@ async function renderShelves() {
         row.classList.add('drag-over');
         return;
       }
-      if (!e.dataTransfer.types.includes('application/x-neo-book')) return;
+      if (!e.dataTransfer.types.includes('application/x-kibitz-book')) return;
       e.preventDefault();
       row.classList.add('drag-over');
       const ind = dropIndicator();
@@ -370,16 +370,16 @@ async function renderShelves() {
       if (e.dataTransfer.files && e.dataTransfer.files.length) {
         e.preventDefault();
         const paths = [...e.dataTransfer.files]
-          .map((f) => { try { return window.neo.pathForFile(f); } catch { return null; } })
+          .map((f) => { try { return window.kibitz.pathForFile(f); } catch { return null; } })
           .filter(Boolean);
         if (!paths.length) return;
         toast(t('Importing…'));
-        const results = await window.neo.importFiles(paths);
+        const results = await window.kibitz.importFiles(paths);
         if (!results.length) { toast(t('No .docx, .txt, or .md files in that drop')); return; }
         await addImportedBooks(results, shelf);
         return;
       }
-      const bookId = e.dataTransfer.getData('application/x-neo-book');
+      const bookId = e.dataTransfer.getData('application/x-kibitz-book');
       if (!bookId) return;
       e.preventDefault();
       // insertion index = how many (non-dragged) books sit before the indicator
@@ -420,7 +420,7 @@ async function renderShelves() {
     blank.onclick = () => createBookOnShelf(shelf);
     pressable(blank, t('Start a new book'));
     // right-click (a long press on a phone): a book or a script — in simple
-    // NEO and on Pocket too, so a writer who looks for scripts finds them
+    // Kibitz and on Pocket too, so a writer who looks for scripts finds them
     // where they'd look (#494, #504)
     if (!isBound(shelf)) {
       blank.addEventListener('contextmenu', async (e) => {
@@ -558,7 +558,7 @@ async function createPageBook(shelf, kind) {
   const written = PAGE_WRITTEN.includes(kind);
   // a prologue opens in the editor as "Prologue", under the book's name
   const title = kind === 'cover' || written ? (written ? pageKindName(kind) : shelf.name) : pageKindName(kind) + ' — ' + shelf.name;
-  const meta = await window.neo.createBook({ author: shelfAuthorName(shelf), title });
+  const meta = await window.kibitz.createBook({ author: shelfAuthorName(shelf), title });
   meta.title = title;
   meta.kind = kind;
   meta.shelfId = shelf.id; // which bound book it belongs to, for anyone reading the folder
@@ -574,7 +574,7 @@ async function createPageBook(shelf, kind) {
     meta.chapterOrder = [];
   } else {
     const chId = 'ch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
-    await window.neo.writeChapter(meta.id, chId, PAGE_STARTERS[kind] ? PAGE_STARTERS[kind](shelf) : '<p><br></p>');
+    await window.kibitz.writeChapter(meta.id, chId, PAGE_STARTERS[kind] ? PAGE_STARTERS[kind](shelf) : '<p><br></p>');
     meta.chapterOrder = [chId];
   }
   await writeBookMeta(meta.id, meta);
@@ -774,13 +774,13 @@ function pageTile(shelf, meta, label) {
       {
         label: t('Remove page'),
         desc: window.Capacitor
-          ? t('Moves the book folder to Deleted Books in your NEO Library, where you can recover it.')
+          ? t('Moves the book folder to Deleted Books in your Kibitz Library, where you can recover it.')
           : t('Sends the page to your system trash, where you can recover it.'),
         danger: true, value: 'remove'
       }
     ]);
     if (choice === 'open') openPage(shelf, meta, label);
-    else if (choice === 'remove' && await window.neo.deleteBook(meta.id, label)) {
+    else if (choice === 'remove' && await window.kibitz.deleteBook(meta.id, label)) {
       shelf.bookIds = shelf.bookIds.filter((b) => b !== meta.id);
       await writeLibrary(library);
       renderShelves();
@@ -870,7 +870,7 @@ const PAGE_PLACEHOLDERS = {
   part: () => t('Title')
 };
 
-// Whatever the editing engine left, a page is stored as NEO's plain
+// Whatever the editing engine left, a page is stored as Kibitz's plain
 // paragraphs: loose text and <div>s become <p>s, stray <br>s go
 function normalizePageBody(body) {
   let cur = null;
@@ -912,14 +912,14 @@ function sheetBackdrop(kind, label, inner) {
 const ATTRIBUTED_PAGES = ['dedication', 'epigraph', 'part'];
 
 async function openPageSheet(shelf, meta, label) {
-  const live = (await window.neo.readBookMeta(meta.id)) || meta;
+  const live = (await window.kibitz.readBookMeta(meta.id)) || meta;
   let chId = (live.chapterOrder || [])[0];
   if (!chId) {
     chId = 'ch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
     live.chapterOrder = [chId];
     await writeBookMeta(live.id, live);
   }
-  const html = await window.neo.readChapter(live.id, chId);
+  const html = await window.kibitz.readChapter(live.id, chId);
   const bd = sheetBackdrop(live.kind, label, '<div class="ps-label" hidden></div><div class="ps-body" contenteditable="true" role="textbox" aria-multiline="true"></div>');
   const lab = bd.querySelector('.ps-label');
   if (live.kind === 'part') { lab.hidden = false; lab.textContent = label; }
@@ -946,7 +946,7 @@ async function openPageSheet(shelf, meta, label) {
     out.querySelectorAll('[data-attr]').forEach((p) => p.removeAttribute('data-attr'));
     if (out.innerHTML === saved) return;
     saved = out.innerHTML;
-    await window.neo.writeChapter(live.id, chId, saved);
+    await window.kibitz.writeChapter(live.id, chId, saved);
   };
   body.addEventListener('input', () => {
     settle();
@@ -993,7 +993,7 @@ function caretToEnd(el) {
 // The cover opens to the title page: the book's title (the shelf's name),
 // a subtitle, and the name it goes out under. One line each; Enter moves on.
 async function openTitlePage(shelf, coverMeta) {
-  const live = (await window.neo.readBookMeta(coverMeta.id)) || coverMeta;
+  const live = (await window.kibitz.readBookMeta(coverMeta.id)) || coverMeta;
   const bd = sheetBackdrop('title', t('Title Page'), `
     <div class="tp-field tp-t" contenteditable="true" role="textbox" spellcheck="false"></div>
     <div class="tp-field tp-s" contenteditable="true" role="textbox" spellcheck="false"></div>
@@ -1102,7 +1102,7 @@ function dropIndicator() {
 }
 
 // Covers are two layers the shelf composites live: art (a seeded abstract,
-// an image the writer chose, or one NEO painted from the text) and type.
+// an image the writer chose, or one Kibitz painted from the text) and type.
 // See covers.js. Painted art is read once and downsampled to tile size so
 // forty books on a shelf cost about as much as forty small PNGs.
 const artCache = new Map(); // bookId/file -> { url, canvas }
@@ -1113,20 +1113,20 @@ async function paintedArt(meta) {
   const key = meta.id + '/' + art.file;
   if (artCache.has(key)) return artCache.get(key);
   try {
-    const data = await window.neo.readCover(meta.id, art.file);
-    if (!data) { window.neo.logError('painted cover missing on disk: ' + key); return null; }
-    const entry = await NeoCovers.fitImage(key, `data:${data.mime};base64,${data.base64}`);
-    if (!entry) { window.neo.logError('painted cover would not decode: ' + key); return null; }
+    const data = await window.kibitz.readCover(meta.id, art.file);
+    if (!data) { window.kibitz.logError('painted cover missing on disk: ' + key); return null; }
+    const entry = await KibitzCovers.fitImage(key, `data:${data.mime};base64,${data.base64}`);
+    if (!entry) { window.kibitz.logError('painted cover would not decode: ' + key); return null; }
     artCache.set(key, entry);
     return entry;
   } catch (err) {
-    window.neo.logError('painted cover: ' + (err && err.stack || err));
+    window.kibitz.logError('painted cover: ' + (err && err.stack || err));
     return null;
   }
 }
 
 // Which layers a book has to show, and which one is showing. Nothing is
-// ever thrown away by switching: the writer's image, NEO's painting, and the
+// ever thrown away by switching: the writer's image, Kibitz's painting, and the
 // abstract all stay available, and coverMode just picks one.
 const hasPainting = (meta) => !!(meta.coverArt && meta.coverArt.status === 'done' && meta.coverArt.file);
 function coverMode(meta) {
@@ -1153,10 +1153,10 @@ function dressTile(el, meta) {
   // The tile may not be on the page yet when the art arrives, so the only
   // staleness check is whether this tile has been dressed again since.
   const cached = mode === 'painted' && artCache.get(meta.id + '/' + meta.coverArt.file);
-  NeoCovers.dress(el, NeoCovers.plan(meta, cached || undefined));
+  KibitzCovers.dress(el, KibitzCovers.plan(meta, cached || undefined));
   if (mode !== 'painted' || cached) return;
   paintedArt(meta).then((art) => {
-    if (art && el._dressToken === token) NeoCovers.dress(el, NeoCovers.plan(meta, art));
+    if (art && el._dressToken === token) KibitzCovers.dress(el, KibitzCovers.plan(meta, art));
   });
 }
 
@@ -1194,7 +1194,7 @@ function bookTile(meta, opts = {}) {
   const refresh = el.querySelector('.b-refresh');
   if (refresh) refresh.setAttribute('aria-hidden', 'true'); // the book's right-click menu offers the same
   el.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('application/x-neo-book', meta.id);
+    e.dataTransfer.setData('application/x-kibitz-book', meta.id);
     // the ghost that rides under the cursor is a faded, smaller cover, held
     // by its top-left corner so it never sits on top of a drop target's label
     el.style.opacity = '0.45';
@@ -1216,10 +1216,10 @@ function bookTile(meta, opts = {}) {
     e.preventDefault();
     e.stopPropagation();
     let p = null;
-    try { p = window.neo.pathForFile(e.dataTransfer.files[0]); } catch { /* no path */ }
+    try { p = window.kibitz.pathForFile(e.dataTransfer.files[0]); } catch { /* no path */ }
     if (!p) return;
     if (/\.(png|jpe?g|webp)$/i.test(p) && !isScript(meta)) {
-      const fname = await window.neo.setCover(meta.id, p);
+      const fname = await window.kibitz.setCover(meta.id, p);
       if (fname) {
         meta.coverImage = fname;
         meta.coverMode = 'image';
@@ -1228,7 +1228,7 @@ function bookTile(meta, opts = {}) {
       }
     } else if (/\.(docx|txt|md|fountain|fdx)$/i.test(p)) {
       const homeShelf = library.shelves.find((s) => s.bookIds.includes(meta.id)) || library.shelves[0];
-      const results = await window.neo.importFiles([p]);
+      const results = await window.kibitz.importFiles([p]);
       if (results.length) await addImportedBooks(results, homeShelf);
     }
   });
@@ -1247,7 +1247,7 @@ function bookTile(meta, opts = {}) {
     const script = isScript(meta);
     const trashLabel = window.Capacitor ? t('Delete book')
       : navigator.platform.toLowerCase().includes('win') ? t('Move to Recycle Bin') : t('Move to Trash');
-    const canCopy = !!window.neo.duplicateBook && !isPageMeta(meta) && featureOn('penNames');
+    const canCopy = !!window.kibitz.duplicateBook && !isPageMeta(meta) && featureOn('penNames');
     // the cover's own choices, gathered in one place
     const coverItems = script ? [] : [
       ...(NO_HOVER ? [] : [{ label: meta.coverImage ? t('Replace cover art…') : t('Set cover art…'), value: 'cover' }]),
@@ -1258,8 +1258,8 @@ function bookTile(meta, opts = {}) {
     let choice;
     // (a book's word goal is set in Goals, inside the book)
     if (NO_HOVER || window.Capacitor) {
-      // a touch screen, and simple NEO: the larger cards, each saying what it
-      // does. Simple NEO has no cover menu: art is dragged onto the book, and
+      // a touch screen, and simple Kibitz: the larger cards, each saying what it
+      // does. Simple Kibitz has no cover menu: art is dragged onto the book, and
       // New cover and Remove cover art stand with the rest.
       const options = [];
       if (startPart) options.push({ label: t('Start a part here'), desc: t('A part page goes in before “{title}”.', { title: escHtml(shownTitle(meta.title)) }), value: 'part' });
@@ -1273,8 +1273,8 @@ function bookTile(meta, opts = {}) {
         if (meta.coverImage) options.push({ label: t('Remove cover art'), desc: t('Deletes the image from the book folder. (To just hide it, use the ↻ on the book.)'), danger: true, value: 'uncover' });
       }
       options.push(
-        { label: t('Remove from bookshelf'), desc: t('Takes it off your shelves. The files stay safe in your NEO Library folder on disk.'), value: 'remove' },
-        { label: trashLabel, desc: window.Capacitor ? t('Moves the book folder to Deleted Books in your NEO Library, where you can recover it.') : t('Sends the book folder to your system trash, where you can recover it.'), danger: true, value: 'trash' }
+        { label: t('Remove from bookshelf'), desc: t('Takes it off your shelves. The files stay safe in your Kibitz Library folder on disk.'), value: 'remove' },
+        { label: trashLabel, desc: window.Capacitor ? t('Moves the book folder to Deleted Books in your Kibitz Library, where you can recover it.') : t('Sends the book folder to your system trash, where you can recover it.'), danger: true, value: 'trash' }
       );
       choice = await optionModal(t('“{title}”', { title: escHtml(shownTitle(meta.title)) }), null, options);
       if (choice === 'coverMenu') choice = await optionModal(t('Cover'), null, coverItems.filter((x) => x !== '-'));
@@ -1320,9 +1320,9 @@ function bookTile(meta, opts = {}) {
         await exportFromShelf(meta.id, fmt);
       }
     } else if (choice === 'cover') {
-      const src = await window.neo.pickCover();
+      const src = await window.kibitz.pickCover();
       if (!src) return;
-      const fname = await window.neo.setCover(meta.id, src);
+      const fname = await window.kibitz.setCover(meta.id, src);
       if (fname) {
         meta.coverImage = fname;
         meta.coverMode = 'image';
@@ -1334,7 +1334,7 @@ function bookTile(meta, opts = {}) {
     } else if (choice === 'saveCover') {
       await saveCoverImage(meta);
     } else if (choice === 'uncover') {
-      await window.neo.removeCover(meta.id);
+      await window.kibitz.removeCover(meta.id);
       meta.coverImage = null;
       await writeBookMeta(meta.id, meta);
       renderShelves();
@@ -1342,9 +1342,9 @@ function bookTile(meta, opts = {}) {
       for (const s of library.shelves) s.bookIds = s.bookIds.filter((b) => b !== meta.id);
       await writeLibrary(library);
       renderShelves();
-      toast(t('“{title}” removed from the shelves — its files are still in your NEO Library', { title: shownTitle(meta.title) }));
+      toast(t('“{title}” removed from the shelves — its files are still in your Kibitz Library', { title: shownTitle(meta.title) }));
     } else if (choice === 'trash') {
-      const ok = await window.neo.deleteBook(meta.id, meta.title);
+      const ok = await window.kibitz.deleteBook(meta.id, meta.title);
       if (ok) {
         for (const s of library.shelves) s.bookIds = s.bookIds.filter((b) => b !== meta.id);
         await writeLibrary(library);
@@ -1367,9 +1367,9 @@ async function duplicateBook(meta) {
   }
   let copy;
   try {
-    copy = await window.neo.duplicateBook(meta.id, t('{title} (copy)', { title: meta.title }));
+    copy = await window.kibitz.duplicateBook(meta.id, t('{title} (copy)', { title: meta.title }));
   } catch (err) {
-    window.neo.logError('duplicate: ' + (err && err.stack || err));
+    window.kibitz.logError('duplicate: ' + (err && err.stack || err));
     toast(t('Couldn’t copy the book: {error}', { error: plainError(err) }), 8000);
     return;
   }
@@ -1393,27 +1393,27 @@ async function duplicateBook(meta) {
 
 // The cover as a picture file: the writer's own image just as they gave it;
 // otherwise the abstract at full size (1600×2560, KDP's ratio) with the
-// title and author set on it. A painted cover never leaves NEO, here as in
+// title and author set on it. A painted cover never leaves Kibitz, here as in
 // the exports, so a book showing one saves its abstract.
 async function saveCoverImage(meta) {
   const defaultName = safeName(meta.title) + '-cover';
   let payload = null;
   if (coverMode(meta) === 'image') {
-    const c = await window.neo.readCover(meta.id, meta.coverImage);
+    const c = await window.kibitz.readCover(meta.id, meta.coverImage);
     if (c) payload = { format: c.ext, defaultName, content: c.base64, base64: true };
   }
   if (!payload) {
-    await NeoCovers.ready;
+    await KibitzCovers.ready;
     // JPEG: what KDP asks for, and a tenth the size of a PNG of all that grain
-    const url = NeoCovers.renderFull(meta, {}).toDataURL('image/jpeg', 0.92);
+    const url = KibitzCovers.renderFull(meta, {}).toDataURL('image/jpeg', 0.92);
     payload = { format: 'jpg', defaultName, content: url.split(',')[1], base64: true };
   }
-  const saved = await window.neo.exportSave(payload);
+  const saved = await window.kibitz.exportSave(payload);
   if (saved) toast(t('Saved: {file}', { file: saved.split(/[\\/]/).pop() }));
 }
 
 /* ---- painted covers ----
-   At a thousand words a story has a shape, so NEO reads it and paints an
+   At a thousand words a story has a shape, so Kibitz reads it and paints an
    abstract cover to sit under the type. The writer's own cover (coverImage)
    always wins; the abstract is the fallback; painting never blocks typing. */
 
@@ -1441,11 +1441,11 @@ function bookPlainText() {
 // Paint the open book, or a book on the shelf (text is read from disk then).
 async function requestPaint(meta, text) {
   const provider = coverProvider();
-  if (!(await window.neo.hasSecret(provider))) {
+  if (!(await window.kibitz.hasSecret(provider))) {
     if (!library.coverArtNudged) {
       library.coverArtNudged = true;
       await writeLibrary(library);
-      toast(t('This story just passed {n} words — add an API key under File → Cover Art… and NEO will paint it a cover.', { n: PAINT_AT }), 8000);
+      toast(t('This story just passed {n} words — add an API key under File → Cover Art… and Kibitz will paint it a cover.', { n: PAINT_AT }), 8000);
     }
     return;
   }
@@ -1454,12 +1454,12 @@ async function requestPaint(meta, text) {
   else await writeBookMeta(meta.id, meta);
   markPainting(meta.id, true);
   if (text == null) {
-    const m = await window.neo.readBookMeta(meta.id);
+    const m = await window.kibitz.readBookMeta(meta.id);
     const parts = [];
     for (const chId of (m && m.chapterOrder) || []) {
       if (!isStory(chId, m)) continue; // (the story alone, as bookPlainText)
       const holder = document.createElement('div');
-      holder.innerHTML = await window.neo.readChapter(meta.id, chId);
+      holder.innerHTML = await window.kibitz.readChapter(meta.id, chId);
       holder.querySelectorAll(UNCOUNTED).forEach((n) => n.remove());
       parts.push(holder.innerText);
     }
@@ -1469,20 +1469,20 @@ async function requestPaint(meta, text) {
   const mine = (cs.models && cs.models[provider]) || {};
   let res = null;
   try {
-    res = await window.neo.paintCover(meta.id, text, { provider, textModel: mine.text, imageModel: mine.image, quality: cs.quality });
+    res = await window.kibitz.paintCover(meta.id, text, { provider, textModel: mine.text, imageModel: mine.image, quality: cs.quality });
   } catch (err) {
-    window.neo.logError('paint request: ' + (err && err.stack || err));
+    window.kibitz.logError('paint request: ' + (err && err.stack || err));
     res = { error: String((err && err.message) || err) };
   }
   // the writer may have moved on — write to whichever copy of the meta is live
-  const live = (book && book.id === meta.id) ? book : (await window.neo.readBookMeta(meta.id)) || meta;
+  const live = (book && book.id === meta.id) ? book : (await window.kibitz.readBookMeta(meta.id)) || meta;
   if (res && res.file) {
     live.coverArt = { status: 'done', file: res.file, brief: res.brief, words: meta.wordCount || 0, at: new Date().toISOString() };
     if (!live.coverImage) live.coverMode = 'painted';
     artCache.delete(meta.id + '/' + res.file);
   } else {
     live.coverArt = { status: 'failed', error: (res && res.error) || 'unknown', at: new Date().toISOString() };
-    toast(t('NEO couldn’t paint that cover: {error}', { error: live.coverArt.error }), 7000);
+    toast(t('Kibitz couldn’t paint that cover: {error}', { error: live.coverArt.error }), 7000);
   }
   if (live === book) scheduleMetaSave();
   else await writeBookMeta(meta.id, live);
@@ -1507,15 +1507,15 @@ async function refreshCover(meta, el) {
   const enough = (meta.wordCount || 0) >= PAINT_AT;
   // a bound book's cover has no text of its own to paint from
   // (painting is behind Show More Features; a painting already made still shows)
-  const hasKey = meta.kind !== 'cover' && featureOn('covers') && await window.neo.hasSecret(coverProvider());
+  const hasKey = meta.kind !== 'cover' && featureOn('covers') && await window.kibitz.hasSecret(coverProvider());
   const options = [];
   if (meta.coverImage && mode !== 'image') options.push({ label: t('Show your cover art'), desc: t('The image you gave this book.'), value: 'image' });
-  if (hasPainting(meta) && mode !== 'painted') options.push({ label: t('Show NEO’s painting'), desc: t('The cover painted from the text.'), value: 'painted' });
+  if (hasPainting(meta) && mode !== 'painted') options.push({ label: t('Show Kibitz’s painting'), desc: t('The cover painted from the text.'), value: 'painted' });
   if (mode !== 'abstract') options.push({ label: t('Show the abstract'), desc: t('The seeded cover every book starts with.'), value: 'abstract' });
   options.push({ label: t('New type & colours'), desc: mode === 'abstract' ? t('A fresh abstract and a different title style.') : t('Re-sets the title in a different style over the same art.'), value: 'reroll' });
   if (hasKey) {
     options.push(enough
-      ? { label: hasPainting(meta) ? t('Paint it again') : t('Paint a cover from the text'), desc: t('NEO reads the manuscript and paints a new cover. About a minute; a few cents.'), value: 'paint' }
+      ? { label: hasPainting(meta) ? t('Paint it again') : t('Paint a cover from the text'), desc: t('Kibitz reads the manuscript and paints a new cover. About a minute; a few cents.'), value: 'paint' }
       : { label: t('Paint a cover from the text'), desc: t('Once the story passes {n} words.', { n: PAINT_AT }), value: 'nope' });
   }
   // a plain abstract with nothing else to offer just re-rolls
@@ -1539,7 +1539,7 @@ async function refreshCover(meta, el) {
 }
 
 async function createBookOnShelf(shelf) {
-  const meta = await window.neo.createBook({ author: displayAuthor() });
+  const meta = await window.kibitz.createBook({ author: displayAuthor() });
   meta.tabNames = {
     notes: (library.tabDefaults && library.tabDefaults.notes) || 'Notes',
     outline: (library.tabDefaults && library.tabDefaults.outline) || 'Outline'
@@ -1610,7 +1610,7 @@ $('#add-shelf-btn').onclick = async () => {
   let rack = null;
   let hideTimer = null;
   const otherAuthors = () => (library.authors || []).filter((a) => a.id !== currentAuthor().id);
-  const isBookDrag = (e) => e.dataTransfer && e.dataTransfer.types.includes('application/x-neo-book');
+  const isBookDrag = (e) => e.dataTransfer && e.dataTransfer.types.includes('application/x-kibitz-book');
 
   function showRack() {
     if (rack) return;
@@ -1635,7 +1635,7 @@ $('#add-shelf-btn').onclick = async () => {
         if (!isBookDrag(e)) return;
         e.preventDefault();
         e.stopPropagation();
-        const bookId = e.dataTransfer.getData('application/x-neo-book');
+        const bookId = e.dataTransfer.getData('application/x-kibitz-book');
         hideRack();
         await moveBookToAuthor(bookId, a.id);
       });
@@ -1673,7 +1673,7 @@ async function moveBookToAuthor(bookId, authorId) {
   const target = (library.authors || []).find((a) => a.id === authorId);
   const shelf = target && shelvesFor(target.id)[0];
   if (!shelf) return;
-  const meta = await window.neo.readBookMeta(bookId);
+  const meta = await window.kibitz.readBookMeta(bookId);
   if (!meta) return;
   const from = library.shelves.find((s) => s.bookIds.includes(bookId));
   lastShelfMove = {
@@ -1696,7 +1696,7 @@ async function undoShelfMove() {
   const home = library.shelves.find((s) => s.id === m.shelfId) || shelvesFor(m.authorId)[0] || library.shelves[0];
   for (const s of library.shelves) s.bookIds = s.bookIds.filter((b) => b !== m.bookId);
   home.bookIds.splice(Math.min(m.index, home.bookIds.length), 0, m.bookId);
-  const meta = await window.neo.readBookMeta(m.bookId);
+  const meta = await window.kibitz.readBookMeta(m.bookId);
   if (meta) { meta.author = m.author; await writeBookMeta(m.bookId, meta); }
   await writeLibrary(library);
   renderShelves();
@@ -1716,7 +1716,7 @@ document.addEventListener('keydown', (e) => {
 // File → Reshelve a Book…: a book taken off the shelves is still on disk;
 // this puts it back, on the current name's first shelf
 async function reshelveBook() {
-  const all = await window.neo.listBooks();
+  const all = await window.kibitz.listBooks();
   const shelved = new Set(library.shelves.flatMap((s) => [...s.bookIds, ...((s.binding && s.binding.parked) || []).map((p) => p.id)]));
   // a bound book's pages aren't books to write in
   const loose = all.filter((b) => !shelved.has(b.id) && !b.kind).sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));

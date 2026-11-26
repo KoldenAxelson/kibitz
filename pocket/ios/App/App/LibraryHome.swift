@@ -1,11 +1,11 @@
-// Where NEO Pocket keeps its books on iOS.
+// Where Kibitz Pocket keeps its books on iOS.
 //
-// Same principle as everywhere else NEO runs: plain files in a folder on the
+// Same principle as everywhere else Kibitz runs: plain files in a folder on the
 // device. When the writer has iCloud Drive switched on, that folder is the
 // app's iCloud folder — still local, still offline-capable, but Apple carries
-// changes to the Mac in the background, where desktop NEO can point at it via
-// File → Library Folder… (it shows up as iCloud Drive → NEO Pocket → NEO
-// Library). With iCloud Drive off, the folder is On My iPad → NEO Pocket.
+// changes to the Mac in the background, where desktop Kibitz can point at it via
+// File → Library Folder… (it shows up as iCloud Drive → Kibitz Pocket → Kibitz
+// Library). With iCloud Drive off, the folder is On My iPad → Kibitz Pocket.
 // No account is required, no dialog is shown; the shelf simply appears.
 
 import Foundation
@@ -31,7 +31,7 @@ public class LibraryHomePlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    private static let folderName = "NEO Library"
+    private static let folderName = "Kibitz Library"
     private static var cached: (url: URL, cloud: Bool)?
 
     private func home() -> (url: URL, cloud: Bool) {
@@ -54,7 +54,7 @@ public class LibraryHomePlugin: CAPPlugin, CAPBridgedPlugin {
         return result
     }
 
-    // {path: "file:///…/NEO%20Library", cloud: true|false}
+    // {path: "file:///…/Kibitz%20Library", cloud: true|false}
     @objc func locate(_ call: CAPPluginCall) {
         let h = home()
         call.resolve(["path": h.url.absoluteString, "cloud": h.cloud])
@@ -112,15 +112,15 @@ public class LibraryHomePlugin: CAPPlugin, CAPBridgedPlugin {
 
 // Registers the plugin above with Capacitor. SceneDelegate creates this
 // instead of the stock CAPBridgeViewController.
-class NeoBridgeViewController: CAPBridgeViewController {
+class KibitzBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(LibraryHomePlugin())
-        bridge?.registerPluginInstance(NeoPdfPlugin())
+        bridge?.registerPluginInstance(KibitzPdfPlugin())
     }
 
     // With a hardware keyboard attached, iPadOS floats a little bar above the
     // page whenever text has focus: a keyboard button, bold/italic, the
-    // microphone, ⌘ hints. NEO has its own formatting and its bar is the
+    // microphone, ⌘ hints. Kibitz has its own formatting and its bar is the
     // page's. WebKit's content view is given, at runtime, a subclass that
     // answers "no accessory view, no assistant items, dark keyboard" — the
     // one place iOS asks before drawing any of that.
@@ -132,7 +132,7 @@ class NeoBridgeViewController: CAPBridgeViewController {
     private func quietKeyboard() {
         guard let scroll = webView?.scrollView else { return }
         for sub in scroll.subviews where String(describing: type(of: sub)).hasPrefix("WKContent") {
-            NeoBridgeViewController.quieten(sub)
+            KibitzBridgeViewController.quieten(sub)
         }
     }
 
@@ -152,7 +152,7 @@ class NeoBridgeViewController: CAPBridgeViewController {
     ]
 
     private static func quieten(_ view: UIView) {
-        let name = "NEOQuiet_" + String(cString: class_getName(object_getClass(view)))
+        let name = "KibitzQuiet_" + String(cString: class_getName(object_getClass(view)))
         var cls: AnyClass? = NSClassFromString(name)
         if cls == nil {
             guard let made = objc_allocateClassPair(object_getClass(view), name, 0) else { return }
@@ -173,7 +173,7 @@ class NeoBridgeViewController: CAPBridgeViewController {
             class_addMethod(made, NSSelectorFromString("keyboardAppearance"),
                             imp_implementationWithBlock(appearance), "q@:")
             // no Paste / AutoFill / Format bubble on a long press in the text:
-            // NEO's page has its own ways, and the bubble only ever got in the
+            // Kibitz's page has its own ways, and the bubble only ever got in the
             // way. Only the bubble's own choices are refused. Every other action
             // is WebKit's to answer as before: answering no to all of them also
             // turned off a hardware keyboard's arrow keys (↑↓ scrolled the page,
@@ -184,7 +184,7 @@ class NeoBridgeViewController: CAPBridgeViewController {
             guard let inherited = class_getMethodImplementation(object_getClass(view), canPerform) else { objc_disposeClassPair(made); return }
             let original = unsafeBitCast(inherited, to: CanPerform.self)
             let menuOnly: @convention(block) (AnyObject, Selector, AnyObject?) -> Bool = { me, action, sender in
-                if !(sender is UIKeyCommand) && NeoBridgeViewController.bubbleActions.contains(NSStringFromSelector(action)) {
+                if !(sender is UIKeyCommand) && KibitzBridgeViewController.bubbleActions.contains(NSStringFromSelector(action)) {
                     return false
                 }
                 return original(me, canPerform, action, sender)

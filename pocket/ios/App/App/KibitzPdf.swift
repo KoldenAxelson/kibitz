@@ -9,10 +9,10 @@ import UIKit
 import WebKit
 import Capacitor
 
-@objc(NeoPdfPlugin)
-public class NeoPdfPlugin: CAPPlugin, CAPBridgedPlugin, WKNavigationDelegate {
-    public let identifier = "NeoPdfPlugin"
-    public let jsName = "NeoPdf"
+@objc(KibitzPdfPlugin)
+public class KibitzPdfPlugin: CAPPlugin, CAPBridgedPlugin, WKNavigationDelegate {
+    public let identifier = "KibitzPdfPlugin"
+    public let jsName = "KibitzPdf"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "print", returnType: CAPPluginReturnPromise)
     ]
@@ -21,11 +21,11 @@ public class NeoPdfPlugin: CAPPlugin, CAPBridgedPlugin, WKNavigationDelegate {
     private var call: CAPPluginCall?
     private var paper = CGSize(width: 612, height: 792)
     private var margin: CGFloat = 72
-    private var name = "NEO"
+    private var name = "Kibitz"
 
     @objc func print(_ call: CAPPluginCall) {
         let html = call.getString("html") ?? ""
-        name = (call.getString("name") ?? "NEO").replacingOccurrences(of: "/", with: "-")
+        name = (call.getString("name") ?? "Kibitz").replacingOccurrences(of: "/", with: "-")
         // US letter (and every script) or A4; a book gets an inch all round,
         // a script lays out its own pages
         paper = (call.getBool("letter") ?? false) ? CGSize(width: 612, height: 792) : CGSize(width: 595.28, height: 841.89)

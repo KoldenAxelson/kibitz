@@ -1,7 +1,7 @@
 'use strict';
 
 // The Windows portable .exe is a packaged build, but it must not run
-// electron-updater: that downloads the setup program and installs NEO when
+// electron-updater: that downloads the setup program and installs Kibitz when
 // the writer quits (#479). Help → Check for Update… shows the release page
 // for it instead, as for `npm start`. Loads main.js the way filesystem.test.js
 // does, with electron-updater and GitHub replaced.
@@ -39,9 +39,9 @@ function build({ portable = false, packaged = true } = {}) {
       return localRequire(name);
     },
     __dirname: root,
-    process: { platform: 'win32', env: portable ? { PORTABLE_EXECUTABLE_FILE: 'C:\\Users\\me\\NEO-1.5.0-portable.exe' } : {}, on() {} },
+    process: { platform: 'win32', env: portable ? { PORTABLE_EXECUTABLE_FILE: 'C:\\Users\\me\\Kibitz-1.5.0-portable.exe' } : {}, on() {} },
     console,
-    fetch: async () => ({ ok: true, json: async () => ({ tag_name: 'v9.9.9', html_url: 'https://github.com/hughhowey/neo/releases/tag/v9.9.9' }) })
+    fetch: async () => ({ ok: true, json: async () => ({ tag_name: 'v9.9.9', html_url: 'https://github.com/KoldenAxelson/kibitz/releases/tag/v9.9.9' }) })
   });
   vm.runInContext(source, context, { filename: path.join(root, 'main.js') });
   return { seen, autoUpdater, getUpdater: () => vm.runInContext('getUpdater()', context), holdUpdateForShutdown: () => vm.runInContext('holdUpdateForShutdown()', context), check: () => handlers.get('update:check')() };

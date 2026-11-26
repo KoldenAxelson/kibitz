@@ -1,5 +1,5 @@
-/* NEO Pocket's spellchecker: the same Hunspell and the same dictionaries
-   as desktop NEO (spell-worker.js there), in a web worker so the page never
+/* Kibitz Pocket's spellchecker: the same Hunspell and the same dictionaries
+   as desktop Kibitz (spell-worker.js there), in a web worker so the page never
    waits on a dictionary. scripts/pocket-www.js puts Hunspell's browser build
    in hunspell/ and the dictionaries in dict/<code>/.
 
@@ -30,7 +30,7 @@ async function load(msg) {
   const [aff, dic] = await Promise.all([bytes(new URL('index.aff', dir)), bytes(new URL('index.dic', dir))]);
   const normalize = msg.language === 'ro' ? romanian : (word) => word;
   const n = ++mounts;
-  const files = [factory.mountBuffer(aff, `neo-${n}.aff`), factory.mountBuffer(dic, `neo-${n}.dic`)];
+  const files = [factory.mountBuffer(aff, `kibitz-${n}.aff`), factory.mountBuffer(dic, `kibitz-${n}.dic`)];
   let hunspell;
   try {
     hunspell = factory.create(files[0], files[1]);

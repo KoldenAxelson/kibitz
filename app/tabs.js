@@ -24,7 +24,7 @@ $$('.tab').forEach((tab) => {
 // Darlings tab is a drop target for selected text
 const darlingsTab = $('.tab.darlings');
 // The selection usually collapses by the time a drag lands on the Darlings
-// tab, so the range is remembered at dragstart and the cut is made by NEO
+// tab, so the range is remembered at dragstart and the cut is made by Kibitz
 // itself (dropEffect 'copy' keeps Chromium from moving the text on its own).
 let draggedRange = null;
 document.addEventListener('dragstart', (e) => {
@@ -179,7 +179,7 @@ async function moveSelectionToDarlings(html, text) {
   } catch {
     delete sidecarPending[bookId + '/darlings'];
     if (book && book.id === bookId) await structuralUndo();
-    toast(t('NEO couldn’t save to Darlings, so the passage stays where it was'));
+    toast(t('Kibitz couldn’t save to Darlings, so the passage stays where it was'));
     return;
   }
   if (chId && book && book.id === bookId) scheduleChapterSave(chId);
@@ -187,7 +187,7 @@ async function moveSelectionToDarlings(html, text) {
   toast(t('Saved to Darlings — kill without remorse ({key} to undo)', { key: KZ }));
 }
 
-// Older versions of NEO planted invisible marker spans at darling cut points,
+// Older versions of Kibitz planted invisible marker spans at darling cut points,
 // which interfered with Chromium's delete handling. On open, convert each one
 // into a remembered-context position and remove it:
 async function migrateDarlingAnchors() {
@@ -340,8 +340,8 @@ function switchTab(name) {
       vimRest();
     }, (err) => {
       if (load !== auxLoad) return;
-      window.neo.logError('notes read: ' + (err && err.message || err));
-      toast(t('NEO couldn’t read this page from disk'));
+      window.kibitz.logError('notes read: ' + (err && err.message || err));
+      toast(t('Kibitz couldn’t read this page from disk'));
     });
   }
 }

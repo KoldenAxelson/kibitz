@@ -41,11 +41,11 @@ function computer({ openFails = false } = {}) {
     Buffer
   });
   vm.runInContext(source, context, { filename: path.join(root, 'main.js') });
-  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-email-'));
+  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-email-'));
   context.library = library;
   vm.runInContext('LIBRARY_DIR = library; LIBRARY_FILE = require("path").join(library, "library.json"); renderPDF = async () => Buffer.from("%PDF-test");', context);
   const draft = (extra) => handlers.get('email:draft')(null, {
-    to: 'me@example.com', subject: 'NEO draft — My Book — 1,200 words', body: 'Line one.\nLine two & more.', html: '<p>x</p>', defaultName: 'My-Book', ...extra
+    to: 'me@example.com', subject: 'Kibitz draft — My Book — 1,200 words', body: 'Line one.\nLine two & more.', html: '<p>x</p>', defaultName: 'My-Book', ...extra
   });
   return { seen, draft, library, done: () => fs.rmSync(library, { recursive: true, force: true }) };
 }
@@ -61,7 +61,7 @@ describe('Email Draft to Myself: the computer\'s own mail program', () => {
       const url = new URL(pc.seen.opened[0]);
       assert.equal(url.protocol, 'mailto:');
       assert.equal(decodeURIComponent(url.pathname), 'me@example.com');
-      assert.equal(url.searchParams.get('subject'), 'NEO draft — My Book — 1,200 words');
+      assert.equal(url.searchParams.get('subject'), 'Kibitz draft — My Book — 1,200 words');
       assert.equal(url.searchParams.get('body'), 'Line one.\nLine two & more.');
       // the snapshot is on disk in Exports, and shown to be attached
       assert.equal(pc.seen.shown.length, 1);

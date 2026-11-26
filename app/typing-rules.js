@@ -70,7 +70,7 @@ function captureBody(body) {
 // them (the indent and white-space of the paragraph they came from); taken
 // off the page there and then, they'd break ⌘Z, which puts back what the
 // engine itself took away. So the page keeps them until the chapter is next
-// opened, and the file never has them. NEO's own spans (placeholder flags)
+// opened, and the file never has them. Kibitz's own spans (placeholder flags)
 // stay.
 function dropJunkSpans(html) {
   if (html.indexOf('<span') < 0) return html;
@@ -117,20 +117,20 @@ function markDialogueOpening(body) {
   setDropCap(body, first);
 }
 
-// THE DROP CAP is a letter NEO draws beside the opening paragraph (that
+// THE DROP CAP is a letter Kibitz draws beside the opening paragraph (that
 // paragraph's ::before, its letter and width handed over in --cap and --cap-w
 // on the chapter body, which is never saved). It is not a ::first-letter:
 // that makes the engine split the paragraph's text in two behind the scenes,
 // and typing or deleting beside the split left doubled letters on the page,
 // so for a long time the cap had to step aside whenever the caret was in its
 // paragraph. Now the words are one plain run of text to edit. The real first
-// letter is still there, unseen (the neo-cap highlight paints it clear) and
+// letter is still there, unseen (the kibitz-cap highlight paints it clear) and
 // drawn back under the cap by its own width, so the line starts where it
 // always did.
 const capHidden = window.Highlight && window.CSS && CSS.highlights ? new Highlight() : null;
 if (capHidden) {
   capHidden.priority = 50; // over the focus, search and spelling highlights: none of them may ink it in
-  CSS.highlights.set('neo-cap', capHidden);
+  CSS.highlights.set('kibitz-cap', capHidden);
 }
 const capState = new WeakMap(); // chapter body → { range, cap, sig }
 const capWidths = new Map(); // what a letter measures, in em, when its chapter isn't laid out
@@ -342,14 +342,14 @@ document.addEventListener('selectionchange', () => {
     if (ch) scanSpellingIn(ch.querySelector('.chapter-body'), ch.dataset.id);
   }
   const inPoetry = !!(caretP && caretP.classList.contains('poetry'));
-  if (inPoetry !== menuPoetryState && window.neo.poetryState) {
+  if (inPoetry !== menuPoetryState && window.kibitz.poetryState) {
     menuPoetryState = inPoetry;
-    window.neo.poetryState(inPoetry);
+    window.kibitz.poetryState(inPoetry);
   }
   const inFlush = !!(caretP && caretP.classList.contains('flush'));
-  if (inFlush !== menuFlushState && window.neo.flushState) {
+  if (inFlush !== menuFlushState && window.kibitz.flushState) {
     menuFlushState = inFlush;
-    window.neo.flushState(inFlush);
+    window.kibitz.flushState(inFlush);
   }
 });
 
@@ -674,7 +674,7 @@ let capJustSet = null; // the capital just set, for ⌘Z
 // must reach the system untouched, so a sentence's first letter is typed as it
 // is and capitalised at the next key, whether it stayed or the picker made é.
 let pressHoldOn = false;
-try { pressHoldOn = !!(window.neo && window.neo.pressHold && window.neo.pressHold()); } catch (_) { /* not on a Mac */ }
+try { pressHoldOn = !!(window.kibitz && window.kibitz.pressHold && window.kibitz.pressHold()); } catch (_) { /* not on a Mac */ }
 let capPending = null; // { block, at } a letter waiting for its capital
 function capPendingResolve(body) {
   const p = capPending;
@@ -802,7 +802,7 @@ function smartKeys(e, body) {
   const french = frenchTypography();
   // French: a narrow no-break space (U+202F) before ; : ! ? replaces the
   // ordinary space typed ahead of them. (The wider U+00A0 is not used: the
-  // editing engine turns it back into a plain space, and NEO heals it away.)
+  // editing engine turns it back into a plain space, and Kibitz heals it away.)
   // Quebec usage (OQLF) keeps the space before the colon only.
   const spaced = french === 'ca' ? /^:$/ : /^[;:!?]$/;
   if (french && spaced.test(e.key) && /^[ \u00a0]$/.test(prevChars(1))) {
@@ -908,7 +908,7 @@ function quoteRuns(runs, q, sq, before = '') {
 }
 
 // The quotation marks of the language being written: the spellcheck
-// language when one is set, otherwise NEO's own language.
+// language when one is set, otherwise Kibitz's own language.
 const QUOTE_STYLES = {
   en: { open: '“', close: '”', singles: true },
   nl: { open: '“', close: '”', singles: true },
@@ -942,7 +942,7 @@ function singleQuotes(el) {
   return { open: '‚', close: '‘' };
 }
 function writingLanguage() {
-  return (library && library.spellLanguage) || NeoI18n.getLocale();
+  return (library && library.spellLanguage) || KibitzI18n.getLocale();
 }
 function quoteStyle() {
   const code = writingLanguage();
@@ -1032,11 +1032,11 @@ function dashStyle() {
 }
 
 // French typographic rules apply when the book is spellchecked in French,
-// or when NEO itself speaks French. Returns false, 'fr', or 'ca' for Quebec
+// or when Kibitz itself speaks French. Returns false, 'fr', or 'ca' for Quebec
 // usage (when the interface is set to Canadian French).
 function frenchTypography() {
   if (!writingLanguage().startsWith('fr')) return false;
-  return /^fr-CA$/i.test(NeoI18n.getLocale()) ? 'ca' : 'fr';
+  return /^fr-CA$/i.test(KibitzI18n.getLocale()) ? 'ca' : 'fr';
 }
 
 // ⌥⌘→ / ⌥⌘← (Ctrl+Alt on Windows and Linux): the next or previous tab,
@@ -1193,7 +1193,7 @@ document.addEventListener('keydown', (e) => {
     // open, Esc only closes the bar and leaves the caret where it is.
     const inBar = !document.activeElement || document.activeElement === document.body || $('#searchbar').contains(document.activeElement);
     if (!$('#searchbar').hidden) { if (inBar) returnFromSearch(); else closeSearch(); }
-    else window.neo.fullscreenEscape().then((exited) => { if (!exited) backToShelf(); });
+    else window.kibitz.fullscreenEscape().then((exited) => { if (!exited) backToShelf(); });
   }
 });
 
@@ -1212,7 +1212,7 @@ document.addEventListener('keydown', (e) => {
 // Pocket takes both: a keyboard paired with a phone or an iPad may be a
 // Mac's (⌘ arrives as Meta) or a PC's (Ctrl).
 // Off the Mac, Ctrl+Page Down / Ctrl+Page Up do the same: GNOME keeps
-// Ctrl+Alt+↑↓ for switching workspaces, so NEO never hears them there, and
+// Ctrl+Alt+↑↓ for switching workspaces, so Kibitz never hears them there, and
 // some Windows graphics drivers turn the screen with them (#254).
 window.addEventListener('keydown', (e) => {
   const arrows = e.key === 'ArrowDown' || e.key === 'ArrowUp';

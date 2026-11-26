@@ -2,12 +2,12 @@
 'use strict';
 
 // npm run try            the newest .bundle in Downloads, on a copy of your library
-// npm run try -- fresh   the same, on an empty library: NEO as a new writer meets it
+// npm run try -- fresh   the same, on an empty library: Kibitz as a new writer meets it
 //
-// Opens the version of NEO in a bundle without bringing it into main or
+// Opens the version of Kibitz in a bundle without bringing it into main or
 // sending anything to GitHub. It runs from a folder of its own (Downloads/
-// NEO trial), with its own settings and a throwaway copy of the library, so
-// the real NEO and the real books are never touched; the two can even run
+// Kibitz trial), with its own settings and a throwaway copy of the library, so
+// the real Kibitz and the real books are never touched; the two can even run
 // side by side. Quit the trial when you're done. Happy with it: npm run bundle.
 // Stops with a plain sentence (and changes nothing) when something isn't right.
 
@@ -45,17 +45,17 @@ say(`Trying ${path.basename(file)}`);
 // its changes, fetched beside main (main itself doesn't move)
 try { git('bundle', 'verify', file); } catch {
   try { git('fetch', '--quiet', 'origin'); git('bundle', 'verify', file); } catch {
-    stop('This bundle doesn\'t fit the NEO you have. It may need a newer NEO first (npm run bundle with the earlier one), or Claude can make a fresh one.');
+    stop('This bundle doesn\'t fit the Kibitz you have. It may need a newer Kibitz first (npm run bundle with the earlier one), or Claude can make a fresh one.');
   }
 }
 const heads = git('bundle', 'list-heads', file).split('\n').filter(Boolean);
 if (!heads.length) stop('This bundle is empty.');
 const ref = heads[0].split(/\s+/)[1];
-git('fetch', '--quiet', '--force', file, `${ref}:refs/neo-trial/head`);
+git('fetch', '--quiet', '--force', file, `${ref}:refs/kibitz-trial/head`);
 
 // a clean trial folder each time; only ever one this script made
-const home = path.join(downloads, 'NEO trial');
-const marker = path.join(home, '.neo-trial');
+const home = path.join(downloads, 'Kibitz trial');
+const marker = path.join(home, '.kibitz-trial');
 // a trial still open holds its settings folder (Electron's SingletonLock,
 // a link to "host-pid"); clearing the folder under it would pull the rug
 function trialOpen() {
@@ -68,7 +68,7 @@ function trialOpen() {
   }
 }
 if (fs.existsSync(home)) {
-  if (!fs.existsSync(marker)) stop(`There's already a folder called "NEO trial" in Downloads that NEO didn't make. Rename or move it, then try again.`);
+  if (!fs.existsSync(marker)) stop(`There's already a folder called "Kibitz trial" in Downloads that Kibitz didn't make. Rename or move it, then try again.`);
   if (trialOpen()) stop('The last trial is still open. Quit it (its window bar says "trial copy"), then try again.');
   say('Clearing out the last trial…');
   try { git('worktree', 'remove', '--force', path.join(home, 'app')); } catch { /* already gone */ }
@@ -78,7 +78,7 @@ try { git('worktree', 'prune'); } catch { /* nothing to prune */ }
 fs.mkdirSync(home, { recursive: true });
 fs.writeFileSync(marker, 'Made by npm run try. Safe to delete.\n');
 const appDir = path.join(home, 'app');
-git('worktree', 'add', '--detach', appDir, 'refs/neo-trial/head');
+git('worktree', 'add', '--detach', appDir, 'refs/kibitz-trial/head');
 
 // the trial's packages: the same as yours unless the bundle changes them
 const lock = (dir) => { try { return fs.readFileSync(path.join(dir, 'package-lock.json'), 'utf8'); } catch { return ''; } };
@@ -89,16 +89,16 @@ if (lock(root) === lock(appDir) && fs.existsSync(path.join(root, 'node_modules')
   execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['ci', '--no-audit', '--no-fund'], { cwd: appDir, stdio: 'inherit', shell: process.platform === 'win32' });
 }
 
-// where the real NEO keeps its settings, and so its library
+// where the real Kibitz keeps its settings, and so its library
 const userData = process.platform === 'darwin'
-  ? path.join(os.homedir(), 'Library', 'Application Support', 'NEO')
+  ? path.join(os.homedir(), 'Library', 'Application Support', 'Kibitz')
   : process.platform === 'win32'
-    ? path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'NEO')
-    : path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'NEO');
+    ? path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Kibitz')
+    : path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'Kibitz');
 let settings = {};
 try { settings = JSON.parse(fs.readFileSync(path.join(userData, 'settings.json'), 'utf8')); } catch { /* none yet */ }
-const realLibrary = settings.libraryDir || path.join(os.homedir(), 'Documents', 'NEO Library');
-const library = path.join(home, 'NEO Library');
+const realLibrary = settings.libraryDir || path.join(os.homedir(), 'Documents', 'Kibitz Library');
+const library = path.join(home, 'Kibitz Library');
 
 // a copy of the books, read only from the real library. The backups, past
 // exports and sync leftovers stay behind. A file still in iCloud, or one
@@ -148,9 +148,9 @@ async function copy(from, to) {
 
   say('Opening the trial. Its window bar says "(trial copy)". Quit it when you\'re done.');
   const electron = require(path.join(appDir, 'node_modules', 'electron'));
-  const child = spawn(electron, ['.'], { cwd: appDir, stdio: 'inherit', env: { ...process.env, NEO_TRY_DIR: home } });
+  const child = spawn(electron, ['.'], { cwd: appDir, stdio: 'inherit', env: { ...process.env, KIBITZ_TRY_DIR: home } });
   child.on('exit', () => {
-    console.log('\n✅ Trial closed. Your real NEO and books weren\'t touched, and nothing was sent to GitHub.');
+    console.log('\n✅ Trial closed. Your real Kibitz and books weren\'t touched, and nothing was sent to GitHub.');
     console.log('   Happy with it?  npm run bundle   Want another look?  npm run try\n');
     process.exit(0); // (a read iCloud never answered would keep this waiting)
   });

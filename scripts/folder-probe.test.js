@@ -23,18 +23,18 @@ const refusal = (code) => Object.assign(new Error(code + ': the file is in use')
 // writes: the errors the first writes of the test file fail with, in turn;
 // unlinkError: what deleting it fails with
 function folder({ writes = [], unlinkError = null } = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-probe-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-probe-'));
   const log = { writes: 0, unlinks: 0 };
   const fsApi = Object.create(fs);
   fsApi.writeFileSync = (file, data, ...rest) => {
-    if (String(file).endsWith('.neo-write-test')) {
+    if (String(file).endsWith('.kibitz-write-test')) {
       const err = writes[log.writes++];
       if (err) throw err;
     }
     return fs.writeFileSync(file, data, ...rest);
   };
   fsApi.unlinkSync = (file) => {
-    if (String(file).endsWith('.neo-write-test')) {
+    if (String(file).endsWith('.kibitz-write-test')) {
       log.unlinks++;
       if (unlinkError) throw unlinkError;
     }

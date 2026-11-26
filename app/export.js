@@ -18,12 +18,12 @@ function safeName(s) {
 // own no-break spaces go through.
 // { blanks: true } (a story's text, for the exports): an empty line on the
 // page is a blank line in the book too, one for a run of them, none at the
-// chapter's top or end. What NEO shows is what the book gets (#461).
+// chapter's top or end. What Kibitz shows is what the book gets (#461).
 function parasFromHtml(html, { blanks = false } = {}) {
   const holder = document.createElement('div');
   holder.innerHTML = html || '';
   // an unwritten outline section is a ghost paragraph plus the scene break
-  // NEO planted for it; neither belongs in a book
+  // Kibitz planted for it; neither belongs in a book
   holder.querySelectorAll('p.ghost[data-sec-id]').forEach((g) => {
     const brk = holder.querySelector(`p.scene-break[data-sec-brk="${g.dataset.secId}"]`);
     if (brk) brk.remove();
@@ -157,7 +157,7 @@ function bookExportData() {
 /*  MANUSCRIPT FORMAT                                                  */
 /*  File → Export → Manuscript Format…: the open book the way agents   */
 /*  and editors ask for it, as Word or PDF. The pages are              */
-/*  manuscript.js's (window.NeoManuscript); this is the dialog, which  */
+/*  manuscript.js's (window.KibitzManuscript); this is the dialog, which  */
 /*  remembers the writer's contact details (library.manuscript, every  */
 /*  book) and the byline and header (book.manuscript, this book), and  */
 /*  the book's chapters handed over as runs. Desktop only.             */
@@ -174,7 +174,7 @@ function manuscriptSections() {
     words: s.paras.reduce((n, p) => n + (p.sceneBreak ? 0 : countWords(p.text || '')), 0)
   }));
 }
-// the name on the book, as NEO knows it ("Anonymous", the screen's stand-in
+// the name on the book, as Kibitz knows it ("Anonymous", the screen's stand-in
 // for no name, is no byline)
 function manuscriptByline() {
   const real = (x) => (x && String(x).trim() !== t('Anonymous') ? String(x).trim() : '');
@@ -192,27 +192,27 @@ function manuscriptDefaults() {
     font: lib.font === 'courier' ? 'courier' : 'times',
     end: lib.end !== false,
     byline,
-    headerName: mine.headerName || NeoManuscript.surnameOf(byline),
+    headerName: mine.headerName || KibitzManuscript.surnameOf(byline),
     headerTitle: mine.headerTitle || String(book.title || t('Untitled')).toLocaleUpperCase(writingLanguage())
   };
 }
 function manuscriptModel(v, sections) {
   const words = sections.reduce((n, s) => n + s.words, 0);
-  const shown = NeoManuscript.roundWords(words);
+  const shown = KibitzManuscript.roundWords(words);
   const chapters = sections.filter((s) => s.kind === 'chapter');
   return {
     title: book.title || t('Untitled'), byline: v.byline, headerName: v.headerName, headerTitle: v.headerTitle,
     contact: { name: v.name, lines: [...String(v.address || '').split(/\r?\n/), v.phone, v.email] },
-    wordsText: t('about {n} words', { n: shown.toLocaleString(NeoI18n.getLocale()) }),
+    wordsText: t('about {n} words', { n: shown.toLocaleString(KibitzI18n.getLocale()) }),
     byText: v.byline ? t('by {name}', { name: v.byline }) : '',
     endText: v.end ? t('END') : '',
-    font: v.font, paper: window.neo.paper || 'Letter', lang: writingLanguage(),
+    font: v.font, paper: window.kibitz.paper || 'Letter', lang: writingLanguage(),
     // one story with no chapters: the short-story layout
     short: sections.length === 1 && chapters.length === 1 && !chapters[0].heading,
     sections, words
   };
 }
-// Courier Prime (NEO's own Courier, bundled) goes into the PDF; Times New
+// Courier Prime (Kibitz's own Courier, bundled) goes into the PDF; Times New
 // Roman is the computer's own. A story with LitRPG boxes carries Courier
 // Prime for them either way.
 async function manuscriptFontFaces(font, boxes) {
@@ -252,7 +252,7 @@ function manuscriptDialog(v, words) {
             <label class="ms-inline"><input type="checkbox" data-k="end"${v.end ? ' checked' : ''}> ${escHtml(t('“END” after the last line'))}</label>
           </fieldset>
         </div>
-        <p class="ms-count">${escHtml(t('{shown} on the title page ({n} counted).', { shown: t('about {n} words', { n: NeoManuscript.roundWords(words).toLocaleString(NeoI18n.getLocale()) }), n: words.toLocaleString(NeoI18n.getLocale()) }))}</p>
+        <p class="ms-count">${escHtml(t('{shown} on the title page ({n} counted).', { shown: t('about {n} words', { n: KibitzManuscript.roundWords(words).toLocaleString(KibitzI18n.getLocale()) }), n: words.toLocaleString(KibitzI18n.getLocale()) }))}</p>
         <div class="ms-actions">
           <button class="m-cancel btn-quiet">${escHtml(t('Cancel'))}</button>
           <button class="btn-quiet ms-docx">${escHtml(t('Save as Word (.docx)'))}</button>
@@ -266,12 +266,12 @@ function manuscriptDialog(v, words) {
       out.font = (bd.querySelector('input[name="ms-font"]:checked') || {}).value || 'times';
       return out;
     };
-    const eg = () => { bd.querySelector('.ms-header-eg').textContent = t('At the top right: {header}', { header: NeoManuscript.headerText(read()) + '1' }); };
+    const eg = () => { bd.querySelector('.ms-header-eg').textContent = t('At the top right: {header}', { header: KibitzManuscript.headerText(read()) + '1' }); };
     // the header's name follows the byline until it's been changed by hand
-    let nameTouched = v.headerName !== NeoManuscript.surnameOf(v.byline);
+    let nameTouched = v.headerName !== KibitzManuscript.surnameOf(v.byline);
     bd.querySelector('[data-k="headerName"]').addEventListener('input', () => { nameTouched = true; });
     bd.querySelector('[data-k="byline"]').addEventListener('input', (e) => {
-      if (!nameTouched) bd.querySelector('[data-k="headerName"]').value = NeoManuscript.surnameOf(e.target.value);
+      if (!nameTouched) bd.querySelector('[data-k="headerName"]').value = KibitzManuscript.surnameOf(e.target.value);
     });
     bd.addEventListener('input', eg);
     eg();
@@ -287,13 +287,13 @@ function manuscriptDialog(v, words) {
 }
 
 // What was typed is kept: the details for every book, the byline and the
-// header for this one (only where they differ from what NEO would choose)
+// header for this one (only where they differ from what Kibitz would choose)
 async function manuscriptKeep(v) {
   library.manuscript = { name: v.name, address: v.address, phone: v.phone, email: v.email, font: v.font, end: !!v.end };
   await writeLibrary(library);
   const mine = {};
   if (v.byline && v.byline !== manuscriptByline()) mine.byline = v.byline;
-  if (v.headerName && v.headerName !== NeoManuscript.surnameOf(v.byline)) mine.headerName = v.headerName;
+  if (v.headerName && v.headerName !== KibitzManuscript.surnameOf(v.byline)) mine.headerName = v.headerName;
   if (v.headerTitle && v.headerTitle !== String(book.title || t('Untitled')).toLocaleUpperCase(writingLanguage())) mine.headerTitle = v.headerTitle;
   const before = JSON.stringify(book.manuscript || {});
   if (Object.keys(mine).length) book.manuscript = mine; else delete book.manuscript;
@@ -304,7 +304,7 @@ let manuscriptBusy = false;
 async function exportManuscript() {
   if (!book) { toast(t('Open a book first')); return; }
   if (isScript()) { toast(t('A script has its own format: Export → PDF.')); return; }
-  if (!window.NeoManuscript || manuscriptBusy) return;
+  if (!window.KibitzManuscript || manuscriptBusy) return;
   // never over another dialog (the menu stays open under one), never twice
   if (document.querySelector('.modal-backdrop:not([hidden])')) return;
   flushAllSaves();
@@ -321,23 +321,23 @@ async function manuscriptRun(sections) {
   const chosen = await manuscriptDialog(manuscriptDefaults(), sections.reduce((n, s) => n + s.words, 0));
   if (!chosen || !book) return;
   // (remembering is a nicety: a library that can't be written now doesn't stop the export)
-  try { await manuscriptKeep(chosen.values); } catch (err) { window.neo.logError('manuscript details: ' + (err && err.stack || err)); }
+  try { await manuscriptKeep(chosen.values); } catch (err) { window.kibitz.logError('manuscript details: ' + (err && err.stack || err)); }
   const m = manuscriptModel(chosen.values, sections);
   const defaultName = safeName(book.title) + '-' + safeName(t('manuscript'));
   try {
     let saved;
     if (chosen.as === 'docx') {
-      saved = await window.neo.exportSave({ format: 'docx', defaultName, zipEntries: NeoManuscript.docxEntries(m) });
+      saved = await window.kibitz.exportSave({ format: 'docx', defaultName, zipEntries: KibitzManuscript.docxEntries(m) });
     } else {
       toast(t('Setting the pages…'));
-      const res = await window.neo.printManuscript({ html: NeoManuscript.html(m, { fontFaces: await manuscriptFontFaces(m.font, (m.sections || []).some((sec) => (sec.paras || []).some((x) => x.litrpg))) }), paper: m.paper, defaultName });
+      const res = await window.kibitz.printManuscript({ html: KibitzManuscript.html(m, { fontFaces: await manuscriptFontFaces(m.font, (m.sections || []).some((sec) => (sec.paras || []).some((x) => x.litrpg))) }), paper: m.paper, defaultName });
       saved = res && res.file;
       if (saved) toast(t('Exported: {file} ({pages} pages)', { file: saved.split(/[\\/]/).pop(), pages: res.pages }), 6000);
       return;
     }
     if (saved) toast(t('Exported: {file}', { file: saved.split(/[\\/]/).pop() }));
   } catch (err) {
-    window.neo.logError('export manuscript: ' + (err && err.stack || err));
+    window.kibitz.logError('export manuscript: ' + (err && err.stack || err));
     toast(t('Couldn’t export: {error}', { error: plainError(err) }), 8000);
   }
 }

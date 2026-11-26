@@ -1,8 +1,8 @@
 'use strict';
 
 /* ================================================================== */
-/*  FEATURES & OPTIONS — NEO → Options… (File → Options… off the Mac)  */
-/*  One NEO for everyone. Each feature in FEATURES (app/core.js) is on */
+/*  FEATURES & OPTIONS — Kibitz → Options… (File → Options… off the Mac)  */
+/*  One Kibitz for everyone. Each feature in FEATURES (app/core.js) is on */
 /*  or off for the library; one that's off keeps its menu items, keys  */
 /*  and right-click choices out of sight. The settings that used to    */
 /*  be ticks in the menus live here too. A new library starts with     */
@@ -11,7 +11,7 @@
 /* ================================================================== */
 
 // A library from before: Show More Features (library.moreFeatures) becomes
-// the features, and simple NEO's quiet defaults become the settings it
+// the features, and simple Kibitz's quiet defaults become the settings it
 // showed, so nothing appears or goes away on the first launch of 2.0. One
 // older still, from before the switch, is judged by what it uses.
 async function setupFeatures() {
@@ -24,7 +24,7 @@ async function setupFeatures() {
   features.vim = more && !!library.vimKeys;
   library.features = features;
   if (!more) {
-    // what simple NEO showed: Markdown typing off, no marks, the standard
+    // what simple Kibitz showed: Markdown typing off, no marks, the standard
     // interface size and page width, focus off
     library.markdownOff = true;
     library.nbspMarks = false;
@@ -45,22 +45,22 @@ async function usedMoreFeatures() {
     (lib.uiZoom !== undefined && snapZoom(lib.uiZoom) !== 1) ||
     (!!lib.focus && lib.focus !== 'off') ||
     !!lib.markdownOff || !!lib.exportCustomChapterTitles ||
-    (!!lib.spellLanguage && lang(lib.spellLanguage) !== lang(NeoI18n.getLocale()))) return true;
+    (!!lib.spellLanguage && lang(lib.spellLanguage) !== lang(KibitzI18n.getLocale()))) return true;
   for (const s of lib.shelves || []) {
     for (const id of s.bookIds || []) {
       const meta = await shelfMeta(id);
       if (meta && (isScript(meta) || hasPainting(meta))) return true;
     }
   }
-  return !!(await window.neo.hasSecret(coverProvider()).catch(() => false));
+  return !!(await window.kibitz.hasSecret(coverProvider()).catch(() => false));
 }
 
 // the menus follow the features (main.js leaves out an item whose feature is off)
 function reportFeatures() {
-  if (!window.neo.featuresState) return;
+  if (!window.kibitz.featuresState) return;
   const on = {};
   for (const f of FEATURES) on[f.key] = featureOn(f.key);
-  window.neo.featuresState(on);
+  window.kibitz.featuresState(on);
 }
 
 async function setFeature(key, on) {
@@ -80,8 +80,8 @@ async function setFeature(key, on) {
 let optionsOpen = null;
 async function openOptions() {
   if (optionsOpen) { optionsOpen.querySelector('.opt-panel').focus(); return; }
-  const langs = window.neo.uiLanguages ? await window.neo.uiLanguages().catch(() => null) : null;
-  const pressHoldShown = window.neo.platform === 'darwin' && !!window.neo.setPressHold;
+  const langs = window.kibitz.uiLanguages ? await window.kibitz.uiLanguages().catch(() => null) : null;
+  const pressHoldShown = window.kibitz.platform === 'darwin' && !!window.kibitz.setPressHold;
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   optionsOpen = bd;
@@ -132,7 +132,7 @@ async function openOptions() {
     allBtn.textContent = all ? t('Turn all off') : t('Turn all on');
     for (const f of features) { const box = bd.querySelector(`[data-opt="feature:${f.key}"]`); if (box) box.checked = featureOn(f.key); }
   };
-  const paintZoom = () => { const z = bd.querySelector('.opt-zoom'); if (z) z.textContent = new Intl.NumberFormat(NeoI18n.getLocale(), { style: 'percent' }).format(snapZoom(library.uiZoom)); };
+  const paintZoom = () => { const z = bd.querySelector('.opt-zoom'); if (z) z.textContent = new Intl.NumberFormat(KibitzI18n.getLocale(), { style: 'percent' }).format(snapZoom(library.uiZoom)); };
   paintAll();
   paintZoom();
   allBtn.onclick = async () => {
@@ -152,16 +152,16 @@ async function openOptions() {
     if (opt.startsWith('feature:')) { await setFeature(opt.slice(8), on); paintAll(); return; }
     if (opt === 'markdown') { if (on) delete library.markdownOff; else library.markdownOff = true; await writeLibrary(library); return; }
     if (opt === 'nbspMarks') { if (!!on !== nbspMarksEnabled) toggleNbspMarks(); return; }
-    if (opt === 'pressHold') { window.neo.setPressHold(!!on); pressHoldOn = !!on; return; }
+    if (opt === 'pressHold') { window.kibitz.setPressHold(!!on); pressHoldOn = !!on; return; }
     if (opt === 'writingStyle') {
       library.writingStyle = on;
       await writeLibrary(library);
-      if (window.neo.writingStyleState) window.neo.writingStyleState(library.writingStyle);
+      if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
       return;
     }
     if (opt === 'chapterTitles') { library.exportCustomChapterTitles = !!on; await writeLibrary(library); return; }
     if (opt === 'spellLanguage') { await changeSpellLanguage(on); return; }
-    if (opt === 'uiLanguage') { close(); window.neo.setUiLanguage(on); }
+    if (opt === 'uiLanguage') { close(); window.kibitz.setUiLanguage(on); }
   });
   bd.addEventListener('click', async (e) => {
     const z = e.target.closest && e.target.closest('[data-zoom]');

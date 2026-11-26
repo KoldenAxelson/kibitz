@@ -71,7 +71,7 @@ function renderNav() {
     const rowEl = item.querySelector('.n-row');
     rowEl.draggable = true;
     rowEl.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('application/x-neo-chapter', chId);
+      e.dataTransfer.setData('application/x-kibitz-chapter', chId);
       chapterDragActive = true;
       $('#nav-pane').classList.add('open');
       item.classList.add('dragging');
@@ -296,7 +296,7 @@ function navDropInd() {
 // (documents dropped in as chapters are behind Show More Features)
 const navFileDrag = (e) => e.dataTransfer.types.includes('Files') && !!book && !isScript() && featureOn('exports');
 navList.addEventListener('dragover', (e) => {
-  if (!e.dataTransfer.types.includes('application/x-neo-chapter') && !navFileDrag(e)) return;
+  if (!e.dataTransfer.types.includes('application/x-kibitz-chapter') && !navFileDrag(e)) return;
   e.preventDefault();
   const ind = navDropInd();
   const items = [...navList.querySelectorAll('.nav-item:not(.dragging)')];
@@ -326,7 +326,7 @@ navList.addEventListener('drop', async (e) => {
     await importDroppedChapters(e.dataTransfer.files, next ? next.dataset.id : null);
     return;
   }
-  const chId = e.dataTransfer.getData('application/x-neo-chapter');
+  const chId = e.dataTransfer.getData('application/x-kibitz-chapter');
   if (!chId) return;
   e.preventDefault();
   const ind = document.querySelector('.nav-drop-ind');
@@ -422,16 +422,16 @@ function pinPane(side, on, key = side) {
   $('#editor-view').classList.toggle(side + '-pinned', on);
   if (on) pane.classList.add('open');
   try {
-    const kept = JSON.parse(localStorage.getItem('neo-pinned-panes') || '{}');
+    const kept = JSON.parse(localStorage.getItem('kibitz-pinned-panes') || '{}');
     kept[key] = on;
-    localStorage.setItem('neo-pinned-panes', JSON.stringify(kept));
+    localStorage.setItem('kibitz-pinned-panes', JSON.stringify(kept));
   } catch { /* fine: it just won't be remembered */ }
 }
 $('#side-pin').onclick = () => pinPane('side', $('#side-pane').dataset.pinned !== '1');
 $('#nav-pin').onclick = () => pinPane('nav', $('#nav-pane').dataset.pinned !== '1', book && isScript() ? 'scriptNav' : 'nav');
 if (!NO_HOVER) {
   try {
-    const kept = JSON.parse(localStorage.getItem('neo-pinned-panes') || '{}');
+    const kept = JSON.parse(localStorage.getItem('kibitz-pinned-panes') || '{}');
     if (kept.nav) pinPane('nav', true);
     if (kept.side) pinPane('side', true);
   } catch { /* nothing kept */ }
@@ -543,7 +543,7 @@ function renderNotesNav() {
     list.appendChild(item);
   };
   row('book', t('The Book'), notesPeeksBook);
-  // simple NEO lists only the chapter pages that have notes on them
+  // simple Kibitz lists only the chapter pages that have notes on them
   const shown = (chId) => featureOn('notesPages') || !!notesPeeks[chId];
   if (!book.chapterOrder.some((c) => isStory(c) && shown(c))) return;
   const sep = document.createElement('div');
@@ -776,7 +776,7 @@ async function foldNotesPage(fromId, intoId) {
     flushAux();
     if (book && book.id === bookId) notesPeeks[intoId] = htmlText(html);
   } catch (err) {
-    window.neo.logError('notes fold: ' + (err && err.message || err));
+    window.kibitz.logError('notes fold: ' + (err && err.message || err));
   }
 }
 

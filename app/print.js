@@ -51,7 +51,7 @@ function buildPrintHtml(d, o) {
   const year = String(new Date().getFullYear());
   // paragraphs of prose, hyphenated in main.js (class "hy")
   // a footnote sits at the foot of its page (Paged.js's float: footnote).
-  // NEO writes both numbers itself, through the whole book: Paged.js's own
+  // Kibitz writes both numbers itself, through the whole book: Paged.js's own
   // counter gave every note on a page that page's last number.
   const fnStart = new Map();
   let fnRun = 0;
@@ -182,12 +182,12 @@ function buildPrintHtml(d, o) {
 ${o.fonts || ''}
 @page { size: ${W}in ${H}in; margin: 0.7in ${trim.outside}in 0.75in ${trim.outside}in; }
 @page :left {
-  margin-left: ${trim.outside}in; margin-right: __NEO_GUTTER__;
+  margin-left: ${trim.outside}in; margin-right: __KIBITZ_GUTTER__;
   @top-center { content: ${cssString(d.author)}; }
   @bottom-left { content: counter(page); }
 }
 @page :right {
-  margin-left: __NEO_GUTTER__; margin-right: ${trim.outside}in;
+  margin-left: __KIBITZ_GUTTER__; margin-right: ${trim.outside}in;
   @top-center { content: ${cssString(d.title)}; }
   @bottom-right { content: counter(page); }
 }
@@ -249,7 +249,7 @@ ${litrpgCss('p.litrpg', { size: '0.78em', side: '0.15in', pad: '0.12in', fill: '
 .note .reach-hd { margin-top: 1.4em; text-align: center; letter-spacing: 0.18em; text-transform: uppercase; font-size: 0.85em; }
 .note .reach { text-align: center; margin-top: 0.35em; }
 .note .reach .k { font-variant-caps: all-small-caps; letter-spacing: 0.08em; }
-.neo-pad { page: front; break-before: page; height: 1px; }
+.kibitz-pad { page: front; break-before: page; height: 1px; }
 .footnote { float: footnote; font-size: ${(sz * 0.8).toFixed(2)}pt; line-height: 1.35; text-align: left; text-indent: 0; hyphens: manual; font-style: normal; font-weight: normal; }
 .footnote::footnote-marker { content: none; }
 ::footnote-call { content: none; }
@@ -285,7 +285,7 @@ async function printPaperback() {
     }
   }
   // the Also by list is the writer's own, one title per line: it starts as
-  // this name's other books in NEO, and can hold books written before NEO
+  // this name's other books in Kibitz, and can hold books written before Kibitz
   const alsoText = typeof ap.alsoByText === 'string' ? ap.alsoByText
     : Array.isArray(ap.alsoBy) ? others.filter((x) => ap.alsoBy.includes(x.id)).map((x) => x.title).join('\n')
       : others.map((x) => x.title).join('\n');
@@ -363,7 +363,7 @@ async function printPaperback() {
   // kept for next time
   book.print = { trim: opts.trim, paper: opts.paper, isbn: opts.isbn, fiction: opts.fiction };
   // The wording is kept with the title as a blank, so it fits the next
-  // book. Left as it came, it stays what it was (NEO's own wording follows
+  // book. Left as it came, it stays what it was (Kibitz's own wording follows
   // its translations); edited, the book's title where it stands as a whole
   // becomes the blank again.
   let ownWording = ap.reviewText || '';
@@ -396,7 +396,7 @@ async function printPaperback() {
   printPaperback.busy = true;
   try {
     const html = buildPrintHtml(d, { ...opts, fonts: await exportFontFaces(d) });
-    const r = await window.neo.printPaperback({
+    const r = await window.kibitz.printPaperback({
       html, trim: opts.trim, paper: opts.paper, language: d.language,
       pagesGuess: Math.round(words / per) + d.sections.length * 1.5 + 8,
       title: d.title, author: d.author,
@@ -408,7 +408,7 @@ async function printPaperback() {
     if (r.tooMany) msg += ' · ' + t('more pages than KDP prints on this paper');
     toast(msg, 9000);
   } catch (err) {
-    window.neo.logError('paperback: ' + (err && err.stack || err));
+    window.kibitz.logError('paperback: ' + (err && err.stack || err));
     toast(t('Couldn’t export: {error}', { error: plainError(err) }), 8000);
   } finally {
     printPaperback.busy = false;
@@ -495,7 +495,7 @@ function buildMd(data) {
   return out;
 }
 
-// The Web Page and PDF read in the page's own typeface. A face NEO ships
+// The Web Page and PDF read in the page's own typeface. A face Kibitz ships
 // (the @font-face rules in styles.css, the body fonts on Linux) travels
 // inside the file, so the PDF matches the page on any machine; a font the
 // computer has goes by name, with the same fallbacks as the page.
@@ -523,7 +523,7 @@ async function exportFontFaces(d) {
   });
 }
 
-// One of NEO's own font files, as base64
+// One of Kibitz's own font files, as base64
 async function fontBase64(url) {
   const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
   let bin = '';
@@ -531,7 +531,7 @@ async function fontBase64(url) {
   return btoa(bin);
 }
 // The @font-face rules an export carries (PDF, paperback, manuscript, a
-// script's PDF): every face NEO bundles for which pick(name, weight, style)
+// script's PDF): every face Kibitz bundles for which pick(name, weight, style)
 // says yes, the file inside as data. A face keeps its range and measures,
 // so a Russian face never stands in for the Latin one at the Latin one's
 // size. A face that won't read is left out; its fallbacks stand in.
@@ -571,7 +571,7 @@ function buildHtml(data, opts = {}) {
   const d = data || bookExportData();
   const total = d.sections.filter((ch) => (ch.kind || 'chapter') === 'chapter')
     .reduce((s, ch) => s + ch.paras.reduce((n, p) => n + countWords(p.text || ''), 0), 0);
-  const stamp = new Date().toLocaleString(NeoI18n.getLocale());
+  const stamp = new Date().toLocaleString(KibitzI18n.getLocale());
   // a chapter's text: only its opening paragraph gets the enlarged initial,
   // scene breaks resume ordinary body text
   const prose = (paras, initial) => {
@@ -761,7 +761,7 @@ ${opts.cover ? `<div class="coverpage"><img src="data:${opts.cover.mime};base64,
 ${d.subtitle ? `<p class="sub">${escHtml(d.subtitle)}</p>` : ''}
 <p class="auth">${escHtml(d.author)}</p></div>
 ${body}
-${opts.stamp ? `<p class="prov">${t('{n} words · exported from NEO on {date}', { n: total, date: stamp })}</p>` : ''}
+${opts.stamp ? `<p class="prov">${t('{n} words · exported from Kibitz on {date}', { n: total, date: stamp })}</p>` : ''}
 </body></html>`;
 }
 
@@ -896,7 +896,7 @@ function softHyphenTick(rect, origin, em) {
 // Paints those characters in every open chapter with the CSS Highlight API,
 // so the marks never enter the chapter HTML — the same door search,
 // spellcheck and focus use. Off means nothing is painted at all.
-const NB_MARK_NAME = 'neo-nb-mark';
+const NB_MARK_NAME = 'kibitz-nb-mark';
 function paintNonBreakingMarks() {
   queueSoftHyphenTicks();
   if (!(window.CSS && CSS.highlights && window.Highlight)) return;
@@ -1168,7 +1168,7 @@ function docxEntriesOf(data) {
   if (!placed) contents();
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join('')}
-<w:sectPr>${(window.neo.paper || 'Letter') === 'A4' ? '<w:pgSz w:w="11906" w:h="16838"/>' : '<w:pgSz w:w="12240" w:h="15840"/>'}<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+<w:sectPr>${(window.kibitz.paper || 'Letter') === 'A4' ? '<w:pgSz w:w="11906" w:h="16838"/>' : '<w:pgSz w:w="12240" w:h="15840"/>'}<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
 </w:body></w:document>`;
   // the page's own typeface (on Linux, the bundled face it shows)
   const font = escXml(firstFamily(exportBodyFont()) || 'Georgia');
@@ -1225,14 +1225,14 @@ ${chr('FootnoteReference', 'footnote reference', '<w:vertAlign w:val="superscrip
 
 // The cover that travels with an export: the writer's own image if they
 // gave one, otherwise the shelf's abstract with the title set in type,
-// rendered at KDP size. NEO's paintings never leave the shelf.
+// rendered at KDP size. Kibitz's paintings never leave the shelf.
 async function exportCover(d) {
   if (d.coverImage) {
-    const c = await window.neo.readCover(d.id, d.coverImage);
+    const c = await window.kibitz.readCover(d.id, d.coverImage);
     if (c) return { base64: c.base64, mime: c.mime, ext: c.ext };
   }
-  await NeoCovers.ready;
-  const url = NeoCovers.renderFull(d).toDataURL('image/jpeg', 0.9);
+  await KibitzCovers.ready;
+  const url = KibitzCovers.renderFull(d).toDataURL('image/jpeg', 0.9);
   return { base64: url.split(',')[1], mime: 'image/jpeg', ext: 'jpg' };
 }
 
@@ -1312,7 +1312,7 @@ ${paras}
     inner = inner.slice(0, at) + `<div class="notes">\n${asides}\n</div>\n` + inner.slice(at);
   }
   // the language on the page too, so a reader hyphenates in the right one
-  const lang = escXml(d.language || NeoI18n.getLocale());
+  const lang = escXml(d.language || KibitzI18n.getLocale());
   return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${lang}" lang="${lang}">
@@ -1368,7 +1368,7 @@ ${navList(n.children)}
 <dc:identifier id="bookid">${uuid}</dc:identifier>
 <dc:title>${escXml(d.title)}</dc:title>
 <dc:creator>${escXml(d.author)}</dc:creator>
-<dc:language>${escXml(d.language || NeoI18n.getLocale())}</dc:language>
+<dc:language>${escXml(d.language || KibitzI18n.getLocale())}</dc:language>
 <meta property="dcterms:modified">${modified}</meta>
 <meta name="cover" content="cover-image"/>
 </metadata>
@@ -1496,7 +1496,7 @@ async function shelfBookData(shelf, opts = {}) {
   const through = bound && ((shelf.binding && shelf.binding.numbering) || 'through') !== 'restart';
   const metas = [];
   for (const id of shelf.bookIds) {
-    const m = await window.neo.readBookMeta(id);
+    const m = await window.kibitz.readBookMeta(id);
     if (m && (bound || !isPageMeta(m))) metas.push(m);
   }
   const cover = metas.find((m) => m.kind === 'cover') || null;
@@ -1504,7 +1504,7 @@ async function shelfBookData(shelf, opts = {}) {
   const titles = metas.filter((m) => !isPageMeta(m));
   const single = titles.length === 1;
   const pageParas = async (m) => parasFromHtml(m.chapterOrder && m.chapterOrder[0]
-    ? await window.neo.readChapter(m.id, m.chapterOrder[0]) : '');
+    ? await window.kibitz.readChapter(m.id, m.chapterOrder[0]) : '');
   const sections = [];
   const toc = [];
   const push = (s) => { s.num = sections.length + 1; sections.push(s); return s; };
@@ -1540,7 +1540,7 @@ async function shelfBookData(shelf, opts = {}) {
       // chapters the writer gave it run on, a scene break between them)
       const paras = [];
       for (const chId of m.chapterOrder || []) {
-        const p = parasFromHtml(await window.neo.readChapter(m.id, chId), { blanks: true });
+        const p = parasFromHtml(await window.kibitz.readChapter(m.id, chId), { blanks: true });
         if (!p.length) continue;
         if (paras.length) paras.push({ sceneBreak: true, poetry: false, text: '', runs: [], align: '', html: '' });
         paras.push(...p);
@@ -1561,7 +1561,7 @@ async function shelfBookData(shelf, opts = {}) {
     for (const chId of m.chapterOrder || []) {
       const kind = chapterKind(chId, m);
       if (!STORY_KINDS.includes(kind) && kind !== 'part') continue;
-      const paras = parasFromHtml(await window.neo.readChapter(m.id, chId), { blanks: kind !== 'part' });
+      const paras = parasFromHtml(await window.kibitz.readChapter(m.id, chId), { blanks: kind !== 'part' });
       if (paras.length || kind === 'part') chapters.push({ chId, kind, paras });
     }
     while (chapters.length && chapters[chapters.length - 1].kind === 'part') chapters.pop();
@@ -1666,10 +1666,10 @@ async function exportShelfAnthology(shelf) {
   try {
     const data = await shelfBookData(shelf, { title: title || shelf.name });
     if (!data.sections.length) { toast(t('No words found on this shelf yet')); return; }
-    const saved = await window.neo.exportSave(await shelfPayload(data, format));
+    const saved = await window.kibitz.exportSave(await shelfPayload(data, format));
     if (saved) toast(t('Anthology of {n} works exported: {file}', { n: shelf.bookIds.length, file: saved.split('/').pop() }), 6000);
   } catch (err) {
-    window.neo.logError('export anthology: ' + (err && err.stack || err));
+    window.kibitz.logError('export anthology: ' + (err && err.stack || err));
     toast(t('Couldn’t export the anthology: {error}', { error: plainError(err) }), 8000);
   }
 }
@@ -1682,10 +1682,10 @@ async function exportBoundBook(shelf) {
   try {
     const data = await shelfBookData(shelf, { bound: true });
     if (!data.sections.length) { toast(t('No words found on this shelf yet')); return; }
-    const saved = await window.neo.exportSave(await shelfPayload(data, format));
+    const saved = await window.kibitz.exportSave(await shelfPayload(data, format));
     if (saved) toast(t('Exported: {file}', { file: saved.split('/').pop() }));
   } catch (err) {
-    window.neo.logError('export bound book: ' + (err && err.stack || err));
+    window.kibitz.logError('export bound book: ' + (err && err.stack || err));
     toast(t('Couldn’t export: {error}', { error: plainError(err) }), 8000);
   }
 }
@@ -1706,18 +1706,18 @@ async function boundCoverMenu(shelf, meta, el) {
   );
   const choice = await optionModal(escHtml(t('“{name}” · one book', { name: shelf.name })), null, options);
   if (choice === 'cover') {
-    const src = await window.neo.pickCover();
+    const src = await window.kibitz.pickCover();
     if (!src) return;
-    const fname = await window.neo.setCover(meta.id, src);
+    const fname = await window.kibitz.setCover(meta.id, src);
     if (!fname) return;
-    const live = (await window.neo.readBookMeta(meta.id)) || meta;
+    const live = (await window.kibitz.readBookMeta(meta.id)) || meta;
     live.coverImage = fname;
     live.coverMode = 'image';
     await writeBookMeta(meta.id, live);
     renderShelves();
   } else if (choice === 'uncover') {
-    await window.neo.removeCover(meta.id);
-    const live = (await window.neo.readBookMeta(meta.id)) || meta;
+    await window.kibitz.removeCover(meta.id);
+    const live = (await window.kibitz.readBookMeta(meta.id)) || meta;
     live.coverImage = null;
     await writeBookMeta(meta.id, live);
     renderShelves();
@@ -1758,10 +1758,10 @@ function plainError(err) {
 // looks at the disk stand aside while shelfExport is set).
 async function exportFromShelf(bookId, format) {
   if (book || shelfExport) return;
-  const meta = await window.neo.readBookMeta(bookId);
+  const meta = await window.kibitz.readBookMeta(bookId);
   if (!meta || !Array.isArray(meta.chapterOrder)) return;
   const html = {};
-  for (const chId of meta.chapterOrder) html[chId] = await window.neo.readChapter(bookId, chId);
+  for (const chId of meta.chapterOrder) html[chId] = await window.kibitz.readChapter(bookId, chId);
   if (book) return; // a book was opened meanwhile
   const hadUuid = !!meta.uuid;
   const keep = { chapterHTML, savedHTML };
@@ -1804,12 +1804,12 @@ async function doExport(format, chId = null) {
       const d = data || bookExportData();
       payload = { format, defaultName, content: buildHtml(d, { cover: one ? null : await exportCover(d), fonts: await exportFontFaces(d) }) };
     }
-    const saved = await window.neo.exportSave(payload);
+    const saved = await window.kibitz.exportSave(payload);
     if (saved) toast(t('Exported: {file}', { file: saved.split('/').pop() }));
   } catch (err) {
     // An export that saves nothing must never be silent: name the failure,
     // and put the stack in the error log for whatever bug report follows.
-    window.neo.logError('export ' + format + ': ' + (err && err.stack || err));
+    window.kibitz.logError('export ' + format + ': ' + (err && err.stack || err));
     toast(t('Couldn’t export: {error}', { error: plainError(err) }), 8000);
   }
 }
@@ -1823,11 +1823,11 @@ function chooseEmailMethod() {
     bd.className = 'modal-backdrop';
     bd.innerHTML = `
       <div class="modal" style="width:440px">
-        <h2 style="font-size:16px">${t('How should NEO email your drafts?')}</h2>
+        <h2 style="font-size:16px">${t('How should Kibitz email your drafts?')}</h2>
         <div class="fr-choices" style="margin-top:14px">
           <button class="fr-choice" data-m="gmail">
             <strong>Gmail</strong>
-            <span>${t('Opens a pre-filled compose window in your browser. NEO shows you the PDF to drag into it.')}</span>
+            <span>${t('Opens a pre-filled compose window in your browser. Kibitz shows you the PDF to drag into it.')}</span>
           </button>
           ${mac ? `<button class="fr-choice" data-m="mail">
             <strong>Apple Mail</strong>
@@ -1835,7 +1835,7 @@ function chooseEmailMethod() {
           </button>` : ''}
           <button class="fr-choice" data-m="mailto">
             <strong>${t('Your mail program')}</strong>
-            <span>${t('Opens a new message in the program your computer uses for email. NEO shows you the PDF to attach.')}</span>
+            <span>${t('Opens a new message in the program your computer uses for email. Kibitz shows you the PDF to attach.')}</span>
           </button>
         </div>
       </div>`;
@@ -1871,18 +1871,18 @@ async function doEmailDraft() {
     if (!ok) return;
   }
   const total = bookWordCount();
-  const subject = t('NEO draft — {title} — {n} words — {date}', { title: shownTitle(book.title), n: total, date: fmtDate(new Date()) });
+  const subject = t('Kibitz draft — {title} — {n} words — {date}', { title: shownTitle(book.title), n: total, date: fmtDate(new Date()) });
   const hash = await manuscriptHash();
   const body = t('Draft snapshot of “{title}” — {n} words.', { title: shownTitle(book.title), n: total }) + '\n'
-    + t('Sent from NEO on {date}.', { date: new Date().toLocaleString(NeoI18n.getLocale()) }) + '\n\n'
+    + t('Sent from Kibitz on {date}.', { date: new Date().toLocaleString(KibitzI18n.getLocale()) }) + '\n\n'
     + t('SHA-256 fingerprint of the manuscript text:') + `\n${hash}\n\n`
     + (library.emailMethod === 'gmail' || library.emailMethod === 'mailto'
-      ? t('The PDF snapshot is in the Finder window NEO just opened — drag it into this email before sending.')
+      ? t('The PDF snapshot is in the Finder window Kibitz just opened — drag it into this email before sending.')
       : t('PDF snapshot attached.'));
   toast(t('Preparing your draft…'));
   const script = isScript();
   const snapshot = script ? null : bookExportData();
-  const res = await window.neo.emailDraft({
+  const res = await window.kibitz.emailDraft({
     to: library.emailAddress,
     subject,
     body,
@@ -1892,8 +1892,8 @@ async function doEmailDraft() {
     defaultName: safeName(book.title),
     method: library.emailMethod
   });
-  if (res.method === 'gmail') toast(t('Gmail compose opened — drag in the PDF NEO revealed, then send'), 8000);
-  else if (res.method === 'mailto') toast(t('Your mail program opened — attach the PDF NEO revealed, then send'), 8000);
+  if (res.method === 'gmail') toast(t('Gmail compose opened — drag in the PDF Kibitz revealed, then send'), 8000);
+  else if (res.method === 'mailto') toast(t('Your mail program opened — attach the PDF Kibitz revealed, then send'), 8000);
   else if (res.ok) toast(t('Draft handed to Mail — hit send for your timestamp'));
   else toast(t('Mail unavailable — snapshot saved to your Exports folder instead'));
 }
@@ -1906,7 +1906,7 @@ function updateDialogBox(res) {
   bd.className = 'modal-backdrop';
   bd.innerHTML = `
     <div class="modal" style="width:400px">
-      <h2 style="font-size:16px">${t('NEO {version} is available', { version: res.latestVersion })}</h2>
+      <h2 style="font-size:16px">${t('Kibitz {version} is available', { version: res.latestVersion })}</h2>
       <p class="up-text">${t('You have {version}.', { version: res.currentVersion })}</p>
       <div class="up-bar" hidden><div class="up-fill"></div></div>
       <div style="text-align:right;margin-top:14px">
@@ -1947,30 +1947,30 @@ function updateDialogShow(state, info = {}) {
     fill.style.width = pct.toFixed(1) + '%';
     ok.hidden = true;
   } else if (state === 'ready') {
-    text.textContent = t('Downloaded. NEO will save your work and restart.');
+    text.textContent = t('Downloaded. Kibitz will save your work and restart.');
     ok.textContent = t('Restart to update');
-    ok.onclick = () => { flushAllSaves(); setTimeout(() => window.neo.installUpdate(), 300); };
+    ok.onclick = () => { flushAllSaves(); setTimeout(() => window.kibitz.installUpdate(), 300); };
     ok.focus();
   } else if (state === 'error') {
     text.textContent = t('The update couldn’t be installed from here: {message}', { message: info.message || t('unknown error') })
       + ' ' + t('You can download it from the release page instead.');
     ok.textContent = t('View Release');
-    ok.onclick = () => { window.neo.openRelease(); bd.close(); };
+    ok.onclick = () => { window.kibitz.openRelease(); bd.close(); };
   } else if (state === 'release') {
     text.textContent = t('You have {version}.', { version: info.currentVersion });
     ok.textContent = t('View Release');
-    ok.onclick = () => { window.neo.openRelease(); bd.close(); };
+    ok.onclick = () => { window.kibitz.openRelease(); bd.close(); };
   }
 }
 
 async function checkForUpdate() {
   if (updateDialog) { updateDialog.focus(); return; }
-  const res = await window.neo.checkForUpdate();
+  const res = await window.kibitz.checkForUpdate();
   // the answer comes in a window, like an update does: a line at the foot
   // of the screen was too easy to miss
   if (res.error) { updateNotice(t('Couldn’t check for updates — try again later')); return; }
-  if (!res.hasUpdate) { updateNotice(t('NEO is up to date'), t('You have {version}.', { version: res.currentVersion })); return; }
-  // NEO has been fetching it in the background since it was found: show
+  if (!res.hasUpdate) { updateNotice(t('Kibitz is up to date'), t('You have {version}.', { version: res.currentVersion })); return; }
+  // Kibitz has been fetching it in the background since it was found: show
   // where that download is — usually done, with "Restart to update"
   updateDialog = updateDialogBox(res);
   if (!res.canInstall) updateDialogShow('release', res);
@@ -2008,14 +2008,14 @@ function updateMessage(msg) {
   updateDialogShow(msg.state, msg);
 }
 
-// Help → About NEO: the version, plainly
+// Help → About Kibitz: the version, plainly
 async function showAbout() {
-  const v = await window.neo.appVersion();
+  const v = await window.kibitz.appVersion();
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   bd.innerHTML = `
     <div class="modal" style="width:340px;text-align:center">
-      <h2 style="font-size:22px;letter-spacing:6px">NEO</h2>
+      <h2 style="font-size:22px;letter-spacing:6px">Kibitz</h2>
       <p class="about-version">${t('Version {version}', { version: v })}</p>
       <p class="about-line">${t('A word processor for authors.')}</p>
       <div style="margin-top:16px">
@@ -2029,14 +2029,14 @@ async function showAbout() {
   bd.querySelector('.m-ok').focus();
 }
 
-// WHAT'S NEW — Help → What's New in NEO…, and once after an update.
+// WHAT'S NEW — Help → What's New in Kibitz…, and once after an update.
 // The notes are whats-new.json (newest release first, in English), shipped
-// with NEO so they're there offline. A writer who updates sees the notes
+// with Kibitz so they're there offline. A writer who updates sees the notes
 // for the releases since the one they last saw, once, at launch: before a
 // word is typed, never in the middle of one. A fresh install skips them
 // (the welcome is enough), and so does Pocket, which has its own versions,
-// and so does NEO run from its folder (npm start, npm run try, the tests).
-const WHATS_NEW_SEEN = 'neo.whatsNewSeen';
+// and so does Kibitz run from its folder (npm start, npm run try, the tests).
+const WHATS_NEW_SEEN = 'kibitz.whatsNewSeen';
 async function whatsNewNotes() {
   try { return await (await fetch(new URL('whats-new.json', location.href))).json(); } catch { return []; }
 }
@@ -2047,8 +2047,8 @@ function versionNewer(a, b) {
   return false;
 }
 async function whatsNewAtLaunch(existing) {
-  if (IS_POCKET || !window.neo.appVersion || !window.neo.isPackaged || !window.neo.isPackaged()) return;
-  const now = await window.neo.appVersion();
+  if (IS_POCKET || !window.kibitz.appVersion || !window.kibitz.isPackaged || !window.kibitz.isPackaged()) return;
+  const now = await window.kibitz.appVersion();
   let seen = null;
   try { seen = localStorage.getItem(WHATS_NEW_SEEN); } catch { /* storage off: show nothing */ return; }
   try { localStorage.setItem(WHATS_NEW_SEEN, now); } catch { /* ignore */ }
@@ -2065,9 +2065,9 @@ async function showWhatsNew(notes) {
   const inline = (s) => escHtml(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
   bd.innerHTML = `
     <div class="modal whats-new">
-      <h2>${t('What’s New in NEO')}</h2>
+      <h2>${t('What’s New in Kibitz')}</h2>
       <div class="wn-list">${notes.map((r) => `
-        <h3>NEO ${escHtml(r.version)}</h3>
+        <h3>Kibitz ${escHtml(r.version)}</h3>
         <ul>${(r.items || []).map((it) => `<li>${inline(it)}</li>`).join('')}</ul>`).join('')}
       </div>
       <div style="margin-top:16px;text-align:center">
@@ -2101,7 +2101,7 @@ async function setEditorFontSize(value) {
   keepReadingPlace(applyFonts);
 }
 
-window.neo.onMenu(async (msg) => {
+window.kibitz.onMenu(async (msg) => {
   // full screen and focus mode together hide the bottom bar until hovered
   // (styles.css); the window says when it goes in and out, whatever is open
   if (msg.type === 'fullScreen') { document.body.classList.toggle('full-screen', !!msg.value); return; }
@@ -2154,7 +2154,7 @@ window.neo.onMenu(async (msg) => {
   if (msg.type === 'writingStyle') {
     library.writingStyle = msg.value;
     await writeLibrary(library);
-    if (window.neo.writingStyleState) window.neo.writingStyleState(library.writingStyle);
+    if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
   }
   if (msg.type === 'coverArt') openCoverArt();
   // a script's lines sit where they print: no alignment, poetry or flush
@@ -2167,8 +2167,8 @@ window.neo.onMenu(async (msg) => {
   if (msg.type === 'uiLanguage') {
     // save every open page, then reload the window in the new language
     flushAllSaves();
-    try { if (book && !$('#editor-view').hidden) sessionStorage.setItem('neo-reopen', book.id); } catch { /* a nicety */ }
-    setTimeout(() => window.neo.reloadForLanguage(), 400);
+    try { if (book && !$('#editor-view').hidden) sessionStorage.setItem('kibitz-reopen', book.id); } catch { /* a nicety */ }
+    setTimeout(() => window.kibitz.reloadForLanguage(), 400);
   }
   if (msg.type === 'uiZoomStep') {
     const next = nextZoomStep(library.uiZoom, msg.value);

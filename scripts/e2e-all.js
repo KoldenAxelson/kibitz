@@ -2,7 +2,7 @@
 'use strict';
 
 // npm run test:e2e — every end-to-end test (scripts/*.e2e.js), one after
-// another, each in its own NEO on a throwaway library. Prints one line per
+// another, each in its own Kibitz on a throwaway library. Prints one line per
 // file and stops with a failing exit code if any test failed. On Linux with
 // no screen it runs under xvfb-run when that is installed. The robot runs
 // this on a Mac for every push (.github/workflows/tests.yml).

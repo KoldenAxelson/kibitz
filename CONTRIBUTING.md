@@ -1,10 +1,10 @@
-# Contributing to NEO
+# Contributing to Kibitz
 
-Thanks for wanting to make NEO better. A few notes before you dive in.
+Thanks for wanting to make Kibitz better. A few notes before you dive in.
 
 ## The philosophy
 
-NEO exists because every writing app was eventually ruined by bloat. The bar for new features is not "would this be cool?" but "does this help a working author write, finish, and publish books?"
+Kibitz exists because every writing app was eventually ruined by bloat. The bar for new features is not "would this be cool?" but "does this help a working author write, finish, and publish books?"
 
 Good territory: bug fixes, performance, accessibility, better import/export precision, and platform polish (especially Windows and Linux, which I haven't tested much).
 
@@ -15,7 +15,7 @@ Good territory: bug fixes, performance, accessibility, better import/export prec
 - `app/` — the entire UI, one file per area (bookshelf, editor, outline, search, goals…), loaded in the order `index.html` lists.
 - `styles.css` — all styling, with CSS variables at the top.
 
-Books are folders of plain files in `~/Documents/NEO Library`: `book.json` for metadata, `chapters/*.html` for text, JSON files for darlings/stickies.
+Books are folders of plain files in `~/Documents/Kibitz Library`: `book.json` for metadata, `chapters/*.html` for text, JSON files for darlings/stickies.
 
 ## Ground rules
 
@@ -29,4 +29,4 @@ Books are folders of plain files in `~/Documents/NEO Library`: `book.json` for m
 - Run from source: `npm install && npm start` (needs Node.js).
 - Keep PRs focused — one feature or fix each.
 - Describe the writer-facing behavior in your PR, not just the code. Think like an author, not a programmer!
-- Bug reports: please include your OS, what you did, what happened, and the tail of `~/Documents/NEO Library/neo-errors.log` if it's a crash.
+- Bug reports: please include your OS, what you did, what happened, and the tail of `~/Documents/Kibitz Library/kibitz-errors.log` if it's a crash.

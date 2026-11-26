@@ -2,7 +2,7 @@
 // on iCloud, say). book.json holds the list of a book's chapters and is saved
 // whole; a device that saved it without having seen the other's new chapter
 // used to drop that chapter from the book, its words left in a file no list
-// named (#526). NEO runs on a throwaway library and the "other device" is
+// named (#526). Kibitz runs on a throwaway library and the "other device" is
 // played by writing its files into the book's folder, the way a sync does.
 // Run with `npm run test:twodevices`.
 
@@ -17,20 +17,20 @@ const path = require('path');
 // A folder of its own for each run (see words.e2e.js for why earlier runs'
 // folders are the ones removed).
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-twodevices-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-twodevices-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-twodevices-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-twodevices-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));
-// run from scripts/, NEO's window would look for scripts/index.html
+// run from scripts/, Kibitz's window would look for scripts/index.html
 const loadFile = BrowserWindow.prototype.loadFile;
 BrowserWindow.prototype.loadFile = function (file, opts) {
   return loadFile.call(this, path.resolve(__dirname, '..', file), opts);
@@ -41,7 +41,7 @@ let wc;
 const js = (code) => wc.executeJavaScript(code, true);
 const tick = (ms = 40) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const lib = path.join(tmp, 'NEO Library');
+const lib = path.join(tmp, 'Kibitz Library');
 let dir; // the book's folder
 const readMeta = () => JSON.parse(fs.readFileSync(path.join(dir, 'book.json'), 'utf8'));
 // the other device's book.json lands (a sync hands the file over whole)
@@ -134,7 +134,7 @@ test('a chapter the other device deleted goes (it says so), though its file is s
   assert.ok(!readMeta().chapterOrder.includes(gone));
 });
 
-test('a chapter deleted by an older NEO on the other device (no word of it, the file gone) goes too', async () => {
+test('a chapter deleted by an older Kibitz on the other device (no word of it, the file gone) goes too', async () => {
   const mine = await addChapterHere('OLDSTYLE words.');
   const meta = readMeta();
   fs.unlinkSync(path.join(dir, 'chapters', mine + '.html'));

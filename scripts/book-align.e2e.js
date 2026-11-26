@@ -6,8 +6,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-book-align-'));
-const lib = path.join(tmp, 'NEO Library');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-book-align-'));
+const lib = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(lib);
 app.setPath('documents', tmp);
 app.setPath('userData', path.join(tmp, 'app'));
@@ -104,7 +104,7 @@ async function main() {
     assert.equal(await js("alignBookProse('center')"), 0);
     await js("library.features.formatting = true; book.format = 'screenplay'");
     assert.equal(await js("alignBookProse('center')"), 0);
-    console.log('ok notes, poetry, flush and breaks stay untouched; simple NEO and scripts stand down');
+    console.log('ok notes, poetry, flush and breaks stay untouched; simple Kibitz and scripts stand down');
   } catch (err) { failed = true; console.error(err); }
   finally { app.exit(failed ? 1 : 0); }
 }

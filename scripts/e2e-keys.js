@@ -17,7 +17,7 @@ async function editKey(wc, letter, { shift = false } = {}) {
     await wc.executeJavaScript(`(() => {
       if (window.__editKeyWatch) return;
       window.__editKeyWatch = true;
-      // on the window, bubbling: after every handler of NEO's
+      // on the window, bubbling: after every handler of Kibitz's
       window.addEventListener('keydown', (e) => { window.__editKeyPrevented = e.defaultPrevented; });
     })()`, true);
     await wc.executeJavaScript('window.__editKeyPrevented = null', true);

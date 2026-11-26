@@ -1,4 +1,4 @@
-package com.hughhowey.neopocket;
+package com.koldenaxelson.kibitzpocket;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -9,8 +9,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 // The page tells Android its background color (night, paper or light), so
 // the camera cutout band and any peeking system bar match it — see
 // pocket-bridge.js and MainActivity.paintBehindThePage.
-@CapacitorPlugin(name = "NeoBars")
-public class NeoBarsPlugin extends Plugin {
+@CapacitorPlugin(name = "KibitzBars")
+public class KibitzBarsPlugin extends Plugin {
     @PluginMethod
     public void set(PluginCall call) {
         final String css = call.getString("color");

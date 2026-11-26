@@ -11,7 +11,7 @@
 
     <!-- Always dark underneath, whatever the phone's own light/dark setting:
          any sliver of window that shows around the page (a Samsung camera
-         cutout, a bar peeking in) is NEO's night, never the system's white.
+         cutout, a bar peeking in) is Kibitz's night, never the system's white.
          The page's own color takes over once it loads (MainActivity). -->
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
         <item name="windowActionBar">false</item>

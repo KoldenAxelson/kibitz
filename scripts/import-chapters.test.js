@@ -26,7 +26,7 @@ function room(opts = {}) {
     book: opts.book === undefined ? { id: 'b1', title: 'My Book', chapterOrder: ['c1', 'c2'], chapterTitles: {} } : opts.book,
     chapterHTML: { c1: '<p>one</p>', c2: '<p>two</p>' },
     library: null,
-    NeoI18n: { getLocale: () => 'en' },
+    KibitzI18n: { getLocale: () => 'en' },
     undoStack: [],
     currentTab: 'manuscript',
     currentChapterId: opts.currentChapterId || null,
@@ -47,7 +47,7 @@ function room(opts = {}) {
     renderOutline: () => {},
     updateCounters: () => {},
     $: () => ({ hidden: false }),
-    window: { neo: { logError: (m) => log.push('logError ' + m), importPick: async () => opts.picked || [] } }
+    window: { kibitz: { logError: (m) => log.push('logError ' + m), importPick: async () => opts.picked || [] } }
   });
   vm.runInContext(app.slice(app.indexOf('function quoteOpenIn('), app.indexOf('// A hyphen standing on its own')), ctx);
   vm.runInContext(app.slice(from, to), ctx);

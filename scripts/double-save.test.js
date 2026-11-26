@@ -19,7 +19,7 @@ function bookInMemory(chapters) {
   const writes = [];
   const none = () => {};
   const page = vm.createContext({
-    window: { neo: {
+    window: { kibitz: {
       writeChapter: async (bookId, chId, html) => { writes.push({ chId, html }); return true; }
     } },
     book: { id: 'b', chapterOrder: Object.keys(chapters) },
@@ -97,10 +97,10 @@ test('a save that comes due with words typed since the flush writes them', async
 test('a save that comes due while a write is on its way writes when that write fails', async () => {
   const { page, writes } = bookInMemory({ x: F });
   const timers = heldTimers(page);
-  const written = page.window.neo.writeChapter;
+  const written = page.window.kibitz.writeChapter;
   let fail;
-  page.window.neo.writeChapter = () => {
-    page.window.neo.writeChapter = written;
+  page.window.kibitz.writeChapter = () => {
+    page.window.kibitz.writeChapter = written;
     return new Promise((resolve, reject) => { fail = reject; });
   };
   page.chapterHTML.x = F + '<p>Typed.</p>';

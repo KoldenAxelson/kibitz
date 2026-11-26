@@ -40,7 +40,7 @@ test('breaks, ghosts, poetry, flush lines, script lines and empty lines don\'t c
   assert.equal(chapterAlign(undefined), null);
 });
 
-test('an alignment NEO never sets reads as left', () => {
+test('an alignment Kibitz never sets reads as left', () => {
   assert.equal(chapterAlign('<p style="text-align: left;">Rain.</p>'), '');
   assert.equal(chapterAlign('<p style="text-align: start;">Rain.</p>'), '');
   assert.equal(chapterAlign('<p style="text-align: right;">Rain.</p>'), 'right');

@@ -10,14 +10,14 @@ const SECOND = Date.UTC(2026, 10, 15, 12);
 function library() {
   const files = {};
   const reads = [];
-  const neo = {
+  const kibitz = {
     async snapshotList() { return Object.entries(files).reverse().map(([name, data]) => ({ name, files: Object.keys(data) })); },
     async snapshotRead(id, name, file) { reads.push([name, file]); if (!(file in files[name])) throw new Error('unavailable'); return files[name][file]; },
     async snapshotWrite(id, name, file, text) { files[name] ||= {}; if (file in files[name]) return false; files[name][file] = text; return true; },
     async snapshotRemove(id, name) { delete files[name]; },
     logError() {}
   };
-  const ctx = vm.createContext({ window: { neo }, snapsCan: () => true, renderSnapList() {}, logSnap(e) { throw e; },
+  const ctx = vm.createContext({ window: { kibitz }, snapsCan: () => true, renderSnapList() {}, logSnap(e) { throw e; },
     htmlWords: (html) => html.split(/\s+/).filter(Boolean).length });
   vm.runInContext(between('const SNAP_KEPT', '// (the rules above are plain functions: scripts/snapshots.test.js)') +
     between('let snapCache = null;', '// The first change of a writing day') +
@@ -28,7 +28,7 @@ function library() {
     files[name] = { 'snapshot.json': JSON.stringify({ at: new Date(at).toISOString() }), ...data };
     return name;
   };
-  return { ...ctx.api, files, reads, neo, add };
+  return { ...ctx.api, files, reads, kibitz, add };
 }
 
 test('legacy same-second snapshots reconstruct unchanged chapters after reloading', async () => {
@@ -60,7 +60,7 @@ test('unreadable or invalid tied metadata still loads, but nothing is thinned', 
     const list = await lib.loadSnaps('test', true);
     assert.equal(list.length, 2);
     assert.equal(list.uncertain, true);
-    await lib.thinSnapshots(lib.neo, 'test', list, SECOND + 40 * 86400000);
+    await lib.thinSnapshots(lib.kibitz, 'test', list, SECOND + 40 * 86400000);
     assert.equal(lib.files[old]['a.html'], 'keep me');
   }
 });
@@ -84,7 +84,7 @@ test('thinning same-second snapshots carries unchanged text forward in creation 
   const old = lib.add(SECOND + 100, 5, { 'a.html': 'old a', 'b.html': 'keep b' }, 'd');
   const next = lib.add(SECOND + 900, 1, { 'a.html': 'new a' }, 'r');
   const list = await lib.loadSnaps('test', true);
-  await lib.thinSnapshots(lib.neo, 'test', list, SECOND + 40 * 86400000);
+  await lib.thinSnapshots(lib.kibitz, 'test', list, SECOND + 40 * 86400000);
   assert.equal(lib.files[old], undefined);
   assert.equal(lib.files[next]['a.html'], 'new a');
   assert.equal(lib.files[next]['b.html'], 'keep b');

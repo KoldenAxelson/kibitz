@@ -13,15 +13,15 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-fn-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-fn-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-fn-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-fn-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-const lib = path.join(tmp, 'NEO Library');
+const lib = path.join(tmp, 'Kibitz Library');
 fs.mkdirSync(lib);
 fs.writeFileSync(path.join(lib, 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
@@ -78,7 +78,7 @@ const caretAt = (para, offset) => js(`(() => {
 const html0 = () => js(`chapterHTML[book.chapterOrder[0]]`);
 const until = async (fn, ms = 60000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return; await tick(100); } throw new Error('timed out'); };
 const has = (cmd) => { try { execFileSync('which', [cmd], { stdio: 'ignore' }); return true; } catch { return false; } };
-const OUT = process.env.NEO_OUT || path.join(tmp, 'out');
+const OUT = process.env.KIBITZ_OUT || path.join(tmp, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 const saveTo = (name) => { const to = path.join(OUT, name); try { fs.unlinkSync(to); } catch { /* new */ } dialog.showSaveDialog = async () => ({ canceled: false, filePath: to }); return to; };
 const exported = async (format, name) => {
@@ -197,7 +197,7 @@ for (const away of ['a click in another line', 'the window losing focus']) {
   });
 }
 
-// NEO no longer merges a line's text nodes (#477), which 0.3.7 did because
+// Kibitz no longer merges a line's text nodes (#477), which 0.3.7 did because
 // deleting across a seam between them duplicated a character. Here a line
 // cut into pieces, with numbers between some, is edited across every kind
 // of seam, and each key has to leave exactly the letters it should.
@@ -354,20 +354,20 @@ test('Manuscript format: Word footnotes and a PDF with notes at the foot of the 
 });
 
 // Paged.js's own counter gave every note on a page that page's last number
-// (4, 4, 4, 4): NEO writes the numbers, through the book, call and note alike
+// (4, 4, 4, 4): Kibitz writes the numbers, through the book, call and note alike
 test('the paperback and manuscript pages number their notes in order, through the book', async () => {
   const seq = (html, re) => [...html.matchAll(re)].map((m) => +m[1]);
   const pb = await js(`buildPrintHtml(bookExportData(), { trim: '5.5x8.5', paper: 'cream', links: {}, alsoByText: '', reviewText: '', reviewWords: '' })`);
   assert.deepEqual(seq(pb, /<sup class="fncall">(\d+)<\/sup>/g), [1, 2]);
   assert.deepEqual(seq(pb, /<span class="fnm">(\d+)<\/span>/g), [1, 2]);
-  const ms = await js(`NeoManuscript.html(manuscriptModel(manuscriptDefaults(), manuscriptSections()))`);
+  const ms = await js(`KibitzManuscript.html(manuscriptModel(manuscriptDefaults(), manuscriptSections()))`);
   assert.deepEqual(seq(ms, /<sup class="fncall">(\d+)<\/sup>/g), [1, 2]);
   assert.deepEqual(seq(ms, /<span class="footnote">(\d+)\. /g), [1, 2]);
 });
 
 test('on the page, the numbers run on from chapter to chapter', async () => {
   assert.equal(await js(`getComputedStyle(document.querySelector('.chapter-body')).counterReset`), 'none');
-  assert.match(await js(`getComputedStyle(document.getElementById('chapters')).counterReset`), /neo-fn/);
+  assert.match(await js(`getComputedStyle(document.getElementById('chapters')).counterReset`), /kibitz-fn/);
 });
 
 test('Paperback: the notes at the foot of their pages', async () => {
@@ -389,7 +389,7 @@ test('screenshot', async () => {
   wc.insertText('A third note, open.');
   await tick(300);
   const img = await wc.capturePage();
-  if (process.env.NEO_SHOT) fs.writeFileSync(process.env.NEO_SHOT, img.toPNG());
+  if (process.env.KIBITZ_SHOT) fs.writeFileSync(process.env.KIBITZ_SHOT, img.toPNG());
   await key('Return');
 });
 

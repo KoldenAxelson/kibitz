@@ -1,4 +1,4 @@
-// End-to-end tests for word counts. NEO runs on a throwaway library, a book
+// End-to-end tests for word counts. Kibitz runs on a throwaway library, a book
 // comes in the way a dropped manuscript does, and every count is read off
 // the screen the way the writer sees it. Run with `npm run test:words`.
 
@@ -14,20 +14,20 @@ const path = require('path');
 // the process is gone, so a run can't remove its own; it removes those of
 // earlier runs whose process has ended instead, leaving any still running.
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-words-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-words-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-words-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-words-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: '', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));
-// run from scripts/, NEO's window would look for scripts/index.html
+// run from scripts/, Kibitz's window would look for scripts/index.html
 const loadFile = BrowserWindow.prototype.loadFile;
 BrowserWindow.prototype.loadFile = function (file, opts) {
   return loadFile.call(this, path.resolve(__dirname, '..', file), opts);
@@ -155,7 +155,7 @@ test('a paragraph typed after the last one adds its words', async () => {
 
 // The counter keeps each paragraph's count until the paragraph changes. Each
 // edit below is one the kept counts could miss; the count must still match
-// the chapter counted whole, the way NEO counted before it kept them.
+// the chapter counted whole, the way Kibitz counted before it kept them.
 const COUNT_CHECK = `(() => {
   const body = document.querySelector('.chapter-body');
   const id = body.closest('.chapter').dataset.id;
@@ -370,7 +370,7 @@ test('a thousand random edits keep the count true', async () => {
 // The library is synced between two computers. Each book below comes in on
 // disk the way the other one leaves it, and today's count is read off the
 // screen.
-const LIB = path.join(tmp, 'NEO Library');
+const LIB = path.join(tmp, 'Kibitz Library');
 const many = (n, word) => Array.from({ length: n }, () => word).join(' ');
 const folder = (id) => path.join(LIB, fs.readdirSync(LIB).find((d) => d.endsWith(id)));
 const bookJson = (id) => JSON.parse(fs.readFileSync(path.join(folder(id), 'book.json'), 'utf8'));

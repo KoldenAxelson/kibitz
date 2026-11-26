@@ -12,7 +12,7 @@ const { describe, test } = require('node:test');
 
 const app = require('./app-files').appSource();
 const between = (from, to) => app.slice(app.indexOf(from), app.indexOf(to));
-const context = vm.createContext({ library: null, book: null, chapterHTML: {}, NeoI18n: { getLocale: () => 'en' } });
+const context = vm.createContext({ library: null, book: null, chapterHTML: {}, KibitzI18n: { getLocale: () => 'en' } });
 vm.runInContext(between('function quoteOpenIn(', '// A hyphen standing on its own'), context);
 vm.runInContext('this.api = { typedQuote, quoteOpenIn, bookQuotes, singleQuotes, incomingQuotes, quoteRuns };', context);
 const { typedQuote, quoteOpenIn, bookQuotes, singleQuotes, incomingQuotes, quoteRuns } = context.api;

@@ -56,7 +56,7 @@ function loadMain() {
 const main = loadMain();
 
 function tempLibrary() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-library-fs-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-library-fs-'));
   main.pointAt(dir);
   return dir;
 }
@@ -231,7 +231,7 @@ describe('filesystem', { concurrency: 1 }, () => {
       assert.equal(main.call('library:write', library), true);
       const catalog = path.join(dir, '_catalog.txt');
       const text = fs.readFileSync(catalog, 'utf8');
-      assert.match(text, /NEO LIBRARY CATALOG — which folder is which book/);
+      assert.match(text, /Kibitz LIBRARY CATALOG — which folder is which book/);
       assert.match(text, /regenerated automatically; edits here do nothing/);
       assert.match(text, new RegExp(`Hello  —  ${book.id}  —  shelf: Works in Progress`));
 
@@ -246,7 +246,7 @@ describe('filesystem', { concurrency: 1 }, () => {
   });
 
   test('a rejected name creates nothing outside the temp library', () => {
-    const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-library-fs-'));
+    const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-library-fs-'));
     const dir = path.join(rootDir, 'library');
     fs.mkdirSync(dir);
     main.pointAt(dir);

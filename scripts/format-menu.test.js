@@ -23,7 +23,7 @@ const source = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
 // view: the page's view state (body font, drop cap, alignment...) as the window reports it
 function menuOn(platform, { script = false, more = true, view = null } = {}) {
   // the library and the app's settings both stand in a throwaway folder
-  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-format-menu-'));
+  const library = fs.mkdtempSync(path.join(os.tmpdir(), 'kibitz-format-menu-'));
   const listeners = new Map();
   let template = null;
   const sent = [];

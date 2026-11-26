@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.hughhowey.neopocket"
+    namespace = "com.koldenaxelson.kibitzpocket"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.hughhowey.neopocket"
+        applicationId "com.koldenaxelson.kibitzpocket"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // CI passes these in (see .github/workflows/pocket.yml); local builds get 1 / "local".

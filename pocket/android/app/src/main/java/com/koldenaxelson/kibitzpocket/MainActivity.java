@@ -1,4 +1,4 @@
-package com.hughhowey.neopocket;
+package com.koldenaxelson.kibitzpocket;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -20,7 +20,7 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
-    // Pocket reads and writes Documents/NEO Library, the same plain files
+    // Pocket reads and writes Documents/Kibitz Library, the same plain files
     // Syncthing shares with the desktop. On Android 11+ that needs "All files
     // access", which lives on a buried Settings page most people never find.
     // So on first launch without it, take the writer straight to that page.
@@ -28,8 +28,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        registerPlugin(NeoBarsPlugin.class);
-        registerPlugin(NeoPdfPlugin.class);
+        registerPlugin(KibitzBarsPlugin.class);
+        registerPlugin(KibitzPdfPlugin.class);
         super.onCreate(savedInstanceState);
         pageLanguage = getResources().getConfiguration().getLocales().get(0).toLanguageTag();
         if (!hasFilesAccess()) {
@@ -38,9 +38,9 @@ public class MainActivity extends BridgeActivity {
         }
         wireBackGesture();
         paintBehindThePage(Color.rgb(0x19, 0x19, 0x19));
-        giveNeoTheWholeScreen();
+        giveKibitzTheWholeScreen();
         // the page then reports its own background (night, paper or light)
-        // through NeoBarsPlugin, so whatever shows around it matches
+        // through KibitzBarsPlugin, so whatever shows around it matches
     }
 
     // "rgb(25, 25, 25)" → a color; anything else → 0 (leave things be)
@@ -75,10 +75,10 @@ public class MainActivity extends BridgeActivity {
         bars.setAppearanceLightNavigationBars(lightPage);
     }
 
-    // NEO's philosophy: nothing on screen but the page. Android's status and
+    // Kibitz's philosophy: nothing on screen but the page. Android's status and
     // navigation bars stay hidden; a swipe from the top or bottom edge peeks
     // them for a moment, then they slide away again.
-    private void giveNeoTheWholeScreen() {
+    private void giveKibitzTheWholeScreen() {
         WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         bars.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         bars.hide(WindowInsetsCompat.Type.systemBars());
@@ -106,17 +106,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     // Samsung brings the bars back after a dialog, the share sheet or the
-    // keyboard; hide them again whenever NEO has the window back
+    // keyboard; hide them again whenever Kibitz has the window back
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) giveNeoTheWholeScreen();
+        if (hasFocus) giveKibitzTheWholeScreen();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        giveNeoTheWholeScreen();
+        giveKibitzTheWholeScreen();
         // Back from the Settings page with the toggle now on: reload so the
         // bookshelf appears instead of the "no permission" note.
         if (askedForFilesAccess && hasFilesAccess()) {
@@ -136,7 +136,7 @@ public class MainActivity extends BridgeActivity {
     // The page picks its language once, when it loads
     private String pageLanguage;
 
-    // A keyboard connected or disconnected: tell the page. NEO's language
+    // A keyboard connected or disconnected: tell the page. Kibitz's language
     // changed in Settings → Apps: load the page again in the new one (the
     // page saved when it went to the background).
     @Override

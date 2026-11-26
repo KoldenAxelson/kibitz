@@ -3,10 +3,10 @@
 
 // node scripts/pocket-www.js
 //
-// Fills pocket/www with what NEO Pocket shares with desktop NEO: the editor
+// Fills pocket/www with what NEO Pocket shares with desktop Kibitz: the editor
 // (app/, covers.js, styles.css, i18n.js, fonts, locales), JSZip, and the
 // spellchecker (Hunspell's browser build plus the same dictionaries desktop
-// NEO bundles). The robot build runs this; so does a local Android or iOS
+// Kibitz bundles). The robot build runs this; so does a local Android or iOS
 // build, before `npx cap sync`.
 
 const fs = require('node:fs');
@@ -47,7 +47,7 @@ if (!index.includes('import("#hunspell-glue")')) throw new Error('hunspell-wasm 
 fs.writeFileSync(path.join(spellDir, 'index.js'), index.replace('import("#hunspell-glue")', 'import("./hunspell.web.js")'));
 copy(path.join(hun, 'lib', 'hunspell.web.mjs'), path.join(spellDir, 'hunspell.web.js'));
 
-// The dictionaries: the list desktop NEO offers (SPELL_LANGUAGES in main.js)
+// The dictionaries: the list desktop Kibitz offers (SPELL_LANGUAGES in main.js)
 const main = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
 const block = main.match(/const SPELL_LANGUAGES = \{([\s\S]*?)\n\};/);
 if (!block) throw new Error('SPELL_LANGUAGES not found in main.js');
@@ -62,7 +62,7 @@ const dictDir = path.join(www, 'dict');
 fs.rmSync(dictDir, { recursive: true, force: true });
 for (const [code, pkg] of Object.entries(langs)) {
   for (const f of ['index.aff', 'index.dic']) copy(path.join(mods, pkg, f), path.join(dictDir, code, f));
-  // the license and notice go along: NEO's own copy in licenses/<pkg>
+  // the license and notice go along: Kibitz's own copy in licenses/<pkg>
   // (Swedish), or the files a dictionary kept in dictionaries/<code> lists
   // beside its data (Hungarian, Danish)
   const own = path.join(root, 'licenses', pkg);

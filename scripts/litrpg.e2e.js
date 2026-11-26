@@ -1,7 +1,7 @@
 // End-to-end tests for LitRPG boxes: [[ typed at the start of a line makes
 // the paragraph a box line (monospace on gray, every space kept); Enter goes
 // on in the box, Enter on its empty last line ends it; the drop cap passes a
-// box by; and every export carries the box. NEO runs on a throwaway library,
+// box by; and every export carries the box. Kibitz runs on a throwaway library,
 // and the keys arrive as the writer types them. Run with `npm run test:litrpg`
 // (OUT=<folder> keeps the exported files for a look).
 
@@ -14,16 +14,16 @@ const os = require('os');
 const path = require('path');
 
 for (const name of fs.readdirSync(os.tmpdir())) {
-  const pid = /^neo-litrpg-test-(\d+)-/.exec(name);
+  const pid = /^kibitz-litrpg-test-(\d+)-/.exec(name);
   if (!pid || +pid[1] === process.pid) continue;
   try { process.kill(+pid[1], 0); continue; } catch (err) { if (err.code === 'EPERM') continue; }
   fs.rmSync(path.join(os.tmpdir(), name), { recursive: true, force: true });
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `neo-litrpg-test-${process.pid}-`));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `kibitz-litrpg-test-${process.pid}-`));
 app.setPath('userData', path.join(tmp, 'app'));
 app.setPath('documents', tmp);
-fs.mkdirSync(path.join(tmp, 'NEO Library'));
-fs.writeFileSync(path.join(tmp, 'NEO Library', 'library.json'), JSON.stringify({
+fs.mkdirSync(path.join(tmp, 'Kibitz Library'));
+fs.writeFileSync(path.join(tmp, 'Kibitz Library', 'library.json'), JSON.stringify({
   authorName: 'Test Writer', penNames: [], firstRunDone: true, moreFeatures: true, pageTheme: process.env.THEME || 'night',
   shelves: [{ id: 'shelf-1', name: 'Works in Progress', bookIds: [] }]
 }));
@@ -225,7 +225,7 @@ test('text pasted into a box keeps its lines and spaces', async () => {
   assert.deepEqual(ps.slice(2, 4).map((p) => p.cls), ['litrpg', 'litrpg']);
 });
 
-test('a box copied from NEO is pasted as a box', async () => {
+test('a box copied from Kibitz is pasted as a box', async () => {
   await caret(4, 0, 1);
   await js(`(() => {
     const dt = new DataTransfer();
@@ -262,8 +262,8 @@ test('Word: one LitRPG style, Courier New, shaded and bordered; spaces kept', as
 test('Manuscript Format: the boxes in both files', async () => {
   const m = await js(`(() => {
     const model = { title: 'T', contact: { name: 'A B', lines: [] }, wordsText: 'about 100 words', byText: 'by A B', endText: 'END', font: 'times', paper: 'Letter', lang: 'en-US', short: false, headerName: 'B', headerTitle: 'T', sections: manuscriptSections() };
-    const e = NeoManuscript.docxEntries(model);
-    return { doc: e.find((x) => x.path === 'word/document.xml').content, styles: e.find((x) => x.path === 'word/styles.xml').content, html: NeoManuscript.html(model), model };
+    const e = KibitzManuscript.docxEntries(model);
+    return { doc: e.find((x) => x.path === 'word/document.xml').content, styles: e.find((x) => x.path === 'word/styles.xml').content, html: KibitzManuscript.html(model), model };
   })()`);
   if (OUT) fs.writeFileSync(path.join(OUT, 'litrpg-manuscript.html'), m.html);
   assert.match(m.styles, /w:styleId="LitRPG"/);
@@ -310,7 +310,7 @@ test('a chapter’s own title keeps its case in the PDF and the EPUB, as on the 
   assert.match(r.pdf, /— <span class="own">the long walk OUT<\/span>$/);
   assert.match(r.html, /<span class="own">the long walk OUT<\/span>/);
   assert.match(r.html, /\.chapter \.hd \.own \{ font-variant-caps: normal/);
-  assert.equal(r.css, 'none', 'NEO shows the title as typed');
+  assert.equal(r.css, 'none', 'Kibitz shows the title as typed');
 });
 
 test('EPUB: classes, styles and the font files', async () => {
@@ -370,12 +370,12 @@ test('a blank line on the page is a blank line in the book (#461): one for a run
   assert.ok(out.txt.includes('One more line.\n\n\nAnd the last.'), JSON.stringify(out.txt.slice(-120)));
 });
 
-test('Help → What’s New in NEO shows the notes, and Esc closes them', async () => {
+test('Help → What’s New in Kibitz shows the notes, and Esc closes them', async () => {
   await js(`showWhatsNew()`);
   await tick(300);
   const r = await js(`(() => { const m = document.querySelector('.whats-new'); return m && { h: m.querySelector('h3').textContent, items: m.querySelectorAll('li').length, bold: !!m.querySelector('li strong, li b') }; })()`);
   assert.ok(r && r.items > 0, JSON.stringify(r));
-  assert.match(r.h, /^NEO \d/);
+  assert.match(r.h, /^Kibitz \d/);
   assert.ok(r.bold, 'the **bold** lead shows bold');
   await js(`document.querySelector('.whats-new').closest('.modal-backdrop').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
   assert.equal(await js(`!!document.querySelector('.whats-new')`), false);
