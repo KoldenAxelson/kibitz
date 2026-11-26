@@ -8,7 +8,7 @@ with the CSS Highlight API.
 Each file runs in two places:
 - **Node:** `require('./craft')` (or one file), for the tests.
 - **The window:** a plain `<script>` in this order: text, shapes, cut,
-  echoes, landings, voice, suggest, lexicon, passes. Each hangs off `window.KibitzCraft`.
+  echoes, landings, voice, suggest, lexicon, passes, scenes. Each hangs off `window.KibitzCraft`.
 
 | File | What it gives |
 |---|---|
@@ -20,6 +20,7 @@ Each file runs in two places:
 | `suggest.js` | The suggester's rhythm layer: `suggest` (eight rules, first match wins, one shape and one reason), `atSentenceEnd`, `shouldShow` (cooldown) |
 | `lexicon.js` | Word lists for the passes: the five senses, time words, loud tags, motion verbs, own-face and eye/hair patterns, words that aren't names |
 | `passes.js` | The eight revision passes: `run(key, text)` → `{ findings: [{ start, end, label, note, marks? }], summary }`; `PASSES` (menu order, labels, about); `names` |
+| `scenes.js` | The questions a card asks (`FIELDS`, `CHAPTER_FIELDS`), `clean`, `summary`, `answered`; `bookShape(chapters)`: lengths, dialogue share, pace, runs that drag, narrator gaps |
 | `voice.js` | `lines` (quoted lines with a guessed speaker: tag, beat or paragraph), `profile`, `bySpeaker`, `compare` |
 
 Conventions:

@@ -67,3 +67,83 @@ body.kibitz-pass-open #paper-scroll { left: calc(50% - 150px * var(--ui-zoom, 1)
 .kibitz-pass .kp-quote mark { background: none; color: inherit; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
 .kibitz-pass .kp-note { display: block; opacity: 0.8; }
 .kibitz-pass .kp-empty { margin: 4px 14px; font-style: italic; }
+
+/* SCENE QUESTIONS AND BOOK SHAPE (app/scenes.js) */
+.ks-ask {
+  position: absolute; right: calc(6px * var(--cz)); top: calc(6px * var(--cz)); z-index: 3;
+  width: 18px; height: 18px; padding: 0; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--card-soft) 60%, transparent); background: var(--card);
+  color: var(--card-soft); font: 600 11px/16px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center;
+  opacity: 0; transition: opacity 0.12s; cursor: pointer;
+}
+.ob-cell:hover .ks-ask, .ob-cell:focus-visible .ks-ask { opacity: 1; }
+.ob-cell.open .ks-ask, body.ob-dragging .ks-ask { display: none; }
+.ks-ask:hover, .ks-ask:focus-visible { color: var(--card-mark); border-color: var(--card-mark); outline: none; }
+.ks-tags {
+  margin-top: auto; font-size: 0.78em; color: var(--card-mark); opacity: 0.85;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ks-tags + .ob-foot { margin-top: 0; }
+
+.ks-form { display: flex; flex-direction: column; gap: 10px; }
+.ks-label { display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.ks-input {
+  display: block; width: 100%; box-sizing: border-box; resize: none;
+  font: 13px/1.45 var(--body-font); color: #ddd;
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+  border: 1px solid transparent; border-radius: 5px; padding: 5px 7px;
+}
+.ks-input::placeholder { color: #6b675f; font-style: italic; }
+body.light .ks-input { color: #2b2926; }
+body.light .ks-input::placeholder { color: #a39d90; }
+.ks-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.ks-choices { display: flex; flex-wrap: wrap; gap: 5px; }
+.ks-choices button {
+  font: 12px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: var(--muted);
+  background: none; border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent); border-radius: 12px;
+  padding: 2px 9px; cursor: pointer;
+}
+.ks-choices button:hover, .ks-choices button:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+.ks-choices button[aria-pressed="true"] { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.ks-close { background: none; border: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.ks-close:hover, .ks-close:focus-visible { color: var(--accent); outline: none; }
+
+.ks-pop {
+  position: fixed; z-index: 90; width: 300px; box-sizing: border-box; padding: 12px 14px 14px;
+  background: var(--pane); color: #bdb8ad; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent); box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  font: 12px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+body.light .ks-pop { color: #5f5a50; box-shadow: 0 8px 24px rgba(60,50,30,0.16); }
+.ks-pop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--accent); font-weight: 600; font-size: 13px; }
+
+.ks-side { padding: 4px 16px 18px; color: #bdb8ad; font: 12px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+body.light .ks-side { color: #5f5a50; }
+.ks-side-head { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 6px 0 10px; }
+
+.ks-shape {
+  position: fixed; inset: 0; z-index: 95; display: flex; justify-content: center; align-items: flex-start;
+  background: color-mix(in srgb, var(--bg) 88%, transparent); overflow-y: auto; padding: 48px 20px;
+}
+.ks-shape-inner {
+  width: min(820px, 100%); box-sizing: border-box; padding: 22px 26px 26px; border-radius: 10px;
+  background: var(--pane); color: #ddd;
+  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+body.light .ks-shape-inner { color: #2b2926; }
+.ks-shape-head { display: flex; justify-content: space-between; align-items: center; }
+.ks-shape h2 { margin: 0; font: 600 18px var(--body-font); color: var(--accent); }
+.ks-notes { margin: 12px 0 18px; padding-left: 18px; }
+.ks-notes li { margin-bottom: 6px; }
+.ks-notes .ks-quiet { list-style: none; margin-left: -18px; font-style: italic; color: var(--muted); }
+.ks-table { width: 100%; border-collapse: collapse; }
+.ks-table th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 0 8px 6px; }
+.ks-table td { padding: 5px 8px; border-top: 1px solid color-mix(in srgb, var(--muted) 14%, transparent); white-space: nowrap; }
+.ks-table tbody tr { cursor: pointer; }
+.ks-table tbody tr:hover, .ks-table tbody tr:focus-visible { background: color-mix(in srgb, var(--accent) 8%, transparent); outline: none; }
+.ks-table tr.flagged td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.ks-table .ks-barcell { width: 32%; position: relative; }
+.ks-track { display: inline-block; width: calc(100% - 52px); height: 9px; vertical-align: middle; margin-right: 8px; }
+.ks-bar { display: block; height: 100%; min-width: 1px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 65%, transparent); }
+.ks-val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }

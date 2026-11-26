@@ -3202,6 +3202,8 @@ function buildMenu() {
           registerAccelerator: false, // the window answers / and ? itself (isHelpShortcut)
           click: () => sendToWindow({ type: 'help' })
         },
+        // Kibitz: the whole book's shape (app/scenes.js)
+        { feature: 'scenes', label: t('Book Shape…'), click: () => sendToWindow({ type: 'bookShape' }) },
         { type: 'separator' },
         {
           label: t('Full Screen'),
