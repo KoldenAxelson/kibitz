@@ -12,7 +12,7 @@ LOG_DIR   := private/logs
 # bash, so the quest's pipe can use pipefail
 SHELL := /bin/bash
 
-.PHONY: help quest quest-steps install start test e2e lint sync status
+.PHONY: help quest quest-steps install start try test e2e lint sync status
 
 help:
 	@echo "make quest    run the batch of commands Claude left for you (logged to private/logs, secrets redacted)"
@@ -21,7 +21,8 @@ help:
 	@echo "make test     unit tests (node --test)"
 	@echo "make e2e      the Electron end-to-end tests"
 	@echo "make lint     oxlint"
-	@echo "make sync     merge the latest NEO from upstream into main"
+	@echo "make try      run from source with throwaway settings and library"
+	@echo "make sync     merge the latest NEO, renamed to Kibitz, into main"
 	@echo "make status   branch, remotes and working tree at a glance"
 
 # ---------------------------------------------------------------------------
@@ -47,17 +48,22 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit the quest logging (Makefile, tools/redact.pl), push,
-# and prove the log hides secrets.
+# Current quest: rename NEO to Kibitz. Commits the rename tooling, builds
+# the upstream-kibitz branch (NEO 2.0.0 run through tools/rebrand.py),
+# merges it into main, swaps in Kibitz's README, tests, lints and pushes.
 quest-steps:
-	git add Makefile tools/redact.pl
-	git commit -m "Kibitz: log make quest output to private/logs, with secrets redacted"
-	git push
-	@echo "Redaction check, these should all come out masked:"
-	@echo "ANTHROPIC_API_KEY=sk-ant-api03-thisisnotarealkey0000000"
-	@echo "token: ghp_thisisnotarealtoken000000000000000000"
+	git add Makefile tools/rebrand.py tools/sync-upstream.sh tools/README.kibitz.md
+	git commit -m "Kibitz: rename tooling (tools/rebrand.py, tools/sync-upstream.sh)"
+	./tools/sync-upstream.sh
+	git mv -f tools/README.kibitz.md README.md
+	git commit -m "Kibitz: README"
+	npm install
+	npm test
+	npm run lint
+	git push origin main upstream-kibitz
 	git status --short
-	git log --oneline -3
+	git log --oneline --graph -6
+	@echo; echo "Left as NEO on purpose:"; git grep -n -w NEO -- . ':!dictionaries' ':!licenses' ':!LICENSE' ':!README.md' ':!Makefile' ':!tools' | grep -v 'NEO Pocket' | cut -c1-140 || true
 
 install:
 	npm install
@@ -75,8 +81,10 @@ lint:
 	npm run lint
 
 sync:
-	git fetch upstream
-	git merge upstream/main
+	./tools/sync-upstream.sh
+
+try:
+	npm run try
 
 status:
 	@git branch -vv
