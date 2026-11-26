@@ -49,10 +49,10 @@ async function usedMoreFeatures() {
   for (const s of lib.shelves || []) {
     for (const id of s.bookIds || []) {
       const meta = await shelfMeta(id);
-      if (meta && (isScript(meta) || hasPainting(meta))) return true;
+      if (meta && isScript(meta)) return true;
     }
   }
-  return !!(await window.kibitz.hasSecret(coverProvider()).catch(() => false));
+  return false;
 }
 
 // the menus follow the features (main.js leaves out an item whose feature is off)

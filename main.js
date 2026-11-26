@@ -1167,10 +1167,8 @@ function readCover(fp, fname) {
 }
 
 // ---------------------------------------------------------------------------
-// Painted covers: once a story passes a thousand words, Kibitz reads it and
-// paints an abstract cover (art.js). The API key lives encrypted in the
-// app's own data folder — never in the library, which gets synced and
-// backed up as plain files.
+// Secrets (API keys for a future service): kept encrypted in the app's own
+// data folder, never in the library, which is plain files.
 // ---------------------------------------------------------------------------
 
 const SECRETS_FILE = () => path.join(app.getPath('userData'), 'secrets.json');
@@ -1205,54 +1203,6 @@ ipcMain.handle('secret:set', (_e, name, value) => {
 });
 
 ipcMain.handle('secret:has', (_e, name) => !!readSecret(name));
-
-// One painting at a time per book; a second request while one is running
-// simply gets the running one's answer.
-const paintJobs = new Map();
-
-ipcMain.handle('cover:paint', (_e, bookId, text, options) => {
-  if (paintJobs.has(bookId)) return paintJobs.get(bookId);
-  const job = (async () => {
-    const provider = (options && options.provider) || 'openai';
-    const apiKey = readSecret(provider);
-    if (!apiKey) return { error: t('No API key for {provider} — add one under File → Cover Art…', { provider }) };
-    const dir = bookDir(bookId);
-    if (!fs.existsSync(dir)) return { error: t('Book folder is missing') };
-    try {
-      const art = require('./art.js');
-      const out = await art.paintCover({
-        provider,
-        apiKey,
-        text: String(text || ''),
-        textModel: options && options.textModel,
-        imageModel: options && options.imageModel,
-        quality: options && options.quality
-      });
-      // sweep older paintings; the writer's own cover-*.png files are untouched
-      for (const f of fs.readdirSync(dir)) {
-        if (/^art-\d+\.(png|jpg|webp)$/.test(f)) fs.unlinkSync(path.join(dir, f));
-      }
-      const fname = 'art-' + Date.now() + '.' + (out.ext || 'jpg');
-      fs.writeFileSync(path.join(dir, fname), out.buffer);
-      // the brief sits beside the picture, so a future repaint can start from it
-      writeJSON(path.join(dir, 'art.json'), {
-        file: fname,
-        brief: out.brief,
-        provider,
-        textModel: out.textModel,
-        imageModel: out.imageModel,
-        painted: new Date().toISOString()
-      });
-      return { file: fname, brief: out.brief };
-    } catch (err) {
-      logError('paint', err);
-      return { error: String((err && err.message) || err) };
-    }
-  })();
-  paintJobs.set(bookId, job);
-  job.finally(() => paintJobs.delete(bookId));
-  return job;
-});
 
 // ---------------------------------------------------------------------------
 // Fullscreen
@@ -2742,7 +2692,6 @@ function buildMenu() {
         // same in Pocket with a keyboard and never fires twice
         { label: t('Take Snapshot'), accelerator: 'CmdOrCtrl+S', registerAccelerator: false, click: () => sendToWindow({ type: 'snapshot' }) },
         { type: 'separator' },
-        { feature: 'covers', label: t('Cover Art…'), click: () => sendToWindow({ type: 'coverArt' }) },
         {
           label: t('Goals…'),
           accelerator: 'CmdOrCtrl+,',

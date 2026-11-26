@@ -67,7 +67,6 @@ const app = require('./app-files').appSource();
 const KEYS = [...app.matchAll(/^\s+\{ key: '(\w+)', label:/gm)].map((m) => m[1]);
 const BEHIND = {
   exports: ['Plain Text (.txt)', 'Markdown (.md)', 'Web Page (.html)', 'Manuscript Format…', 'Import Chapters…'],
-  covers: ['Cover Art…'],
   penNames: ['Reshelve a Book…'],
   formatting: ['Other Font…', 'Align Paragraph', 'Align Book Prose'],
   pages: ['Show Pages', 'Two Pages Side by Side', 'Page Width'],
@@ -151,12 +150,11 @@ const to = app.indexOf('async function setFeature(key, on)');
 assert.ok(from > 0 && to > from, 'the FEATURES & OPTIONS code is where the test expects it');
 const featuresSrc = app.slice(app.indexOf('const FEATURES = ['), app.indexOf('// *italic* and **bold** typed as Markdown'));
 
-function room(library, { metas = {}, key = false, pocket = false } = {}) {
+function room(library, { metas = {} } = {}) {
   const log = [];
   const ctx = vm.createContext({
     library,
     log,
-    IS_POCKET: pocket,
     tk: (s) => s,
     t: (s) => s,
     toast: (msg) => log.push('toast ' + msg),
@@ -166,10 +164,8 @@ function room(library, { metas = {}, key = false, pocket = false } = {}) {
     KibitzI18n: { getLocale: () => 'en' },
     shelfMeta: async (id) => metas[id] || { id },
     isScript: (m) => !!m && m.format === 'screenplay',
-    hasPainting: (m) => !!(m.coverArt && m.coverArt.status === 'done' && m.coverArt.file),
-    coverProvider: () => 'openai',
     writeLibrary: async () => log.push('write'),
-    window: { kibitz: { hasSecret: async () => key, featuresState: (on) => log.push('menu ' + Object.values(on).filter(Boolean).length) } }
+    window: { kibitz: { featuresState: (on) => log.push('menu ' + Object.values(on).filter(Boolean).length) } }
   });
   vm.runInContext(featuresSrc + app.slice(from, to), ctx);
   return ctx;
@@ -213,8 +209,6 @@ describe('a library from before 2.0', () => {
 
   for (const [what, lib, opts] of [
     ['a script on a shelf', {}, { metas: { b2: { id: 'b2', format: 'screenplay' } } }],
-    ['a painted cover', {}, { metas: { b1: { id: 'b1', coverArt: { status: 'done', file: 'art-1.png' } } } }],
-    ['a cover-art key', {}, { key: true }],
     ['a second pen name', { authors: [{ id: 'a1' }, { id: 'a2' }] }],
     ['a bound shelf', { shelves: [shelf(['b1'], { binding: { bound: true } })] }],
     ['focus mode', { focus: 'sentence' }],

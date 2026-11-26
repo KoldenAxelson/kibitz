@@ -1225,7 +1225,7 @@ ${chr('FootnoteReference', 'footnote reference', '<w:vertAlign w:val="superscrip
 
 // The cover that travels with an export: the writer's own image if they
 // gave one, otherwise the shelf's abstract with the title set in type,
-// rendered at KDP size. Kibitz's paintings never leave the shelf.
+// rendered at KDP size.
 async function exportCover(d) {
   if (d.coverImage) {
     const c = await window.kibitz.readCover(d.id, d.coverImage);
@@ -1998,7 +1998,7 @@ window.kibitz.onMenu(async (msg) => {
   if ($('#keyboard-shortcuts') && msg.type !== 'help') return;
   // a window the menu opens (⌘, for Goals, say) never stacks on one that's
   // already open: pressing it again used to pile up overlays
-  const WINDOWS = ['stats', 'about', 'emailSettings', 'coverArt', 'reshelve', 'options'];
+  const WINDOWS = ['stats', 'about', 'emailSettings', 'reshelve', 'options'];
   if (WINDOWS.includes(msg.type) && document.querySelector('.modal-backdrop:not([hidden])')) return;
   if (msg.type === 'help') showHelp();
   if (msg.type === 'about') showAbout();
@@ -2040,7 +2040,6 @@ window.kibitz.onMenu(async (msg) => {
     await writeLibrary(library);
     if (window.kibitz.writingStyleState) window.kibitz.writingStyleState(library.writingStyle);
   }
-  if (msg.type === 'coverArt') openCoverArt();
   // a script's lines sit where they print: no alignment, poetry or flush
   if (msg.type === 'align' && !(book && isScript())) {
     applyAlign(msg.value);

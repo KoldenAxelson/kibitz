@@ -1091,39 +1091,13 @@ function dropIndicator() {
 }
 
 // Covers are two layers the shelf composites live: art (a seeded abstract,
-// an image the writer chose, or one Kibitz painted from the text) and type.
-// See covers.js. Painted art is read once and downsampled to tile size so
-// forty books on a shelf cost about as much as forty small PNGs.
-const artCache = new Map(); // bookId/file -> { url, canvas }
-
-async function paintedArt(meta) {
-  const art = meta.coverArt;
-  if (!art || art.status !== 'done' || !art.file) return null;
-  const key = meta.id + '/' + art.file;
-  if (artCache.has(key)) return artCache.get(key);
-  try {
-    const data = await window.kibitz.readCover(meta.id, art.file);
-    if (!data) { window.kibitz.logError('painted cover missing on disk: ' + key); return null; }
-    const entry = await KibitzCovers.fitImage(key, `data:${data.mime};base64,${data.base64}`);
-    if (!entry) { window.kibitz.logError('painted cover would not decode: ' + key); return null; }
-    artCache.set(key, entry);
-    return entry;
-  } catch (err) {
-    window.kibitz.logError('painted cover: ' + (err && err.stack || err));
-    return null;
-  }
-}
-
-// Which layers a book has to show, and which one is showing. Nothing is
-// ever thrown away by switching: the writer's image, Kibitz's painting, and the
-// abstract all stay available, and coverMode just picks one.
-const hasPainting = (meta) => !!(meta.coverArt && meta.coverArt.status === 'done' && meta.coverArt.file);
+// or an image the writer chose) and type. See covers.js. Nothing is thrown
+// away by switching: coverMode just picks which one shows.
 function coverMode(meta) {
   const m = meta.coverMode;
   if (m === 'image' && meta.coverImage) return 'image';
-  if (m === 'painted' && hasPainting(meta)) return 'painted';
   if (m === 'abstract') return 'abstract';
-  return meta.coverImage ? 'image' : hasPainting(meta) ? 'painted' : 'abstract';
+  return meta.coverImage ? 'image' : 'abstract';
 }
 
 function dressTile(el, meta) {
@@ -1135,18 +1109,7 @@ function dressTile(el, meta) {
     el.style.background = `#1d1d1d url("${coverUrl(meta)}") center / cover no-repeat`;
     return;
   }
-  el.classList.toggle('cv-painting', !!(meta.coverArt && meta.coverArt.status === 'pending'));
-  const token = (el._dressToken = (el._dressToken || 0) + 1);
-  // a painting already decoded is drawn straight away; otherwise the
-  // abstract shows instantly and the painting replaces it once read.
-  // The tile may not be on the page yet when the art arrives, so the only
-  // staleness check is whether this tile has been dressed again since.
-  const cached = mode === 'painted' && artCache.get(meta.id + '/' + meta.coverArt.file);
-  KibitzCovers.dress(el, KibitzCovers.plan(meta, cached || undefined));
-  if (mode !== 'painted' || cached) return;
-  paintedArt(meta).then((art) => {
-    if (art && el._dressToken === token) KibitzCovers.dress(el, KibitzCovers.plan(meta, art));
-  });
+  KibitzCovers.dress(el, KibitzCovers.plan(meta));
 }
 
 function bookTile(meta, opts = {}) {
@@ -1157,13 +1120,11 @@ function bookTile(meta, opts = {}) {
   el.innerHTML = `
     <div class="b-text"><div class="b-title"></div><div class="b-author"></div></div>
     <span class="b-refresh" title="${t('New cover')}">&#8635;</span>
-    <div class="b-painting" hidden></div>
     <div class="b-progress" hidden><div></div></div>`;
   el.querySelector('.b-author').textContent = meta.author || '';
   if (isScript(meta)) scriptTile(el, meta);
   else {
     dressTile(el, meta);
-    el.querySelector('.b-painting').hidden = !(meta.coverArt && meta.coverArt.status === 'pending');
     el.querySelector('.b-refresh').onclick = async (e) => {
       e.stopPropagation();
       await refreshCover(meta, el);
@@ -1379,8 +1340,7 @@ async function duplicateBook(meta) {
 
 // The cover as a picture file: the writer's own image just as they gave it;
 // otherwise the abstract at full size (1600×2560, KDP's ratio) with the
-// title and author set on it. A painted cover never leaves Kibitz, here as in
-// the exports, so a book showing one saves its abstract.
+// title and author set on it.
 async function saveCoverImage(meta) {
   const defaultName = safeName(meta.title) + '-cover';
   let payload = null;
@@ -1398,122 +1358,18 @@ async function saveCoverImage(meta) {
   if (saved) toast(t('Saved: {file}', { file: saved.split(/[\\/]/).pop() }));
 }
 
-/* ---- painted covers ----
-   At a thousand words a story has a shape, so Kibitz reads it and paints an
-   abstract cover to sit under the type. The writer's own cover (coverImage)
-   always wins; the abstract is the fallback; painting never blocks typing. */
-
-const PAINT_AT = 1000;
-const STALE_PAINT_MS = 10 * 60 * 1000; // a job that never came back
-
-function paintable(meta) {
-  if (!meta || meta.coverImage) return false; // the writer's own art is never painted over
-  if (isScript(meta)) return false; // a script is card stock
-  if (meta.kind) return false; // a bound book's pages show no cover of their own
-  if ((meta.wordCount || 0) < PAINT_AT) return false;
-  const art = meta.coverArt;
-  if (!art) return true;
-  if (art.status === 'pending') return Date.now() - Date.parse(art.at || 0) > STALE_PAINT_MS;
-  return false; // done, shelved, or failed: the ↻ on the tile is the way back in
-}
-
-// What a painting reads: the story alone (its chapters, prologue and
-// epilogue). The copyright, dedication, acknowledgments and about pages
-// carry the writer's name and the book's, and stay on this computer.
-function bookPlainText() {
-  return book.chapterOrder.filter((id) => isStory(id)).map((id) => chapterText(id)).join('\n\n');
-}
-
-// Paint the open book, or a book on the shelf (text is read from disk then).
-async function requestPaint(meta, text) {
-  const provider = coverProvider();
-  if (!(await window.kibitz.hasSecret(provider))) {
-    if (!library.coverArtNudged) {
-      library.coverArtNudged = true;
-      await writeLibrary(library);
-      toast(t('This story just passed {n} words — add an API key under File → Cover Art… and Kibitz will paint it a cover.', { n: PAINT_AT }), 8000);
-    }
-    return;
-  }
-  meta.coverArt = { status: 'pending', at: new Date().toISOString(), words: meta.wordCount || 0 };
-  if (book && book.id === meta.id) scheduleMetaSave();
-  else await writeBookMeta(meta.id, meta);
-  markPainting(meta.id, true);
-  if (text == null) {
-    const m = await window.kibitz.readBookMeta(meta.id);
-    const parts = [];
-    for (const chId of (m && m.chapterOrder) || []) {
-      if (!isStory(chId, m)) continue; // (the story alone, as bookPlainText)
-      const holder = document.createElement('div');
-      holder.innerHTML = await window.kibitz.readChapter(meta.id, chId);
-      holder.querySelectorAll(UNCOUNTED).forEach((n) => n.remove());
-      parts.push(holder.innerText);
-    }
-    text = parts.join('\n\n');
-  }
-  const cs = coverSettings();
-  const mine = (cs.models && cs.models[provider]) || {};
-  let res = null;
-  try {
-    res = await window.kibitz.paintCover(meta.id, text, { provider, textModel: mine.text, imageModel: mine.image, quality: cs.quality });
-  } catch (err) {
-    window.kibitz.logError('paint request: ' + (err && err.stack || err));
-    res = { error: String((err && err.message) || err) };
-  }
-  // the writer may have moved on — write to whichever copy of the meta is live
-  const live = (book && book.id === meta.id) ? book : (await window.kibitz.readBookMeta(meta.id)) || meta;
-  if (res && res.file) {
-    live.coverArt = { status: 'done', file: res.file, brief: res.brief, words: meta.wordCount || 0, at: new Date().toISOString() };
-    if (!live.coverImage) live.coverMode = 'painted';
-    artCache.delete(meta.id + '/' + res.file);
-  } else {
-    live.coverArt = { status: 'failed', error: (res && res.error) || 'unknown', at: new Date().toISOString() };
-    toast(t('Kibitz couldn’t paint that cover: {error}', { error: live.coverArt.error }), 7000);
-  }
-  if (live === book) scheduleMetaSave();
-  else await writeBookMeta(meta.id, live);
-  markPainting(meta.id, false);
-  if (!$('#bookshelf-view').hidden) renderShelves();
-}
-
-// shimmer on the tile while its painting is in flight
-function markPainting(bookId, on) {
-  for (const el of $$('.book')) {
-    if (el.dataset.bookId !== bookId) continue;
-    el.classList.toggle('cv-painting', on);
-    const sh = el.querySelector('.b-painting');
-    if (sh) sh.hidden = !on;
-  }
-}
-
-// the ↻ on a tile: switch between the covers a book has, re-roll the
-// abstract, or paint a fresh one from the text
+// the ↻ on a tile: switch between the writer's image and the abstract, or
+// re-roll the abstract
 async function refreshCover(meta, el) {
   const mode = coverMode(meta);
-  const enough = (meta.wordCount || 0) >= PAINT_AT;
-  // a bound book's cover has no text of its own to paint from
-  // (painting is behind Show More Features; a painting already made still shows)
-  const hasKey = meta.kind !== 'cover' && featureOn('covers') && await window.kibitz.hasSecret(coverProvider());
   const options = [];
   if (meta.coverImage && mode !== 'image') options.push({ label: t('Show your cover art'), desc: t('The image you gave this book.'), value: 'image' });
-  if (hasPainting(meta) && mode !== 'painted') options.push({ label: t('Show Kibitz’s painting'), desc: t('The cover painted from the text.'), value: 'painted' });
   if (mode !== 'abstract') options.push({ label: t('Show the abstract'), desc: t('The seeded cover every book starts with.'), value: 'abstract' });
   options.push({ label: t('New type & colours'), desc: mode === 'abstract' ? t('A fresh abstract and a different title style.') : t('Re-sets the title in a different style over the same art.'), value: 'reroll' });
-  if (hasKey) {
-    options.push(enough
-      ? { label: hasPainting(meta) ? t('Paint it again') : t('Paint a cover from the text'), desc: t('Kibitz reads the manuscript and paints a new cover. About a minute; a few cents.'), value: 'paint' }
-      : { label: t('Paint a cover from the text'), desc: t('Once the story passes {n} words.', { n: PAINT_AT }), value: 'nope' });
-  }
   // a plain abstract with nothing else to offer just re-rolls
   const choice = options.length === 1 ? 'reroll' : await optionModal(t('Cover for “{title}”', { title: escHtml(shownTitle(meta.title)) }), null, options);
-  if (!choice || choice === 'nope') return;
+  if (!choice) return;
   const live = (book && book.id === meta.id) ? book : meta;
-  if (choice === 'paint') {
-    if (meta.coverArt && meta.coverArt.status === 'pending' && !paintable(meta)) { toast(t('Still painting…')); return; }
-    live.coverMode = 'painted';
-    requestPaint(live, book && book.id === meta.id ? bookPlainText() : null);
-    return;
-  }
   if (choice === 'reroll') {
     live.coverSeed = meta.id + ':' + (meta.wordCount || 0) + ':' + Date.now().toString(36);
     if (mode === 'image') live.coverMode = 'abstract';

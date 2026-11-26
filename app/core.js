@@ -297,7 +297,6 @@ const FEATURES = [
   { key: 'footnotes', label: tk('Footnotes'), desc: tk('Numbered notes at the foot of the page.') },
   { key: 'formatting', label: tk('Alignment and other fonts'), desc: tk('Center, right-align or justify paragraphs or the whole book, and use any font on your computer.') },
   { key: 'penNames', label: tk('Pen names and bound shelves'), desc: tk('Shelves under other names, a shelf bound into one book, anthologies, Duplicate and Reshelve.') },
-  { key: 'covers', label: tk('Painted covers'), desc: tk('Covers painted from your story with your own OpenAI key.') },
   { key: 'pages', label: tk('Page views'), desc: tk('See the book as printed pages, two side by side, and choose the page width.') },
   { key: 'focus', label: tk('Focus mode'), desc: tk('Dim everything but the sentence or paragraph you’re writing.') },
   { key: 'readAloud', label: tk('Read aloud and Look Up'), desc: tk('Hear your words in your computer’s voice; look up a selected word.') },
