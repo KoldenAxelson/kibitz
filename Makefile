@@ -12,7 +12,7 @@ LOG_DIR   := private/logs
 # bash, so the quest's pipe can use pipefail
 SHELL := /bin/bash
 
-.PHONY: help quest quest-steps install start try test e2e lint sync status
+.PHONY: help quest quest-steps install start try test e2e lint status
 
 help:
 	@echo "make quest    run the batch of commands Claude left for you (logged to private/logs, secrets redacted)"
@@ -22,7 +22,6 @@ help:
 	@echo "make e2e      the Electron end-to-end tests"
 	@echo "make lint     oxlint (NEO 2.0.0 already fails 30 checks)"
 	@echo "make try      run from source with throwaway settings and library"
-	@echo "make sync     merge the latest NEO, renamed to Kibitz, into main"
 	@echo "make status   branch, remotes and working tree at a glance"
 
 # ---------------------------------------------------------------------------
@@ -54,12 +53,10 @@ quest:
 # train split, then it runs once on the untouched test split with that
 # stretch fixed. About 5 minutes.
 quest-steps:
-	./tools/dev-name.sh
-	set -o pipefail; npm test 2>&1 | tail -3
-	npm run test:e2e -- zoom passes
-	git add Makefile tools/dev-name.sh app/core.js app/passes.js craft/zoom.js kibitz.css scripts/zoom.e2e.js scripts/craft-zoom.test.js
-	git commit -m "Kibitz: Zoom shows every paragraph's curve, panels drop their explanations; dev app named Kibitz" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
-	git push
+	npm install --silent
+	git push -q origin --delete upstream-kibitz
+	git push -q
+	git log --oneline -3
 
 install:
 	npm install
@@ -76,9 +73,6 @@ e2e:
 
 lint:
 	npm run lint
-
-sync:
-	./tools/sync-upstream.sh
 
 try:
 	npm run try

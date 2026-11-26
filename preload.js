@@ -46,10 +46,6 @@ contextBridge.exposeInMainWorld('kibitz', {
   pathForFile: (file) => webUtils.getPathForFile(file),
   fullscreenEscape: () => ipcRenderer.invoke('fullscreen:escape'),
   fullscreenToggle: () => ipcRenderer.invoke('fullscreen:toggle'),
-  checkForUpdate: () => ipcRenderer.invoke('update:check'),
-  pocketLibrary: () => ipcRenderer.invoke('library:pocket'),
-  usePocketLibrary: () => ipcRenderer.invoke('library:usePocket'),
-  installUpdate: () => ipcRenderer.invoke('update:install'),
   spellCheckWords: (words) => ipcRenderer.invoke('spell:check', words),
   // Kibitz: the local decision model (decide.js)
   decide: (req) => ipcRenderer.invoke('kibitz:decide', req),
@@ -59,7 +55,6 @@ contextBridge.exposeInMainWorld('kibitz', {
   setSpellLanguage: (code) => ipcRenderer.invoke('spell:setLanguage', code),
   appVersion: () => ipcRenderer.invoke('app:version'),
   isPackaged: () => ipcRenderer.sendSync('app:packaged'),
-  openRelease: () => ipcRenderer.invoke('update:openRelease'),
 
   poetryState: (on) => ipcRenderer.send('poetry:state', on),
   flushState: (on) => ipcRenderer.send('flush:state', on),

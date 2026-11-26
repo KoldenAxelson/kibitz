@@ -163,15 +163,6 @@ ipcMain.handle('i18n:reload', (e) => {
 
 // File → Library Folder…: point Kibitz at any folder, or back at the default.
 // The library is plain files, so the writer moves them; Kibitz only follows.
-// NEO Pocket's folder in iCloud Drive, as this Mac sees it. It's there once
-// the app has run on an iPad or iPhone signed in to the same iCloud account;
-// desktop Kibitz never makes it (only the app it belongs to can).
-function pocketCloudLibrary() {
-  if (process.platform !== 'darwin') return null;
-  const dir = path.join(app.getPath('home'), 'Library', 'Mobile Documents', 'iCloud~com~hughhowey~neo~pocket', 'Documents');
-  try { if (!fs.statSync(dir).isDirectory()) return null; } catch { return null; }
-  return path.join(dir, 'NEO Library');
-}
 
 // what a library folder holds that moving it carries: books and anything
 // else the writer keeps there, but not Kibitz's own half-written spares
@@ -280,7 +271,7 @@ async function moveLibraryAndClose(win, from, to) {
       type: 'warning',
       message: t('Your books weren’t moved'),
       detail: (err && err.code === 'ECLOUD'
-        ? t('iCloud is still bringing NEO Pocket’s books to this Mac. Try again in a minute.')
+        ? t('iCloud is still bringing the books to this Mac. Try again in a minute.')
         : String((err && err.message) || err)) + '\n\n' + t('Nothing was changed. Your books are still in:\n{dir}', { dir: from }),
       buttons: [t('OK')]
     });
@@ -295,104 +286,6 @@ async function moveLibraryAndClose(win, from, to) {
   return true;
 }
 
-// NEO Pocket on the App Store
-const POCKET_STORE_URL = 'https://apps.apple.com/app/id6816721843';
-
-// This library into NEO Pocket's folder in iCloud Drive: the books move there
-// (when there are any) and Kibitz restarts in it. File → Library Folder…, the
-// question NEO asks once, Help → NEO for iPad and iPhone… and the welcome
-// screen all come here.
-async function useCloudLibrary(win) {
-  const cloud = pocketCloudLibrary();
-  if (!cloud || path.resolve(cloud) === path.resolve(LIBRARY_DIR)) return false;
-  if (hasBooks(LIBRARY_DIR) && !(await moveLibraryAndClose(win, LIBRARY_DIR, cloud))) {
-    app.relaunch(); // the window closed for the move: open again where the books still are
-    app.exit(0);
-    return false;
-  }
-  const settings = readSettings();
-  settings.libraryDir = cloud;
-  writeSettings(settings);
-  app.relaunch();
-  app.exit(0);
-  return true;
-}
-
-// Once NEO Pocket has made its folder in iCloud Drive (an iPad or iPhone
-// signed in to this Mac's iCloud), Kibitz asks once whether this library should
-// go there too. Not Now is an answer: it never asks again on this Mac. The
-// same button waits in File → Library Folder… and Help → Kibitz for iPad and
-// iPhone…. A first run asks on its own welcome screen instead.
-let pocketAsking = false;
-async function askAboutPocket() {
-  if (pocketAsking) return;
-  const cloud = pocketCloudLibrary();
-  if (!cloud || path.resolve(cloud) === path.resolve(LIBRARY_DIR)) return;
-  const settings = readSettings();
-  if (settings.pocketAsked) return;
-  const lib = parseJSONFile(LIBRARY_FILE);
-  if (!lib || !lib.firstRunDone) return;
-  pocketAsking = true;
-  try {
-    settings.pocketAsked = true;
-    writeSettings(settings);
-    const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
-    const r = await dialog.showMessageBox(win, {
-      type: 'question',
-      message: t('Share this library with NEO Pocket?'),
-      detail: t('NEO Pocket’s folder is in iCloud Drive on this Mac. Use iCloud Drive to write in the same books on your iPad and iPhone. Kibitz moves your books there and restarts.'),
-      buttons: [t('Use iCloud Drive'), t('Not Now')],
-      defaultId: 0,
-      cancelId: 1
-    });
-    if (r.response === 0) await useCloudLibrary(win);
-  } finally {
-    pocketAsking = false;
-  }
-}
-
-// Help → NEO for iPad and iPhone…: what NEO Pocket is, where to get it, and
-// (on a Mac that has its folder) the same Use iCloud Drive button
-async function showPocketInfo() {
-  const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
-  const cloud = pocketCloudLibrary();
-  const shared = !!cloud && path.resolve(cloud) === path.resolve(LIBRARY_DIR);
-  const offer = !!cloud && !shared;
-  const lines = [t('NEO Pocket is NEO for iPad and iPhone, free on the App Store.')];
-  if (process.platform === 'darwin') {
-    lines.push(shared
-      ? t('This library is in NEO Pocket’s folder in iCloud Drive, so your iPad and iPhone write in the same books.')
-      : offer
-        ? t('Use iCloud Drive to write in the same books on this Mac and on your iPad and iPhone. Kibitz moves your books there and restarts.')
-        : t('Open NEO Pocket once on your iPad or iPhone with iCloud Drive turned on, then come back here to share this library with it.'));
-  }
-  const choices = [...(offer ? ['cloud'] : []), 'store', 'ok'];
-  const label = { cloud: t('Use iCloud Drive'), store: t('Get NEO Pocket'), ok: t('OK') };
-  const r = await dialog.showMessageBox(win, {
-    type: 'info',
-    message: t('NEO for iPad and iPhone'),
-    detail: lines.join('\n\n'),
-    buttons: choices.map((c) => label[c]),
-    defaultId: 0,
-    cancelId: choices.length - 1
-  });
-  const choice = choices[r.response];
-  if (choice === 'store') {
-    const { shell } = require('electron');
-    await shell.openExternal(POCKET_STORE_URL);
-  } else if (choice === 'cloud') {
-    await useCloudLibrary(win);
-  }
-}
-
-// the welcome screen's own offer: a writer who started in NEO Pocket opens
-// its books here, setup and all
-ipcMain.handle('library:pocket', () => {
-  const cloud = pocketCloudLibrary();
-  const offer = !!cloud && path.resolve(cloud) !== path.resolve(LIBRARY_DIR);
-  return { offer, books: offer && hasBooks(cloud) };
-});
-ipcMain.handle('library:usePocket', async () => useCloudLibrary(BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]));
 // Kibitz: the local decision model (decide.js), asked by the Zoom pass
 require('./decide.js').register(ipcMain);
 
@@ -400,17 +293,12 @@ async function chooseLibraryFolder() {
   const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
   const defaultDir = path.join(app.getPath('documents'), 'Kibitz Library');
   const custom = LIBRARY_DIR !== defaultDir;
-  // NEO Pocket's folder in iCloud Drive, once an iPad or iPhone has made it
-  const cloud = pocketCloudLibrary();
-  const offerCloud = !!cloud && path.resolve(cloud) !== path.resolve(LIBRARY_DIR);
-  const choices = [...(offerCloud ? ['cloud'] : []), 'choose', ...(custom ? ['default'] : []), 'cancel'];
-  const label = { cloud: t('Use iCloud Drive'), choose: t('Choose Folder…'), default: t('Use Default Folder'), cancel: t('Cancel') };
+  const choices = ['choose', ...(custom ? ['default'] : []), 'cancel'];
+  const label = { choose: t('Choose Folder…'), default: t('Use Default Folder'), cancel: t('Cancel') };
   const ask = await dialog.showMessageBox(win, {
     type: 'question',
     message: t('Library folder'),
-    detail: t('Your books live in:\n{dir}', { dir: LIBRARY_DIR }) + '\n\n' + (offerCloud
-      ? t('Use iCloud Drive to write in the same books on your iPad and iPhone with NEO Pocket. Kibitz moves your books there and restarts.')
-      : t('Choose another folder and Kibitz restarts there.')),
+    detail: t('Your books live in:\n{dir}', { dir: LIBRARY_DIR }) + '\n\n' + t('Choose another folder and Kibitz restarts there.'),
     buttons: choices.map((c) => label[c]),
     defaultId: 0,
     cancelId: choices.length - 1
@@ -418,10 +306,7 @@ async function chooseLibraryFolder() {
   const choice = choices[ask.response];
   let next = null;
   let move = false;
-  if (choice === 'cloud') {
-    await useCloudLibrary(win);
-    return;
-  } else if (choice === 'choose') {
+  if (choice === 'choose') {
     const r = await dialog.showOpenDialog(win, {
       title: t('Choose a folder for your Kibitz library'),
       defaultPath: LIBRARY_DIR,
@@ -2522,10 +2407,6 @@ function createWindow() {
       spellcheck: true
     }
   });
-  if (process.platform === 'win32') {
-    win.on('query-session-end', holdUpdateForShutdown);
-    win.on('session-end', holdUpdateForShutdown);
-  }
   // a trial says so in the window bar
   if (TRY_DIR) win.on('page-title-updated', (e, title) => { e.preventDefault(); win.setTitle(title + ' (trial copy)'); });
   win.loadFile('index.html');
@@ -3266,18 +3147,10 @@ function buildMenu() {
           label: t('What’s New in Kibitz…'),
           click: () => sendToWindow({ type: 'whatsNew' })
         },
-        {
-          label: t('NEO for iPad and iPhone…'),
-          click: () => { showPocketInfo().catch((err) => logError('pocket info', err)); }
-        },
         { type: 'separator' },
         {
           label: t('About Kibitz'),
           click: () => sendToWindow({ type: 'about' })
-        },
-        {
-          label: t('Check for Update…'),
-          click: () => sendToWindow({ type: 'checkUpdate' })
         }
       ]
     }
@@ -3434,158 +3307,11 @@ function watchEditMenu() {
   }
 }
 
-// Manual update check (Help → Check for Update…): a direct GitHub Releases
-// lookup, separate from the silent auto-updater. Works in dev builds too.
-let lastReleaseUrl = null;
-
-function compareVersions(a, b) {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const na = pa[i] || 0, nb = pb[i] || 0;
-    if (na !== nb) return na - nb;
-  }
-  return 0;
-}
-
 // toggling at the session level forces the engine to re-scan visible text —
 // newer Chromium ignores attribute changes on text it has already looked at
 ipcMain.handle('app:version', () => app.getVersion());
 // a packaged Kibitz (not `npm start`, `npm run try` or a test): What's New shows itself only there
 ipcMain.on('app:packaged', (e) => { e.returnValue = app.isPackaged; });
-
-// Updating
-//
-// Packaged builds keep themselves current without being asked: a few seconds
-// after launch (and every few hours after that) Kibitz looks at the latest
-// GitHub release, and if it's newer, electron-updater starts downloading it
-// straight away, quietly. The new version goes in the next time Kibitz quits
-// and opens again. Help → Check for Update… shows where that stands — most
-// often it's already downloaded, and the window offers "Restart to update"
-// (the page saves itself first). A build that can't self-update — `npm
-// start`, the Windows portable .exe, anything unsigned — falls back to the
-// release page on GitHub, as before.
-let updater = null;          // electron-updater's autoUpdater, wired once
-let updaterReady = false;    // an update is downloaded and waiting
-// where the background download stands, so the window can pick it up mid-way
-const upd = { state: 'idle', version: '', percent: 0, transferred: 0, total: 0, message: '' };
-function getUpdater() {
-  // (electron-builder's portable launcher sets PORTABLE_EXECUTABLE_FILE: there
-  // the updater would install the setup program on quit, #479)
-  if (updater || !app.isPackaged || process.env.PORTABLE_EXECUTABLE_FILE) return updater;
-  const { autoUpdater } = require('electron-updater');
-  autoUpdater.logger = null;
-  autoUpdater.autoDownload = true;       // found it? fetch it — nobody should have to ask
-  autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('update-available', (info) => {
-    Object.assign(upd, { state: 'downloading', version: info && info.version || '', percent: 0, transferred: 0, total: 0, message: '' });
-    sendToWindow({ type: 'update', ...upd });
-  });
-  autoUpdater.on('download-progress', (p) => {
-    Object.assign(upd, { state: 'downloading', percent: p.percent, transferred: p.transferred, total: p.total });
-    sendToWindow({ type: 'update', ...upd });
-  });
-  autoUpdater.on('update-downloaded', (info) => {
-    updaterReady = true;
-    Object.assign(upd, { state: 'ready', percent: 100 });
-    if (info && info.version) upd.version = info.version;
-    sendToWindow({ type: 'update', ...upd });
-  });
-  autoUpdater.on('error', (err) => {
-    logError('updater', err);
-    if (updaterReady) return; // a failed later look doesn't undo a finished download
-    Object.assign(upd, { state: 'error', message: String(err && err.message || err) });
-    sendToWindow({ type: 'update', ...upd });
-  });
-  updater = autoUpdater;
-  return updater;
-}
-
-// Windows shutting down (or the writer signing out) quits Kibitz too, and an
-// update installed then is cut off halfway: the old Kibitz already removed, the
-// new one never in, and the next morning Kibitz is gone from the PC (#490). So
-// a quit that Windows started leaves the update waiting for the writer's own
-// next quit, or for Restart to update.
-function holdUpdateForShutdown() {
-  if (updater) updater.autoInstallOnAppQuit = false;
-}
-
-// one look at GitHub; if something newer is there, the download starts on
-// its own (autoDownload). Never twice at once, and not again once it's here.
-let updateLook = null;
-function lookForUpdate() {
-  const u = getUpdater();
-  if (!u) return Promise.resolve(null);
-  if (updaterReady || upd.state === 'downloading') return Promise.resolve(null);
-  if (!updateLook) {
-    updateLook = u.checkForUpdates()
-      .catch((err) => { logError('updater', err); throw err; })
-      .finally(() => { updateLook = null; });
-  }
-  return updateLook;
-}
-
-// what's on GitHub, for the fallback path and the release link
-async function latestReleaseFromGitHub() {
-  const res = await fetch('https://api.github.com/repos/KoldenAxelson/kibitz/releases/latest', {
-    headers: { 'User-Agent': 'Kibitz-App' }
-  });
-  if (!res.ok) throw new Error('GitHub API returned ' + res.status);
-  const data = await res.json();
-  lastReleaseUrl = data.html_url || null;
-  return String(data.tag_name || '').replace(/^v/, '');
-}
-
-ipcMain.handle('update:check', async () => {
-  const currentVersion = app.getVersion();
-  try {
-    const u = getUpdater();
-    if (u) {
-      // already on its way (or already here): just say where it is
-      if (!updaterReady && upd.state !== 'downloading') {
-        if (upd.state === 'error') upd.state = 'idle'; // asking again is a retry
-        const result = await lookForUpdate();
-        const v = result && result.updateInfo && result.updateInfo.version || '';
-        if (v && compareVersions(v, currentVersion) > 0 && upd.state === 'idle') {
-          Object.assign(upd, { state: 'downloading', version: v });
-        }
-      }
-      latestReleaseFromGitHub().catch(() => {}); // the release link, for the fallback button
-      const latestVersion = upd.version;
-      const hasUpdate = !!latestVersion && compareVersions(latestVersion, currentVersion) > 0;
-      return { ...upd, hasUpdate, latestVersion, currentVersion, canInstall: true, ready: updaterReady };
-    }
-  } catch (err) {
-    logError('update', err); // fall through to the plain check
-  }
-  try {
-    const latestVersion = await latestReleaseFromGitHub();
-    return {
-      hasUpdate: !!latestVersion && compareVersions(latestVersion, currentVersion) > 0,
-      latestVersion,
-      currentVersion,
-      canInstall: false
-    };
-  } catch (err) {
-    logError('update', err);
-    return { error: true };
-  }
-});
-
-ipcMain.handle('update:install', () => {
-  const u = getUpdater();
-  if (!u || !updaterReady) return false;
-  setImmediate(() => u.quitAndInstall(false, true));
-  return true;
-});
-
-// the renderer may only open the release page fetched above — never arbitrary URLs
-ipcMain.handle('update:openRelease', () => {
-  if (lastReleaseUrl && /^https:\/\/github\.com\//.test(lastReleaseUrl)) {
-    require('electron').shell.openExternal(lastReleaseUrl);
-  }
-  return true;
-});
 
 // a trial (npm run try) keeps its settings apart from the real Kibitz's
 if (TRY_DIR) app.setPath('userData', path.join(TRY_DIR, 'settings'));
@@ -3601,24 +3327,6 @@ if (!app.requestSingleInstanceLock()) {
       win.focus();
     }
   });
-}
-
-// The background look: a few seconds after launch, every hour after that
-// for a writer who leaves Kibitz open for days, and whenever the computer
-// wakes (a laptop lid is how most Kibitz sessions end and begin). Nothing pops
-// up; any failure is logged and swallowed, so an offline machine or an
-// unsigned build never notices.
-const UPDATE_EVERY = 60 * 60 * 1000;
-function checkForUpdates() {
-  if (!app.isPackaged) return;
-  const look = () => { lookForUpdate().catch(() => { /* logged in lookForUpdate */ }); };
-  setTimeout(look, 8000);
-  const timer = setInterval(look, UPDATE_EVERY);
-  if (timer.unref) timer.unref();
-  try {
-    // after a wake the network needs a moment
-    require('electron').powerMonitor.on('resume', () => setTimeout(look, 15000));
-  } catch (err) { logError('updater', err); }
 }
 
 app.whenReady().then(() => {
@@ -3675,9 +3383,6 @@ app.whenReady().then(() => {
     try { ensureLibrary(); } catch (err) { logError('library', err); }
     createWindow();
     try { announceLibraryFallback(); } catch (err) { logError('library notice', err); }
-    // NEO Pocket's folder may be here already, or arrive while Kibitz is open
-    setTimeout(() => { askAboutPocket().catch((err) => logError('pocket ask', err)); }, 2500).unref?.();
-    app.on('browser-window-focus', () => { askAboutPocket().catch((err) => logError('pocket ask', err)); });
     try { initSpell(); } catch (err) { logError('spell', err); }
     try { buildMenu(); } catch (err) { logError('menu', err); }
     // the day's backup waits until Kibitz is up and the writer is writing (it
@@ -3686,7 +3391,6 @@ app.whenReady().then(() => {
     // Kibitz left open for days still makes each day's backup (and retries one
     // that failed); an existing day's zip makes this a no-op
     setInterval(() => { dailyBackup().catch(() => {}); }, 60 * 60 * 1000).unref?.();
-    try { checkForUpdates(); } catch (err) { logError('updater', err); }
     setTimeout(() => { fetchLibraryFromICloud().catch((err) => logError('icloud', err)); }, 60000).unref?.();
   } catch (err) {
     // catastrophic: tell the human instead of dying in silence

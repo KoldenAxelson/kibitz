@@ -1,7 +1,7 @@
 'use strict';
 
 // Kibitz's window code, the files of app/ in the order they load. index.html
-// and Pocket's page list them in this order (scripts/app-files.test.js
+// lists them in this order (scripts/app-files.test.js
 // checks); they share one global scope, as one file did, and each starts
 // 'use strict'. A file's code that runs while it loads may only call what
 // is already loaded; everything else waits for the writer.

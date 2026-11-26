@@ -633,7 +633,7 @@ function spSetElement(type) {
 
 // The keys of a script. True when the key was handled here.
 function scriptKey(e, body) {
-  const cmd = IS_POCKET ? (e.metaKey !== e.ctrlKey) : (IS_MAC ? e.metaKey : e.ctrlKey);
+  const cmd = IS_MAC ? e.metaKey : e.ctrlKey;
   if (cmd && !e.shiftKey && !e.altKey && /^Digit[1-7]$/.test(e.code || '')) {
     e.preventDefault();
     spSetElement(SP_TYPES[Number(e.code.slice(5)) - 1]);
@@ -1121,7 +1121,6 @@ function renderScriptNav() {
       const sc = $('#paper-scroll');
       sc.scrollTop += p.getBoundingClientRect().top - sc.getBoundingClientRect().top - sc.clientHeight / 4;
       updateCounters();
-      if (IS_POCKET && $('#nav-pane').dataset.pinned !== '1') $('#nav-pane').classList.remove('open');
     };
     pressable(row, [String(k + 1), s.slug].join(' '));
     list.appendChild(item);

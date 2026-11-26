@@ -26,7 +26,6 @@
     "test:new-script": "electron scripts/new-script.e2e.js",
     "test:danish": "electron scripts/danish.e2e.js",
     "test:litrpg": "electron scripts/litrpg.e2e.js",
-    "test:pocket": "electron scripts/pocket.e2e.js",
     "test:e2e": "node scripts/e2e-all.js",
     "test": "node --test \"scripts/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"scripts/*.test.js\"",
@@ -35,19 +34,11 @@
     "bundle": "node scripts/bundle.js",
     "try": "node scripts/try.js",
     "package": "npm run package:mac",
-    "package:mac": "electron-builder --mac",
-    "package:win": "electron-builder --win",
-    "package:linux": "electron-builder --linux",
-    "package:all": "electron-builder --mac --win --linux"
+    "package:mac": "electron-builder --mac"
   },
   "build": {
     "appId": "com.koldenaxelson.kibitz",
     "productName": "Kibitz",
-    "publish": {
-      "provider": "github",
-      "owner": "KoldenAxelson",
-      "repo": "kibitz"
-    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
@@ -71,50 +62,6 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "notarize": true
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "category": "Office",
-      "synopsis": "A distraction-free word processor for authors",
-      "desktop": {
-        "entry": {
-          "Comment": "A word processor for authors. Distraction-free by default.",
-          "Keywords": "writing;writer;novel;book;author;manuscript;wordprocessor;"
-        }
-      },
-      "maintainer": "KoldenAxelson <KoldenAxelson896@Protonmail.com>"
-    },
-    "nsis": {
-      "oneClick": true,
-      "deleteAppDataOnUninstall": false,
-      "artifactName": "${productName}-Setup-${version}.${ext}"
-    },
-    "portable": {
-      "artifactName": "${productName}-${version}-portable.${ext}"
     },
     "asarUnpack": [
       "node_modules/dictionary-ro/**",
@@ -144,7 +91,6 @@
     ],
     "files": [
       "**/*",
-      "!pocket/**",
       "!dist/**",
       "!Backups/**",
       "!*.md",
@@ -187,7 +133,6 @@
     "dictionary-ru": "^3.0.0",
     "dictionary-sv": "4.0.0",
     "dictionary-uk": "file:dictionaries/uk",
-    "electron-updater": "^6.3.9",
     "jszip": "^3.10.1",
     "koffi": "2.16.3"
   },

@@ -279,11 +279,9 @@ function setText(el, text) {
 
 // Platform-aware key labels: Macs read ⌘⇧X, everyone else reads Ctrl+Shift+X
 const IS_MAC = navigator.platform.toLowerCase().includes('mac');
-const IS_LINUX = !IS_MAC && /linux/i.test(navigator.platform) && !window.Capacitor;
-// a touch screen (Pocket): nothing to hover, no right button
-const NO_HOVER = !!(window.matchMedia && window.matchMedia('(hover: none)').matches) || !!window.Capacitor;
-// NEO Pocket (the Android and iOS shell)
-const IS_POCKET = !!window.Capacitor;
+const IS_LINUX = !IS_MAC && /linux/i.test(navigator.platform);
+// a touch screen: nothing to hover, no right button
+const NO_HOVER = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
 
 // Kibitz's features, each turned on or off in Options (library.features, kept
 // in library.json, so every device of the library follows the writer's
@@ -292,29 +290,25 @@ const IS_POCKET = !!window.Capacitor;
 // a poetry paragraph, a bound shelf, a painted cover open and export as
 // before. A new library starts with all of them off. FEATURES & OPTIONS in
 // app/options.js turns them on and off, and sets up a library from before.
-// `pocket`: whether NEO Pocket shows the feature too.
 const FEATURES = [
-  { key: 'cards', label: tk('Outline cards'), desc: tk('The outline as index cards, loose cards, and the cards beside the page.'), pocket: true },
-  { key: 'notesPages', label: tk('Chapter notes pages'), desc: tk('A notes page for each chapter, beside the book’s own.'), pocket: true },
-  { key: 'poetry', label: tk('Poetry paragraphs'), desc: tk('Lines set in from the margins, in italic.'), pocket: true },
-  { key: 'footnotes', label: tk('Footnotes'), desc: tk('Numbered notes at the foot of the page.'), pocket: true },
-  { key: 'formatting', label: tk('Alignment and other fonts'), desc: tk('Center, right-align or justify paragraphs or the whole book, and use any font on your computer.'), pocket: false },
-  { key: 'penNames', label: tk('Pen names and bound shelves'), desc: tk('Shelves under other names, a shelf bound into one book, anthologies, Duplicate and Reshelve.'), pocket: true },
-  { key: 'covers', label: tk('Painted covers'), desc: tk('Covers painted from your story with your own OpenAI key.'), pocket: false },
-  { key: 'pages', label: tk('Page views'), desc: tk('See the book as printed pages, two side by side, and choose the page width.'), pocket: false },
-  { key: 'focus', label: tk('Focus mode'), desc: tk('Dim everything but the sentence or paragraph you’re writing.'), pocket: false },
-  { key: 'readAloud', label: tk('Read aloud and Look Up'), desc: tk('Hear your words in your computer’s voice; look up a selected word.'), pocket: false },
-  { key: 'vim', label: tk('Vim keys'), desc: tk('Move around the page with h j k l and friends, the vim way.'), pocket: true },
-  { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.'), pocket: true, pocketDesc: tk('Plain text, Markdown and web page, beside Word and EPUB.') },
-  { key: 'suggester', label: tk('Sentence shape suggester'), desc: tk('After a pause at the end of a sentence, a gray line suggests a shape for the next one. It’s gone when you type.'), pocket: false },
-  { key: 'passes', label: tk('Revision passes'), desc: tk('Edit → Revision Pass: words to cut, rhythm, echoes, point of view, clutter, dialogue, description, time and cast, and Zoom (read by the local model), marked in the chapter and listed beside it. Nothing is changed.'), pocket: false },
-  { key: 'scenes', label: tk('Scene questions and book shape'), desc: tk('Each outline card asks its scene’s question, what moves it on, how it ends, its tentpole and its revelation, and a chapter’s card its narrator. View → Book Shape… shows the whole book.'), pocket: false }
+  { key: 'cards', label: tk('Outline cards'), desc: tk('The outline as index cards, loose cards, and the cards beside the page.') },
+  { key: 'notesPages', label: tk('Chapter notes pages'), desc: tk('A notes page for each chapter, beside the book’s own.') },
+  { key: 'poetry', label: tk('Poetry paragraphs'), desc: tk('Lines set in from the margins, in italic.') },
+  { key: 'footnotes', label: tk('Footnotes'), desc: tk('Numbered notes at the foot of the page.') },
+  { key: 'formatting', label: tk('Alignment and other fonts'), desc: tk('Center, right-align or justify paragraphs or the whole book, and use any font on your computer.') },
+  { key: 'penNames', label: tk('Pen names and bound shelves'), desc: tk('Shelves under other names, a shelf bound into one book, anthologies, Duplicate and Reshelve.') },
+  { key: 'covers', label: tk('Painted covers'), desc: tk('Covers painted from your story with your own OpenAI key.') },
+  { key: 'pages', label: tk('Page views'), desc: tk('See the book as printed pages, two side by side, and choose the page width.') },
+  { key: 'focus', label: tk('Focus mode'), desc: tk('Dim everything but the sentence or paragraph you’re writing.') },
+  { key: 'readAloud', label: tk('Read aloud and Look Up'), desc: tk('Hear your words in your computer’s voice; look up a selected word.') },
+  { key: 'vim', label: tk('Vim keys'), desc: tk('Move around the page with h j k l and friends, the vim way.') },
+  { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.') },
+  { key: 'suggester', label: tk('Sentence shape suggester'), desc: tk('After a pause at the end of a sentence, a gray line suggests a shape for the next one. It’s gone when you type.') },
+  { key: 'passes', label: tk('Revision passes'), desc: tk('Edit → Revision Pass: words to cut, rhythm, echoes, point of view, clutter, dialogue, description, time and cast, and Zoom (read by the local model), marked in the chapter and listed beside it. Nothing is changed.') },
+  { key: 'scenes', label: tk('Scene questions and book shape'), desc: tk('Each outline card asks its scene’s question, what moves it on, how it ends, its tentpole and its revelation, and a chapter’s card its narrator. View → Book Shape… shows the whole book.') }
 ];
 const featureOn = (key) => {
-  if (!library || !library.features || !library.features[key]) return false;
-  if (!IS_POCKET) return true;
-  const f = FEATURES.find((x) => x.key === key);
-  return !!(f && f.pocket);
+  return !!library && !!library.features && !!library.features[key];
 };
 // *italic* and **bold** typed as Markdown: a setting in Options
 const markdownOff = () => !!library && !!library.markdownOff;
@@ -333,7 +327,6 @@ const markdownOff = () => !!library && !!library.markdownOff;
     if (!target.closest) return;
     // shelf names are editable on tap, but a long press on one is a menu
     if (target.closest('[contenteditable="true"], input, textarea')) return;
-    if (target.closest('#pocket-chapters')) return;
     const p = e.touches[0];
     start = { x: p.clientX, y: p.clientY, target };
     armed = false;
@@ -574,11 +567,11 @@ document.addEventListener('mousedown', (e) => {
 // The open book's title up where the window's buttons are: the system's own
 // title bar on Windows and Linux (and the Window menu everywhere), and on
 // macOS, where that bar is hidden behind the page, the strip beside the buttons
-if (IS_MAC && !IS_POCKET) document.body.classList.add('mac-bar');
+if (IS_MAC) document.body.classList.add('mac-bar');
 function showWindowTitle() {
   const title = book ? (book.title || t('Untitled')) : '';
   document.title = title ? title + ' — Kibitz' : 'Kibitz';
-  const strip = IS_MAC && !IS_POCKET && document.querySelector('#dragstrip'); // the desktop's page only
+  const strip = IS_MAC && document.querySelector('#dragstrip'); // the desktop's page only
   if (strip) strip.textContent = title;
 }
 

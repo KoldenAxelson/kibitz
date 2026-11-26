@@ -79,20 +79,12 @@ function renderNav() {
     rowEl.addEventListener('dragend', finishChapterDrag);
     // right-click: what it is, or Delete
     item.addEventListener('contextmenu', (e) => {
-      if (IS_POCKET) { e.preventDefault(); return; } // on a phone this pane is for hopping
       if (e.target.closest('.nav-note[contenteditable="true"]')) return; // the note's own text menu
       e.preventDefault();
       chapterMenu(chId, e.clientX, e.clientY, rowEl);
     });
 
-    if (story && IS_POCKET) {
-      // on a phone this pane is for hopping: a tap anywhere on the box
-      // goes there. The note is read here and written in the Outline.
-      const note = document.createElement('div');
-      note.className = 'nav-note nav-note-ro';
-      note.textContent = book.chapterNotes[chId] || '';
-      item.appendChild(note);
-    } else if (story) {
+    if (story) {
       // outline your whole book from this panel:
       const note = document.createElement('div');
       note.className = 'nav-note';
@@ -123,14 +115,6 @@ function renderNav() {
 
     item.onclick = () => {
       switchTab('manuscript');
-      if (IS_POCKET) {
-        // the top of the chapter, and the pane steps aside for the page
-        const sec = document.querySelector(`.chapter[data-id="${chId}"]`);
-        focusChapterStart(chId);
-        if (sec) sec.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
-        if ($('#nav-pane').dataset.pinned !== '1') $('#nav-pane').classList.remove('open');
-        return;
-      }
       focusChapter(chId);
     };
     // from the keyboard, the row is the chapter's button (F6 reaches the pane)
@@ -535,8 +519,6 @@ function renderNotesNav() {
     else { peek.classList.add('blank'); peek.dataset.ph = t('No notes yet'); }
     const go = () => {
       openNotesPage(page);
-      // on a phone the pane steps aside for the page
-      if (IS_POCKET && $('#nav-pane').dataset.pinned !== '1') $('#nav-pane').classList.remove('open');
     };
     item.addEventListener('click', go);
     item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });

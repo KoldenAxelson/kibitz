@@ -665,9 +665,6 @@ body.light .print-modal select, body.light .print-modal textarea { background: #
 .fr-font:hover { border-color: #666; }
 .fr-font.sel { border-color: var(--accent); color: var(--accent); }
 .fr-font .fr-cap { font-size: 20px; margin-right: 7px; }
-/* a Mac that already has NEO Pocket's books in iCloud Drive */
-#fr-pocket { margin: 20px 0 0; font-size: 13px; color: var(--muted); }
-#fr-pocket .btn-quiet { display: block; color: var(--accent); font-size: 13px; padding: 4px 0; }
 .font-list {
   display: flex; flex-direction: column; gap: 6px;
   max-height: 50vh; overflow-y: auto; margin-top: 12px; padding-right: 10px;
@@ -1799,8 +1796,6 @@ body.bright .pop-menu button:disabled { color: #8a8a8a; }
 }
 
 /* Help → Check for Update…: the download bar */
-.up-bar { height: 6px; background: #2a2a2a; border-radius: 3px; margin-top: 12px; overflow: hidden; }
-.up-fill { height: 100%; width: 0; background: var(--accent); transition: width 0.2s ease; }
 
 /* ================================================================== */
 /* LIGHT (View → Page → Light): the paper page in a light room, and   */
@@ -1890,7 +1885,6 @@ body.light #fr-error { color: #a8412f; }
 body.light #fr-sample { box-shadow: 0 0 0 1px #e6e1d6; }
 body.light .about-version { color: #6a665e; }
 body.light .modal p.about-line { color: #77726a; }
-body.light .up-bar { background: #e4e0d8; }
 
 /* the page's surround */
 body.light .sheet, body.light #aux-paper { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 28px rgba(0,0,0,0.1); }

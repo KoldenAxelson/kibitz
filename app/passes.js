@@ -15,7 +15,7 @@
 // the main process asks): it reads a paragraph at a time, keeps each
 // paragraph's levels so an edit only asks again about what changed, and
 // says plainly in the panel when the model is waking or can't be reached.
-// A feature (FEATURES in core), off until switched on. Desktop only.
+// A feature (FEATURES in core), off until switched on.
 
 const PASS_RESCAN_MS = 700;
 const ZOOM_RESCAN_MS = 2000;  // the model is slower: wait for a real pause
@@ -351,7 +351,7 @@ document.addEventListener('keyup', () => setTimeout(passStillHere), true);
 
 // (Not on Pocket: its bridge keeps a single menu listener, the window's
 // own, and the passes are desktop only.)
-if (!IS_POCKET && window.kibitz && window.kibitz.onMenu) {
+if (window.kibitz && window.kibitz.onMenu) {
   window.kibitz.onMenu((msg) => {
     if (msg.type !== 'revisionPass') return;
     if (!msg.pass || msg.pass === passKey) endPass();

@@ -85,7 +85,7 @@ async function openOptions() {
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   optionsOpen = bd;
-  const features = FEATURES.filter((f) => !IS_POCKET || f.pocket);
+  const features = FEATURES;
   const check = (id, on, label, desc) => `
     <label class="opt-row">
       <input type="checkbox" data-opt="${id}"${on ? ' checked' : ''}>
@@ -99,7 +99,7 @@ async function openOptions() {
         <section>
           <div class="opt-head"><h3>${t('Features')}</h3><button class="opt-all btn-link" type="button"></button></div>
           <p class="opt-note">${t('Turn on what you use. Anything a book already holds always shows.')}</p>
-          ${features.map((f) => check('feature:' + f.key, featureOn(f.key), t(f.label), t(IS_POCKET && f.pocketDesc ? f.pocketDesc : f.desc))).join('')}
+          ${features.map((f) => check('feature:' + f.key, featureOn(f.key), t(f.label), t(f.desc))).join('')}
         </section>
         <section>
           <h3>${t('Writing')}</h3>
@@ -119,7 +119,7 @@ async function openOptions() {
             <select data-opt="uiLanguage">${langs.list.map((l) => `<option value="${escHtml(l.code)}"${l.code === langs.current ? ' selected' : ''}>${escHtml(l.name)}</option>`).join('')}</select></label>` : ''}
           <label class="opt-row opt-select"><span class="opt-label">${t('Spellcheck language')}</span>
             <select data-opt="spellLanguage">${spellCodes.map((c) => `<option value="${c}"${c === library.spellLanguage ? ' selected' : ''}>${escHtml(SPELL_LANGUAGE_NAMES[c])}</option>`).join('')}</select></label>
-          ${IS_POCKET ? '' : `<div class="opt-row opt-select"><span class="opt-label">${t('Interface size')}</span>
+          ${`<div class="opt-row opt-select"><span class="opt-label">${t('Interface size')}</span>
             <span class="opt-steps"><button type="button" data-zoom="-1" aria-label="${t('Smaller')}">−</button><span class="opt-zoom"></span><button type="button" data-zoom="1" aria-label="${t('Larger')}">+</button><button type="button" class="btn-link" data-zoom="0">${t('Reset')}</button></span></div>`}
         </section>
       </div>

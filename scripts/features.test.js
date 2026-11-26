@@ -241,11 +241,6 @@ describe('a library from before 2.0', () => {
     assert.ok(!ctx.log.includes('write'));
   });
 
-  test('Pocket follows only the features it can show', () => {
-    const ctx = room({ features: Object.fromEntries(KEYS.map((k) => [k, true])) }, { pocket: true });
-    vm.runInContext('this.featureOn = featureOn; this.FEATURES = FEATURES;', ctx);
-    for (const f of ctx.FEATURES) assert.equal(ctx.featureOn(f.key), !!f.pocket, f.key);
-  });
 });
 // ---- Brighter Interface: the writer's choice holds in simple Kibitz too ----
 const brightFrom = app.indexOf('const brightAside = ');

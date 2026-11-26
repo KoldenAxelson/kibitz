@@ -9,7 +9,7 @@ const { test } = require('node:test');
 const { APP_FILES } = require('./app-files');
 
 const root = path.join(__dirname, '..');
-for (const page of ['index.html', 'pocket/www/index.html']) {
+for (const page of ['index.html']) {
   test(`${page} loads the window's files in order`, () => {
     const html = fs.readFileSync(path.join(root, page), 'utf8');
     const listed = [...html.matchAll(/<script src="(app\/[^"]+)"><\/script>/g)].map((m) => m[1]);
@@ -24,7 +24,7 @@ test('every file in app/ is listed, and each is strict', () => {
 test('every function the window declares is used somewhere (lint can no longer tell)', () => {
   const { appSource } = require('./app-files');
   const src = appSource();
-  const others = ['index.html', 'pocket/www/index.html', 'pocket/www/pocket-bridge.js', 'main.js', 'preload.js']
+  const others = ['index.html', 'main.js', 'preload.js']
     .map((f) => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
   const names = [...src.matchAll(/^(?:async )?function (\w+)\(/gm)].map((m) => m[1]);
   const unused = names.filter((n) => {

@@ -92,7 +92,7 @@ test('Danish: the pinned LibreOffice dictionary, æ ø å, inflections, compound
   assert.equal((await send({ type: 'check', words: ['blåbær'] })).result.blåbær, true);
 });
 
-test('Danish ships with its license on desktop and in Pocket', () => {
+test('Danish ships with its license', () => {
   const pkg = JSON.parse(source('package.json'));
   assert.equal(pkg.dependencies['dictionary-da'], 'file:dictionaries/da');
   assert.ok(pkg.build.asarUnpack.includes('node_modules/dictionary-da/**'));
@@ -102,11 +102,7 @@ test('Danish ships with its license on desktop and in Pocket', () => {
   for (const f of ['index.aff', 'index.dic', 'NOTICE.txt', 'MPL-1.1.txt', 'README_da_DK.txt']) assert.ok(da.files.includes(f), f);
   assert.match(source('dictionaries/da/MPL-1.1.txt'), /MOZILLA PUBLIC LICENSE\s+Version 1\.1/);
   assert.match(source('dictionaries/da/README_da_DK.txt'), /Mozilla MPL version 1\.1/);
-  // Pocket: the list desktop offers, with the notice copied beside the data
   assert.match(source('main.js'), /'da': \{ label: 'Dansk', pkg: 'dictionary-da' \}/);
-  const pocket = source('scripts/pocket-www.js');
-  assert.match(pocket, /path\.join\(root, 'dictionaries', code\)/);
-  assert.match(pocket, /meta\.files/);
 });
 
 test('Ukrainian: every apostrophe, ґ, hyphenated words and suggestions', async () => {

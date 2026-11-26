@@ -1050,7 +1050,7 @@ function goToTab(name) {
 const TAB_ORDER = ['manuscript', 'notes', 'outline', 'darlings'];
 window.addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-  const cmd = IS_POCKET ? (e.metaKey !== e.ctrlKey) : (IS_MAC ? e.metaKey : e.ctrlKey);
+  const cmd = IS_MAC ? e.metaKey : e.ctrlKey;
   if (!cmd || !e.altKey || e.shiftKey || e.isComposing) return;
   if ($('#editor-view').hidden || document.querySelector('.modal-backdrop:not([hidden])')) return;
   e.preventDefault();
@@ -1218,9 +1218,9 @@ window.addEventListener('keydown', (e) => {
   const arrows = e.key === 'ArrowDown' || e.key === 'ArrowUp';
   const pages = e.key === 'PageDown' || e.key === 'PageUp';
   if (!arrows && !pages) return;
-  const cmd = IS_POCKET ? (e.metaKey !== e.ctrlKey) : (IS_MAC ? e.metaKey : e.ctrlKey);
+  const cmd = IS_MAC ? e.metaKey : e.ctrlKey;
   if (arrows && (!cmd || !e.altKey || e.shiftKey)) return;
-  if (pages && ((IS_MAC && !IS_POCKET) || !e.ctrlKey || e.metaKey || e.altKey || e.shiftKey)) return;
+  if (pages && (IS_MAC || !e.ctrlKey || e.metaKey || e.altKey || e.shiftKey)) return;
   if ($('#editor-view').hidden || document.querySelector('.modal-backdrop:not([hidden])')) return;
   e.preventDefault();
   e.stopPropagation();

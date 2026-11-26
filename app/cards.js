@@ -2358,7 +2358,7 @@ function sidePaneForTab(name) {
   if (outline) renderLooseCards();
   // on Darlings the pane holds the book's snapshots, and stays open
   const was = $('#editor-view').classList.contains('darlings-tab');
-  const dar = name === 'darlings' && !!book && snapsCan() && !IS_POCKET; // (Pocket's own list: later)
+  const dar = name === 'darlings' && !!book && snapsCan();
   $('#editor-view').classList.toggle('darlings-tab', dar);
   if (dar) { snapList(); $('#side-pane').classList.add('open'); }
   else if (was && $('#side-pane').dataset.pinned !== '1') $('#side-pane').classList.remove('open');

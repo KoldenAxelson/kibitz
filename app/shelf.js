@@ -40,15 +40,6 @@ async function loadLibrary() {
 function showFirstRun() {
   const fr = $('#firstrun');
   fr.hidden = false;
-  // a Mac where NEO Pocket already keeps books in iCloud Drive: open those
-  // instead of starting a new library (Kibitz restarts in that folder)
-  if (window.kibitz.pocketLibrary) {
-    window.kibitz.pocketLibrary().then((p) => {
-      if (!p || !p.offer) return;
-      $('#fr-pocket').hidden = false;
-      $('#fr-pocket-btn').onclick = () => { window.kibitz.usePocketLibrary(); };
-    }).catch(() => {});
-  }
   let picked = { body: Object.keys(BODY_FONTS)[0] || 'Georgia', dropcap: 'literary' };
 
   // Step 1: who are you, and how do you write?
@@ -773,9 +764,7 @@ function pageTile(shelf, meta, label) {
       { label: t('Open'), value: 'open' },
       {
         label: t('Remove page'),
-        desc: window.Capacitor
-          ? t('Moves the book folder to Deleted Books in your Kibitz Library, where you can recover it.')
-          : t('Sends the page to your system trash, where you can recover it.'),
+        desc: t('Sends the page to your system trash, where you can recover it.'),
         danger: true, value: 'remove'
       }
     ]);
@@ -1245,27 +1234,24 @@ function bookTile(meta, opts = {}) {
       startPart = !(prev && prev.kind === 'part');
     }
     const script = isScript(meta);
-    const trashLabel = window.Capacitor ? t('Delete book')
-      : navigator.platform.toLowerCase().includes('win') ? t('Move to Recycle Bin') : t('Move to Trash');
+    const trashLabel = navigator.platform.toLowerCase().includes('win') ? t('Move to Recycle Bin') : t('Move to Trash');
     const canCopy = !!window.kibitz.duplicateBook && !isPageMeta(meta) && featureOn('penNames');
     // the cover's own choices, gathered in one place
     const coverItems = script ? [] : [
       ...(NO_HOVER ? [] : [{ label: meta.coverImage ? t('Replace cover art…') : t('Set cover art…'), value: 'cover' }]),
       { label: t('New cover'), value: 'refresh' },
-      ...(!window.Capacitor ? [{ label: t('Save cover as image…'), value: 'saveCover' }] : []),
+      { label: t('Save cover as image…'), value: 'saveCover' },
       ...(meta.coverImage ? ['-', { label: t('Remove cover art'), value: 'uncover', danger: true }] : [])
     ];
     let choice;
     // (a book's word goal is set in Goals, inside the book)
-    if (NO_HOVER || window.Capacitor) {
+    if (NO_HOVER) {
       // a touch screen, and simple Kibitz: the larger cards, each saying what it
       // does. Simple Kibitz has no cover menu: art is dragged onto the book, and
       // New cover and Remove cover art stand with the rest.
       const options = [];
       if (startPart) options.push({ label: t('Start a part here'), desc: t('A part page goes in before “{title}”.', { title: escHtml(shownTitle(meta.title)) }), value: 'part' });
-      options.push(window.Capacitor
-        ? { label: t('Export…'), desc: script ? t('PDF, Fountain or Final Draft, through the share sheet.') : featureOn('exports') ? t('Text, Markdown, HTML, PDF, Word or EPUB, through the share sheet.') : t('PDF, Word or EPUB, through the share sheet.'), value: 'export' }
-        : { label: t('Export…'), desc: script || featureOn('exports') || isPageMeta(meta) ? '' : t('PDF, Word, EPUB, or a paperback for KDP.'), value: 'export' });
+      options.push({ label: t('Export…'), desc: script || featureOn('exports') || isPageMeta(meta) ? '' : t('PDF, Word, EPUB, or a paperback for KDP.'), value: 'export' });
       if (canCopy) options.push({ label: t('Duplicate'), desc: t('A copy of the whole book on this shelf, to keep as a backup or try another version.'), value: 'duplicate' });
       if (coverItems.length && featureOn('covers')) options.push({ label: t('Cover'), desc: t('A new cover, your own art, or a saved image.'), value: 'coverMenu' });
       else if (coverItems.length) {
@@ -1274,7 +1260,7 @@ function bookTile(meta, opts = {}) {
       }
       options.push(
         { label: t('Remove from bookshelf'), desc: t('Takes it off your shelves. The files stay safe in your Kibitz Library folder on disk.'), value: 'remove' },
-        { label: trashLabel, desc: window.Capacitor ? t('Moves the book folder to Deleted Books in your Kibitz Library, where you can recover it.') : t('Sends the book folder to your system trash, where you can recover it.'), danger: true, value: 'trash' }
+        { label: trashLabel, desc: t('Sends the book folder to your system trash, where you can recover it.'), danger: true, value: 'trash' }
       );
       choice = await optionModal(t('“{title}”', { title: escHtml(shownTitle(meta.title)) }), null, options);
       if (choice === 'coverMenu') choice = await optionModal(t('Cover'), null, coverItems.filter((x) => x !== '-'));
@@ -1310,10 +1296,10 @@ function bookTile(meta, opts = {}) {
         ...(featureOn('exports') ? [{ label: t('Text (.txt)'), value: 'txt' }, { label: t('Markdown (.md)'), value: 'md' }, { label: t('HTML (.html)'), value: 'html' }] : []),
         { label: 'PDF (.pdf)', value: 'pdf' },
         { label: t('Word (.docx)'), value: 'docx' }, { label: t('EPUB (.epub)'), value: 'epub' },
-        ...(window.Capacitor || isPageMeta(meta) ? [] : [{ label: t('Paperback for KDP…'), value: 'paperback' }])
+        ...(isPageMeta(meta) ? [] : [{ label: t('Paperback for KDP…'), value: 'paperback' }])
       ]);
       if (!fmt) return;
-      if (window.Capacitor || fmt === 'paperback') {
+      if (fmt === 'paperback') {
         await openBook(meta.id);
         await doExport(fmt);
       } else {

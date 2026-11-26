@@ -408,7 +408,7 @@ function openBookShape() {
 }
 
 // (Not on Pocket: its bridge keeps a single menu listener, the window's own.)
-if (!IS_POCKET && window.kibitz && window.kibitz.onMenu) {
+if (window.kibitz && window.kibitz.onMenu) {
   window.kibitz.onMenu((msg) => {
     if (msg.type === 'bookShape') openBookShape();
   });
