@@ -30,3 +30,6 @@ pocket/www/dict/
 # working files beside the repo, never part of it
 Claude outputs/
 docs/sessions/
+
+# Kibitz: planning docs and reference material, never part of the repo
+private/
