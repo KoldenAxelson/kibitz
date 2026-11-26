@@ -145,7 +145,7 @@ function register(ipcMain, decider = createDecider()) {
     const ctrl = new AbortController();
     if (req.id) running.set(req.id, ctrl);
     try {
-      return await decider.decide({ model: req.model, state: req.state, questions: req.questions, signal: ctrl.signal });
+      return await decider.decide({ model: req.model, state: req.state, questions: req.questions, signal: ctrl.signal, timeout: Number.isFinite(req.timeout) ? req.timeout : undefined });
     } catch (err) {
       return { error: { code: err.code || 'ERROR', message: err.message } };
     } finally {

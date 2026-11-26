@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('kibitz', {
   // Kibitz: the local decision model (decide.js)
   decide: (req) => ipcRenderer.invoke('kibitz:decide', req),
   decideCancel: (id) => ipcRenderer.invoke('kibitz:decide-cancel', id),
+  decideWarm: (model) => ipcRenderer.invoke('kibitz:decide-warm', model),
   spellSuggest: (word) => ipcRenderer.invoke('spell:suggest', word),
   spellLearn: (word) => ipcRenderer.invoke('spell:learn', word),
   setSpellLanguage: (code) => ipcRenderer.invoke('spell:setLanguage', code),

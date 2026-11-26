@@ -54,12 +54,12 @@ quest:
 # train split, then it runs once on the untouched test split with that
 # stretch fixed. About 5 minutes.
 quest-steps:
-	./tools/dev-name.sh
-	set -o pipefail; npm test 2>&1 | tail -3
-	npm run test:e2e -- zoom passes
-	git add Makefile tools/dev-name.sh app/core.js app/passes.js craft/zoom.js kibitz.css scripts/zoom.e2e.js scripts/craft-zoom.test.js
-	git commit -m "Kibitz: Zoom shows every paragraph's curve, panels drop their explanations; dev app named Kibitz" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
-	git push
+	git switch -c story-layer
+	git add Makefile app/core.js app/suggester.js craft/README.md craft/index.js craft/story.js decide.js index.html preload.js scripts/craft-window.test.js scripts/craft-story.test.js scripts/story-eval.test.js scripts/story.e2e.js tools/story-eval.js
+	git commit -m "Kibitz: story layer, parked (missed its pre-registered bar on the test split: lift +2, needed +5)" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
+	git push -u origin story-layer
+	git switch main
+	git status --short
 
 install:
 	npm install

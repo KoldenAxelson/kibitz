@@ -9,7 +9,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const ORDER = ['text', 'shapes', 'cut', 'echoes', 'landings', 'voice', 'suggest', 'lexicon', 'passes', 'scenes', 'zoom'];
+const ORDER = ['text', 'shapes', 'cut', 'echoes', 'landings', 'voice', 'suggest', 'lexicon', 'passes', 'scenes', 'zoom', 'story'];
 
 test('every module loads as a script and works from window.KibitzCraft', () => {
   const window = {};

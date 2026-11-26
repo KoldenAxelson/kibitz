@@ -3,7 +3,7 @@
 // CRAFT: the rules engine, all in one require for Node. In the window the
 // same modules hang off window.KibitzCraft, loaded in this order by
 // index.html: text, shapes, cut, echoes, landings, voice, suggest, lexicon,
-// passes, scenes, zoom.
+// passes, scenes, zoom, story.
 
 module.exports = {
   text: require('./text.js'),
@@ -16,5 +16,6 @@ module.exports = {
   lexicon: require('./lexicon.js'),
   passes: require('./passes.js'),
   scenes: require('./scenes.js'),
-  zoom: require('./zoom.js')
+  zoom: require('./zoom.js'),
+  story: require('./story.js')
 };

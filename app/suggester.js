@@ -20,10 +20,49 @@ let suggestTimer = 0;
 let suggestEl = null;
 let suggestLast = null;          // { rule, at, chId }: the last suggestion shown
 const suggestShapes = new Map(); // sentence text → its shapes, for the chapter-wide count
+// The story layer (craft/story.js): at the pause, unless the rhythm layer
+// already has a real rhythm problem to name, the local model is asked
+// which shape fits the scene. Typing, clicking or moving abandons the
+// question; an answer that's late, unsure or missing leaves the rhythm
+// layer's say (or silence). The model is woken on the first keystroke.
+let storyAsk = 0;                 // bumped to abandon a question in flight
+let storyAsking = null;           // its id
+let storyWarmed = false;
 
 function suggesterOn() {
   return typeof KibitzCraft !== 'undefined' && !!KibitzCraft.suggest && featureOn('suggester') &&
     !!book && currentTab === 'manuscript' && !isScript() && !document.body.classList.contains('paged');
+}
+
+const storyOn = () => suggesterOn() && featureOn('story') && !!KibitzCraft.story && !!window.kibitz && !!window.kibitz.decide;
+
+function storyAbandon() {
+  storyAsk++;
+  if (storyAsking && window.kibitz.decideCancel) window.kibitz.decideCancel(storyAsking);
+  storyAsking = null;
+}
+
+// What the story layer is shown besides the scene: the scene's outline
+// card (Phase 4's questions) and the chapter's narrator.
+function storyContext(chId) {
+  let card = null;
+  try {
+    const where = typeof sceneWhereOfCaret === 'function' ? sceneWhereOfCaret() : null;
+    card = where && !where.chapter && typeof sceneAnswers === 'function' ? sceneAnswers(where) : null;
+  } catch { card = null; }
+  const narrator = ((book.kibitzChapters || {})[chId] || {}).narrator || '';
+  return { card, narrator };
+}
+
+async function askStory(scene, chId) {
+  const seq = ++storyAsk;
+  const C = KibitzCraft.story;
+  const q = C.question({ scene, ...storyContext(chId) });
+  storyAsking = `story-${seq}`;
+  const res = await window.kibitz.decide({ id: storyAsking, model: q.model, state: q.state, questions: q.questions, timeout: C.TIMEOUT_MS });
+  if (seq !== storyAsk) return { stale: true };
+  storyAsking = null;
+  return { story: res && !res.error ? C.pick(res.answers) : null };
 }
 
 function hideSuggestion() {
@@ -67,7 +106,7 @@ function suggestShapesUsed(sents) {
 
 // The pause is over: is the caret just after a finished sentence, at the
 // edge of the writing, and does a rule have something to say?
-function offerSuggestion() {
+async function offerSuggestion() {
   suggestTimer = 0;
   if (!suggesterOn() || !document.hasFocus()) return;
   const sel = window.getSelection();
@@ -92,9 +131,17 @@ function offerSuggestion() {
   const text = suggestText(body, p, off);
   const sents = C.text.sentences(text.scene);
   const chapterSents = C.text.sentences(text.chapter);
-  const found = C.suggest.suggest(sents, { chapter: { sentences: chapterSents.length, shapesUsed: suggestShapesUsed(chapterSents) } });
+  const rhythm = C.suggest.suggest(sents, { chapter: { sentences: chapterSents.length, shapesUsed: suggestShapesUsed(chapterSents) } });
   const chId = body.closest('.chapter').dataset.id;
   const previous = suggestLast && suggestLast.chId === chId ? suggestLast : null;
+  // a suggestion of any kind waits out the cooldown; asking would be wasted
+  if (!C.suggest.shouldShow(previous, rhythm || { rule: 'story' }, sents.length)) return;
+  let found = rhythm;
+  if (storyOn() && !C.story.rhythmSettles(rhythm)) {
+    const { story, stale } = await askStory(text.scene, chId);
+    if (stale || !p.isConnected || !suggesterOn()) return;
+    found = C.story.combine(rhythm, story, sents[sents.length - 1]);
+  }
   if (!C.suggest.shouldShow(previous, found, sents.length)) return;
   if (showSuggestion(p, found)) suggestLast = { rule: found.rule, at: sents.length, chId };
 }
@@ -139,14 +186,19 @@ function showSuggestion(p, found) {
 // Typing in a chapter starts the wait over; anything at all takes the line away.
 document.addEventListener('input', (e) => {
   hideSuggestion();
+  storyAbandon();
   clearTimeout(suggestTimer);
   suggestTimer = 0;
   if (e.target && e.target.closest && e.target.closest('.chapter-body') && suggesterOn()) {
     suggestTimer = setTimeout(offerSuggestion, SUGGEST_PAUSE_MS);
+    if (!storyWarmed && storyOn() && window.kibitz.decideWarm) {
+      storyWarmed = true;
+      window.kibitz.decideWarm(KibitzCraft.story.MODEL).catch(() => {});
+    }
   }
 }, true);
-document.addEventListener('keydown', hideSuggestion, true);
-document.addEventListener('mousedown', hideSuggestion, true);
+document.addEventListener('keydown', () => { hideSuggestion(); storyAbandon(); }, true);
+document.addEventListener('mousedown', () => { hideSuggestion(); storyAbandon(); }, true);
 document.addEventListener('selectionchange', () => { if (suggestEl) hideSuggestion(); });
 window.addEventListener('resize', hideSuggestion);
 window.addEventListener('blur', () => { clearTimeout(suggestTimer); suggestTimer = 0; });

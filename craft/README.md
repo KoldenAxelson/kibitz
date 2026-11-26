@@ -8,7 +8,7 @@ with the CSS Highlight API.
 Each file runs in two places:
 - **Node:** `require('./craft')` (or one file), for the tests.
 - **The window:** a plain `<script>` in this order: text, shapes, cut,
-  echoes, landings, voice, suggest, lexicon, passes, scenes, zoom. Each hangs off `window.KibitzCraft`.
+  echoes, landings, voice, suggest, lexicon, passes, scenes, zoom, story. Each hangs off `window.KibitzCraft`.
 
 | File | What it gives |
 |---|---|
@@ -22,6 +22,7 @@ Each file runs in two places:
 | `passes.js` | The eight revision passes: `run(key, text)` → `{ findings: [{ start, end, label, note, marks? }], summary }`; `PASSES` (menu order, labels, about); `names` |
 | `scenes.js` | The questions a card asks (`FIELDS`, `CHAPTER_FIELDS`), `clean`, `summary`, `answered`; `bookShape(chapters)`: lengths, dialogue share, pace, runs that drag, narrator gaps |
 | `zoom.js` | Zoom levels 1-5 (the uneven U): `questions(sentences, variant)` for a decision model, `levels(answers)`, `flags(levels)` (endsClose, neverDown, onlyBack), `compare` with a person's labels, `stretchFit`/`stretch`; `CHOSEN` (the measured model, variant and stretch), `paragraphsToRead(text)`, `findings(paragraphs, levels)` for the Zoom pass |
+| `story.js` | The suggester's story layer: `question({scene, card, narrator})` for the decision model (the nine shapes or none), `pick(answers)`, `combine(rhythm, story, last)` (a rhythm problem first, then the story, then the gentle notes) |
 | `voice.js` | `lines` (quoted lines with a guessed speaker: tag, beat or paragraph), `profile`, `bySpeaker`, `compare` |
 
 Conventions:
@@ -36,4 +37,6 @@ Conventions:
 
 Outside craft/ (main process, Node only): `decide.js` asks the local
 decision model (Ollaya on loopback, started from ~/.local/bin when needed);
-`tools/zoom-eval.js` measures models against Konrad's zoom labels.
+`tools/zoom-eval.js` measures models against Konrad's zoom labels;
+`tools/story-eval.js` measures the story layer's picks against what authors
+wrote next (lift over the same picks shuffled).
