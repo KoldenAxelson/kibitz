@@ -33,3 +33,6 @@ docs/sessions/
 
 # Kibitz: planning docs and reference material, never part of the repo
 private/
+
+# Kibitz: notes for Claude, never part of the repo
+CLAUDE.md

@@ -49,16 +49,17 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: finish the rename quest. Last run merged and tested fine
-# but stopped at lint: NEO 2.0.0 itself fails the same 30 oxlint checks, so
-# lint no longer gates. Pushes main and upstream-kibitz.
+# Current quest: commit Phase 1 (the craft/ rules engine and its tests),
+# plus the earlier housekeeping (CLAUDE.md ignored, quest reset). Runs the
+# full test suite first (401: NEO's 365 and our 36) and lint on our files.
 quest-steps:
-	git add Makefile
-	git commit -m "Kibitz: quest no longer gates on lint (NEO 2.0.0 fails it upstream)"
-	git push origin main upstream-kibitz
+	set -o pipefail; npm test 2>&1 | tail -9
+	npx oxlint craft scripts/craft-*.test.js
+	git add Makefile .gitignore craft scripts/craft-*.test.js
+	git commit -m "Kibitz: craft/, the rules engine (sentences, shapes, words to cut, echoes, landings, voice)"
+	git push
 	git status --short
-	git log --oneline --graph -7
-	@echo; echo "Left as NEO on purpose:"; git grep -n -w NEO -- . ':!dictionaries' ':!licenses' ':!LICENSE' ':!README.md' ':!Makefile' ':!tools' | grep -v 'NEO Pocket' | cut -c1-140 || true
+	git log --oneline -3
 
 install:
 	npm install
