@@ -49,15 +49,19 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit the evaluation's baseline (tools/zoom-eval.js now
-# always shows what "always answer the median" scores, and which pairings
-# beat it). No models run this time.
+# Current quest: commit rubric v2 in craft/zoom.js (with the "anchored"
+# way of asking) and the harness's reference set, then run the models
+# against Claude's rubric labels (dev split) and against Konrad's labels.
+# Takes roughly 10-15 minutes; Ollaya starts itself.
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint tools/zoom-eval.js scripts/zoom-eval.test.js
-	git add Makefile tools/zoom-eval.js scripts/zoom-eval.test.js
-	git commit -m "Kibitz: the zoom evaluation always reports a do-nothing baseline to beat"
+	npx oxlint craft/zoom.js tools/zoom-eval.js scripts/craft-zoom.test.js scripts/zoom-eval.test.js
+	git add Makefile craft/zoom.js tools/zoom-eval.js scripts/craft-zoom.test.js scripts/zoom-eval.test.js
+	git commit -m "Kibitz: zoom rubric v2 (Hayot read for fiction), anchored question, reference-set evaluation"
 	git push
+	node tools/zoom-eval.js --set reference --split dev || true
+	node tools/zoom-eval.js --set konrad || true
+	@cat private/eval/zoom/report-reference-dev.md; echo; cat private/eval/zoom/report.md
 
 install:
 	npm install

@@ -68,3 +68,16 @@ test('closeness per model and way of asking, best first, with a report', async (
   assert.match(report, /Closest: \*\*close\*\*/);
   assert.ok(JSON.parse(fs.readFileSync(path.join(dir, 'report.json'), 'utf8')).levels['flat / paragraph']);
 });
+
+test('the reference set: Claude\'s rubric labels, one split at a time', async () => {
+  const dir = workspace('## p01: T\n[ ] a\n[ ] b\n[ ] c\n## p02: T\n[ ] d\n[ ] e\n');
+  fs.writeFileSync(path.join(dir, 'reference.json'), JSON.stringify([
+    { id: 'r001', split: 'dev', sentences: ['A.', 'B.', 'C.'] },
+    { id: 'r002', split: 'test', sentences: ['D.', 'E.', 'F.'] }
+  ]));
+  fs.writeFileSync(path.join(dir, 'mine.json'), JSON.stringify({ r001: [1, 3, 5], r002: [5, 5, 5] }));
+  const rows = await run({ dir, set: 'reference', split: 'dev', decider: fakeDecider({ close: [1, 3, 5] }), models: ['close'], variants: ['paragraph'], log: () => {} });
+  assert.equal(rows[0].raw.distance, 0, 'only the dev paragraph, matched exactly');
+  assert.ok(fs.existsSync(path.join(dir, 'report-reference-dev.md')));
+  assert.match(fs.readFileSync(path.join(dir, 'report-reference-dev.md'), 'utf8'), /Claude’s rubric labels \(reference-dev\)/);
+});

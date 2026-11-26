@@ -10,6 +10,12 @@
 // scale to his, and speed. Not right and wrong: how close together.
 //
 //   node tools/zoom-eval.js [--dir private/eval/zoom] [--models a,b] [--variants a,b]
+//                           [--set konrad|reference] [--split dev|test|train|all]
+//
+// --set konrad (the default) measures against Konrad's labels.md on
+// paragraphs.json; --set reference against Claude's rubric labels
+// (mine.json) on reference.json, one split of it (dev by default: test is
+// kept for the last word).
 //
 // Refuses to run before there are labels, so nobody sees a model's
 // answers first. Writes report.md and report.json beside the labels.
@@ -37,9 +43,22 @@ const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : nul
 const pct = (x) => (x === null ? '–' : Math.round(x * 100) + '%');
 const num = (x, d = 2) => (x === null ? '–' : x.toFixed(d));
 
-async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variants = Z.VARIANTS, decider = createDecider(), log = console.log } = {}) {
-  const paragraphs = JSON.parse(fs.readFileSync(path.join(dir, 'paragraphs.json'), 'utf8'));
-  const labels = parseLabels(fs.readFileSync(path.join(dir, 'labels.md'), 'utf8'));
+function loadSet(dir, set, split) {
+  if (set === 'reference') {
+    const all = JSON.parse(fs.readFileSync(path.join(dir, 'reference.json'), 'utf8'));
+    const mine = JSON.parse(fs.readFileSync(path.join(dir, 'mine.json'), 'utf8'));
+    const paragraphs = all.filter((p) => split === 'all' || p.split === split);
+    return { paragraphs, labels: new Map(paragraphs.map((p) => [p.id, mine[p.id] || []])), who: 'Claude’s rubric labels', tag: `reference-${split}` };
+  }
+  return {
+    paragraphs: JSON.parse(fs.readFileSync(path.join(dir, 'paragraphs.json'), 'utf8')),
+    labels: parseLabels(fs.readFileSync(path.join(dir, 'labels.md'), 'utf8')),
+    who: 'Konrad’s feel', tag: 'konrad'
+  };
+}
+
+async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variants = Z.VARIANTS, set = 'konrad', split = 'dev', decider = createDecider(), log = console.log } = {}) {
+  const { paragraphs, labels, who, tag } = loadSet(dir, set, split);
   const human = paragraphs.map((p) => {
     const ls = labels.get(p.id) || [];
     if (ls.length !== p.sentences.length) throw new Error(`${p.id}: ${ls.length} labels for ${p.sentences.length} sentences; was a line added or removed in labels.md?`);
@@ -97,7 +116,7 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
   baseline.stretched = baseline.raw;
   const beats = (r) => r.stretched.distance < baseline.raw.distance && flagsOf(r.stretched) >= flagsOf(baseline.raw);
   log(`baseline / always ${median}: distance ${num(baseline.raw.distance)}, within one ${pct(baseline.raw.withinOne)}, flags ${pct(flagsOf(baseline.raw))}`);
-  const md = ['# Zoom levels: models against Konrad’s feel', '',
+  const md = [`# Zoom levels: models against ${who} (${tag})`, '',
     `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC · ${paragraphs.length} paragraphs · ${labelled} labelled sentences`, '',
     'Distance: average gap in levels (lower is closer). Within one: share of sentences no more than a level apart. Rank: Spearman correlation of the two orderings. Flags: how often the two agree on each paragraph\'s flags (ends on the close-up / never comes down / climbs back only to where it opened). Stretched: the model\'s scale fitted to the labels with a straight line (fitted on these same labels, so a little flattering).', '',
     '| Model | Asked | Distance | Within one | Rank | Flags | Stretched distance | Stretched within one | Stretched flags | Confidence | s / sentence | Dropped | Load s |',
@@ -114,8 +133,9 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
       : `**No model beats the baseline** (always answering ${median}) on both distance and flags, even after stretching.`);
     md.push('', `Closest: **${best.model}**, asked by **${best.variant}**: flags agree ${pct(flagsOf(best.stretched))} of the time after stretching (ends on the close-up ${pct(best.stretched.flagAgree.endsClose)}, never comes down ${pct(best.stretched.flagAgree.neverDown)}, only back ${pct(best.stretched.flagAgree.onlyBack)}); stretch ${num(best.fit.a)} + ${num(best.fit.b)} × level.`);
   }
-  fs.writeFileSync(path.join(dir, 'report.md'), md.join('\n') + '\n');
-  fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify({ rows, baseline, human, levels: raw }, null, 2) + '\n');
+  const name = tag === 'konrad' ? 'report' : `report-${tag}`;
+  fs.writeFileSync(path.join(dir, name + '.md'), md.join('\n') + '\n');
+  fs.writeFileSync(path.join(dir, name + '.json'), JSON.stringify({ rows, baseline, human, levels: raw }, null, 2) + '\n');
   return Object.assign(rows, { baseline, beats: rows.filter(beats).map((r) => `${r.model}/${r.variant}`) });
 }
 
@@ -127,10 +147,12 @@ if (require.main === module) {
   run({
     dir: arg('dir', 'private/eval/zoom'),
     models: arg('models', DEFAULT_MODELS.join(',')).split(','),
-    variants: arg('variants', Z.VARIANTS.join(',')).split(',')
+    variants: arg('variants', Z.VARIANTS.join(',')).split(','),
+    set: arg('set', 'konrad'),
+    split: arg('split', 'dev')
   }).then((rows) => {
     if (!rows.length) { console.error('No model answered.'); process.exit(1); }
-    console.log('\nReport: ' + path.join(arg('dir', 'private/eval/zoom'), 'report.md'));
+    console.log('\nReport written beside the labels, in ' + arg('dir', 'private/eval/zoom'));
   }).catch((err) => { console.error(err.message); process.exit(1); });
 }
 

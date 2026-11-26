@@ -9,8 +9,11 @@ const Z = require('../craft/zoom.js');
 
 const S = ['The kettle clicked off.', 'Every morning she made two cups.', 'Grief is a habit.'];
 
-test('three ways of asking', () => {
-  assert.deepEqual(Z.VARIANTS, ['paragraph', 'sentence', 'choice']);
+test('four ways of asking', () => {
+  assert.deepEqual(Z.VARIANTS, ['paragraph', 'sentence', 'anchored', 'choice']);
+  const [a] = Z.questions(S, 'anchored');
+  assert.match(a.questions.s0.criteria[0], /^Level 1, the particular: .*Example: "He pulled up the blind/);
+  assert.equal(Z.EXAMPLES.length, 5);
   const [p] = Z.questions(S, 'paragraph');
   assert.equal(p.state, S.join(' '));
   assert.deepEqual(Object.keys(p.questions), ['s0', 's1', 's2']);

@@ -18,13 +18,26 @@
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else (root.KibitzCraft = root.KibitzCraft || {}).zoom = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, () => {
+  // The rubric (private/eval/zoom/rubric.md, v2): Hayot's five levels by
+  // distance from the evidence, read for fiction, where the evidence is the
+  // story world's particulars.
   const LEVELS = [
-    'Level 1: one concrete, physical particular (an object, a gesture, a sound)',
-    'Level 2: a concrete moment or action, several details together',
-    'Level 3: a pattern or situation: what usually happens, habits, routines',
-    'Level 4: an idea or claim about people, places or systems',
-    'Level 5: the big idea, stated in general, abstract terms'
+    'Level 1, the particular: one concrete thing the reader could see, hear or touch: an object, a single gesture, a sound, a line of speech',
+    'Level 2, the scene: a concrete moment or event as it happens, or several observable details together',
+    'Level 3, the interpretation: what the particulars mean in the story: feelings, motives, judgements, character traits, habits, summary over time',
+    'Level 4, the context: the world around the scene: a place in general, a society and its customs, a kind of person, history',
+    'Level 5, the big idea: a general truth about life or human nature, true beyond this story'
   ];
+  // One public-domain example per level, from the reference set's training
+  // split (never from the paragraphs a model is measured on).
+  const EXAMPLES = [
+    'He pulled up the blind and rang the bell loudly.',
+    'It was the dusk of a winter’s day.',
+    'In understanding Darcy was the superior.',
+    'They all knew each other, and felt like one large family, among whom existed the most amicable relations.',
+    'I have often thought that few people know what secrecy there is in the young under terror.'
+  ];
+  const ANCHORED = LEVELS.map((d, i) => `${d}. Example: "${EXAMPLES[i]}"`);
   const CLOSE = 1.5;        // at or under: the close-up
   const CONCRETE = 2.5;     // never at or under this: never came down
   const DIP = 0.5;          // how far under the opening counts as pushing in
@@ -37,6 +50,7 @@
   //   paragraph  the paragraph as state, a score question per sentence
   //   sentence   one request per sentence, the sentence alone as state
   //   choice     the paragraph as state, a five-way choice per sentence
+  //   anchored   as paragraph, each level with an example sentence
   const VARIANTS = {
     paragraph: (sentences) => [{
       state: sentences.join(' '),
@@ -46,6 +60,10 @@
       state: s,
       questions: { ['s' + i]: { type: 'score', instructions: 'How far does this sentence zoom out, from concrete detail to big idea?', criteria: LEVELS } }
     })),
+    anchored: (sentences) => [{
+      state: sentences.join(' '),
+      questions: Object.fromEntries(sentences.map((s, i) => ['s' + i, { type: 'score', instructions: INSTRUCTION(s), criteria: ANCHORED }]))
+    }],
     choice: (sentences) => [{
       state: sentences.join(' '),
       questions: Object.fromEntries(sentences.map((s, i) => ['s' + i, {
@@ -157,5 +175,5 @@
     return dh && dm ? num / Math.sqrt(dh * dm) : null;
   }
 
-  return { LEVELS, VARIANTS: Object.keys(VARIANTS), questions, levels, flags, stretchFit, stretch, compare };
+  return { LEVELS, EXAMPLES, VARIANTS: Object.keys(VARIANTS), questions, levels, flags, stretchFit, stretch, compare };
 });
