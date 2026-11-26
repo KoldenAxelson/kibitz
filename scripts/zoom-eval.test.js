@@ -81,3 +81,11 @@ test('the reference set: Claude\'s rubric labels, one split at a time', async ()
   assert.ok(fs.existsSync(path.join(dir, 'report-reference-dev.md')));
   assert.match(fs.readFileSync(path.join(dir, 'report-reference-dev.md'), 'utf8'), /Claude’s rubric labels \(reference-dev\)/);
 });
+
+test('a stretch fixed in advance is used as given', async () => {
+  const dir = workspace('## p01: T\n[1] a\n[3] b\n[5] c\n## p02: T\n[1] d\n[2] e\n');
+  const rows = await run({ dir, stretch: { a: 0, b: 1 }, decider: fakeDecider({ flat: [3, 3, 3] }), models: ['flat'], variants: ['paragraph'], log: () => {} });
+  assert.deepEqual(rows[0].fit, { a: 0, b: 1 });
+  assert.equal(rows[0].stretched.distance, rows[0].raw.distance, 'no fitting on the labels');
+  assert.match(fs.readFileSync(path.join(dir, 'report.md'), 'utf8'), /Stretch fixed in advance: 0\.00 \+ 1\.00/);
+});

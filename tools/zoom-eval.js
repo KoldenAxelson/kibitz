@@ -11,11 +11,14 @@
 //
 //   node tools/zoom-eval.js [--dir private/eval/zoom] [--models a,b] [--variants a,b]
 //                           [--set konrad|reference] [--split dev|test|train|all]
+//                           [--stretch a,b]
 //
 // --set konrad (the default) measures against Konrad's labels.md on
 // paragraphs.json; --set reference against Claude's rubric labels
 // (mine.json) on reference.json, one split of it (dev by default: test is
-// kept for the last word).
+// kept for the last word). --stretch a,b uses a fixed stretch (fitted on
+// another split) instead of fitting on the labels being measured: the
+// honest way to read the test split.
 //
 // Refuses to run before there are labels, so nobody sees a model's
 // answers first. Writes report.md and report.json beside the labels.
@@ -57,7 +60,7 @@ function loadSet(dir, set, split) {
   };
 }
 
-async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variants = Z.VARIANTS, set = 'konrad', split = 'dev', decider = createDecider(), log = console.log } = {}) {
+async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variants = Z.VARIANTS, set = 'konrad', split = 'dev', stretch = null, decider = createDecider(), log = console.log } = {}) {
   const { paragraphs, labels, who, tag } = loadSet(dir, set, split);
   const human = paragraphs.map((p) => {
     const ls = labels.get(p.id) || [];
@@ -94,7 +97,7 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
       }
       const secs = (Date.now() - t1) / 1000;
       const sentences = paragraphs.reduce((n, p) => n + p.sentences.length, 0);
-      const fit = Z.stretchFit(levels.flat(), human.flat());
+      const fit = stretch || Z.stretchFit(levels.flat(), human.flat());
       const stretched = levels.map((ls) => ls.map((x) => (Number.isFinite(x) ? Z.stretch(x, fit) : null)));
       const c = Z.compare(human, levels);
       const s = Z.compare(human, stretched);
@@ -105,7 +108,9 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
     }
   }
   const flagsOf = (c) => avg(Object.values(c.flagAgree).filter((x) => x !== null));
-  rows.sort((a, b) => (flagsOf(b.stretched) - flagsOf(a.stretched)) || (a.stretched.distance - b.stretched.distance));
+  // closest first: flags are judged on few paragraphs and swing on a single
+  // call, so distance leads and flags break ties
+  rows.sort((a, b) => (a.stretched.distance - b.stretched.distance) || (flagsOf(b.stretched) - flagsOf(a.stretched)));
   // The bar to clear: a "model" that reads nothing and always answers the
   // median of the labels. (It also never raises a flag, unless the median
   // is at an extreme.) A real model is only worth having if it beats this.
@@ -118,7 +123,7 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
   log(`baseline / always ${median}: distance ${num(baseline.raw.distance)}, within one ${pct(baseline.raw.withinOne)}, flags ${pct(flagsOf(baseline.raw))}`);
   const md = [`# Zoom levels: models against ${who} (${tag})`, '',
     `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC · ${paragraphs.length} paragraphs · ${labelled} labelled sentences`, '',
-    'Distance: average gap in levels (lower is closer). Within one: share of sentences no more than a level apart. Rank: Spearman correlation of the two orderings. Flags: how often the two agree on each paragraph\'s flags (ends on the close-up / never comes down / climbs back only to where it opened). Stretched: the model\'s scale fitted to the labels with a straight line (fitted on these same labels, so a little flattering).', '',
+    (stretch ? `Stretch fixed in advance: ${num(stretch.a)} + ${num(stretch.b)} × level (not fitted on these labels).\n\n` : '') + 'Distance: average gap in levels (lower is closer). Within one: share of sentences no more than a level apart. Rank: Spearman correlation of the two orderings. Flags: how often the two agree on each paragraph\'s flags (ends on the close-up / never comes down / climbs back only to where it opened). Stretched: the model\'s scale fitted to the labels with a straight line (fitted on these same labels, so a little flattering).', '',
     '| Model | Asked | Distance | Within one | Rank | Flags | Stretched distance | Stretched within one | Stretched flags | Confidence | s / sentence | Dropped | Load s |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|---|'];
   md.push(`| *baseline* | *always ${median}* | ${num(baseline.raw.distance)} | ${pct(baseline.raw.withinOne)} | – | ${pct(flagsOf(baseline.raw))} | | | | | | | |`);
@@ -149,7 +154,8 @@ if (require.main === module) {
     models: arg('models', DEFAULT_MODELS.join(',')).split(','),
     variants: arg('variants', Z.VARIANTS.join(',')).split(','),
     set: arg('set', 'konrad'),
-    split: arg('split', 'dev')
+    split: arg('split', 'dev'),
+    stretch: arg('stretch') ? (([a, b]) => ({ a: Number(a), b: Number(b) }))(arg('stretch').split(',')) : null
   }).then((rows) => {
     if (!rows.length) { console.error('No model answered.'); process.exit(1); }
     console.log('\nReport written beside the labels, in ' + arg('dir', 'private/eval/zoom'));

@@ -49,19 +49,19 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit rubric v2 in craft/zoom.js (with the "anchored"
-# way of asking) and the harness's reference set, then run the models
-# against Claude's rubric labels (dev split) and against Konrad's labels.
-# Takes roughly 10-15 minutes; Ollaya starts itself.
+# Current quest: the final test for the Zoom pass's model, chosen in
+# advance: winnow:e4b asked per paragraph. Its stretch is fitted on the
+# train split, then it runs once on the untouched test split with that
+# stretch fixed. About 5 minutes.
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint craft/zoom.js tools/zoom-eval.js scripts/craft-zoom.test.js scripts/zoom-eval.test.js
-	git add Makefile craft/zoom.js tools/zoom-eval.js scripts/craft-zoom.test.js scripts/zoom-eval.test.js
-	git commit -m "Kibitz: zoom rubric v2 (Hayot read for fiction), anchored question, reference-set evaluation"
+	npx oxlint tools/zoom-eval.js scripts/zoom-eval.test.js
+	git add Makefile tools/zoom-eval.js scripts/zoom-eval.test.js
+	git commit -m "Kibitz: zoom evaluation sorts by closeness and takes a stretch fixed in advance"
 	git push
-	node tools/zoom-eval.js --set reference --split dev || true
-	node tools/zoom-eval.js --set konrad || true
-	@cat private/eval/zoom/report-reference-dev.md; echo; cat private/eval/zoom/report.md
+	node tools/zoom-eval.js --set reference --split train --models winnow:e4b --variants paragraph
+	node tools/zoom-eval.js --set reference --split test --models winnow:e4b --variants paragraph --stretch $$(node -p "const f=require('./private/eval/zoom/report-reference-train.json').rows[0].fit; f.a+','+f.b")
+	@cat private/eval/zoom/report-reference-test.md
 
 install:
 	npm install
