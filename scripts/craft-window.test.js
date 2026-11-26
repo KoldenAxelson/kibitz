@@ -9,7 +9,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const ORDER = ['text', 'shapes', 'cut', 'echoes', 'landings', 'voice', 'suggest'];
+const ORDER = ['text', 'shapes', 'cut', 'echoes', 'landings', 'voice', 'suggest', 'lexicon', 'passes'];
 
 test('every module loads as a script and works from window.KibitzCraft', () => {
   const window = {};
@@ -25,6 +25,7 @@ test('every module loads as a script and works from window.KibitzCraft', () => {
   assert.ok(K.shapes.shapesOf('Then my assignments.').has('short'));
   assert.equal(K.cut.find('Really.').counts.inflation, 1);
   assert.equal(K.voice.lines('"Go," Owen said.')[0].speaker, 'Owen');
+  assert.equal(K.passes.run('cut', 'Really.').findings.length, 1);
   assert.equal(K.suggest.suggest(K.text.sentences('He stopped. He looked. He sat.')).rule, 'threeShort');
 });
 

@@ -49,15 +49,15 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit Phase 2, the sentence shape suggester. Runs the
-# unit tests, lint on our files, and the suggester's end-to-end test on the
-# Mac (a Kibitz window opens and types for about 25 seconds; leave it be).
+# Current quest: commit Phase 3, the revision passes. Runs the unit tests,
+# lint on our files, and the passes and Pocket end-to-end tests on the Mac
+# (Kibitz windows open and work by themselves for about 30 seconds).
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint app/suggester.js craft scripts/craft-*.test.js scripts/suggester.e2e.js
-	npm run test:e2e -- suggester
-	git add Makefile app/suggester.js app/core.js kibitz.css index.html pocket/www/index.html scripts/app-files.js craft scripts/craft-*.test.js scripts/suggester.e2e.js
-	git commit -m "Kibitz: the sentence shape suggester (craft/suggest.js, app/suggester.js), off until switched on in Options"
+	npx oxlint app/suggester.js app/passes.js craft scripts/craft-*.test.js scripts/suggester.e2e.js scripts/passes.e2e.js
+	npm run test:e2e -- passes pocket
+	git add Makefile main.js app/passes.js app/core.js kibitz.css index.html pocket/www/index.html scripts/app-files.js craft scripts/craft-*.test.js scripts/passes.e2e.js
+	git commit -m "Kibitz: revision passes (craft/passes.js, app/passes.js): Edit > Revision Pass, off until switched on in Options"
 	git push
 	git status --short
 	git log --oneline -3

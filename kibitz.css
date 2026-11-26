@@ -15,3 +15,55 @@
 body.focus-mode .kibitz-suggest { opacity: 0.6; }
 @keyframes kibitz-suggest-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .kibitz-suggest { animation: none; } }
+
+/* REVISION PASSES (app/passes.js): marks in the text, a list beside the
+   page. The page moves aside for the panel, as it does for a pinned pane. */
+::highlight(kibitz-pass) {
+  text-decoration: underline dotted var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: none;
+}
+::highlight(kibitz-pass-current) {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  text-decoration: underline solid var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+body.kibitz-pass-open #paper-scroll { left: calc(50% - 150px * var(--ui-zoom, 1)); }
+.kibitz-pass {
+  position: fixed; right: 0; top: 0; bottom: calc(40px * var(--ui-zoom, 1)); z-index: 71;
+  width: calc(300px * var(--ui-zoom, 1)); box-sizing: border-box;
+  display: flex; flex-direction: column;
+  background: var(--pane); border-left: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  color: var(--muted);
+  font: calc(12px * var(--ui-zoom, 1))/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+}
+.kibitz-pass header { display: flex; align-items: center; gap: 8px; padding: 14px 14px 6px; }
+.kibitz-pass .kp-which {
+  flex: 1; min-width: 0; font: inherit; font-size: 1.15em; font-weight: 600; color: var(--accent);
+  background: transparent; border: none; padding: 2px 0; cursor: pointer;
+}
+.kibitz-pass .kp-which:focus-visible { outline: 1px solid var(--accent); }
+.kibitz-pass .kp-which option { color: initial; }
+.kibitz-pass .kp-close {
+  background: none; border: none; color: var(--muted); font-size: 1.6em; line-height: 1; cursor: pointer; padding: 0 2px;
+}
+.kibitz-pass .kp-close:hover, .kibitz-pass .kp-close:focus-visible { color: var(--accent); outline: none; }
+.kibitz-pass .kp-about { margin: 0 14px 8px; font-style: italic; opacity: 0.85; }
+.kibitz-pass .kp-summary { margin: 0 14px 10px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); }
+.kibitz-pass .kp-summary p { margin: 0 0 4px; }
+.kibitz-pass .kp-list { list-style: none; margin: 0; padding: 0 8px 16px; overflow-y: auto; flex: 1; }
+.kibitz-pass .kp-item {
+  display: block; width: 100%; text-align: left; box-sizing: border-box;
+  background: none; border: none; border-radius: 6px; padding: 7px 8px; margin: 0;
+  font: inherit; color: inherit;
+}
+.kibitz-pass button.kp-item { cursor: pointer; }
+.kibitz-pass button.kp-item:hover, .kibitz-pass button.kp-item:focus-visible { background: color-mix(in srgb, var(--accent) 10%, transparent); outline: none; }
+.kibitz-pass .kp-item.current { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.kibitz-pass .kp-label { display: block; color: var(--accent); font-weight: 600; }
+.kibitz-pass .kp-quote { display: block; font-family: var(--body-font); font-size: 1.08em; margin: 2px 0; opacity: 0.95; }
+.kibitz-pass .kp-quote mark { background: none; color: inherit; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
+.kibitz-pass .kp-note { display: block; opacity: 0.8; }
+.kibitz-pass .kp-empty { margin: 4px 14px; font-style: italic; }

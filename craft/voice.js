@@ -17,7 +17,9 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, (T, C) => {
   const SPEECH_VERBS = ('said says say asked asks ask replied replies answered answers whispered whispers shouted shouts ' +
     'yelled yells muttered mutters murmured murmurs called calls cried cries snapped snaps told tells added adds ' +
-    'continued continues began begins went goes repeated repeats admitted admits insisted insists').split(' ');
+    'continued continues began begins went goes repeated repeats admitted admits insisted insists ' +
+    'exclaimed retorted hissed growled snarled sighed laughed breathed demanded pleaded offered agreed warned explained ' +
+    'suggested protested announced declared remarked responded').split(' ');
   const PRONOUN = '(?:he|she|they|I|we|you|it)';
   const NAME = '(?:\\p{Lu}[\\p{L}’\'-]*(?:\\s\\p{Lu}[\\p{L}’\'-]*)?)';
   const VERB = `(?:${SPEECH_VERBS.join('|')})`;

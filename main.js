@@ -3041,6 +3041,16 @@ function buildMenu() {
           // key and one press did both (#282).
           registerAccelerator: false,
           click: () => sendToWindow({ type: 'spellcheck' })
+        },
+        {
+          // Kibitz: the revision passes (app/passes.js), one item each from craft/passes.js
+          label: t('Revision Pass'),
+          feature: 'passes',
+          submenu: [
+            ...require('./craft/passes.js').PASSES.map((p) => ({ label: t(p.label), click: () => sendToWindow({ type: 'revisionPass', pass: p.key }) })),
+            { type: 'separator' },
+            { label: t('End Pass'), click: () => sendToWindow({ type: 'revisionPass', pass: null }) }
+          ]
         }
       ]
     },
