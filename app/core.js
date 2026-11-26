@@ -305,7 +305,8 @@ const FEATURES = [
   { key: 'focus', label: tk('Focus mode'), desc: tk('Dim everything but the sentence or paragraph you’re writing.'), pocket: false },
   { key: 'readAloud', label: tk('Read aloud and Look Up'), desc: tk('Hear your words in your computer’s voice; look up a selected word.'), pocket: false },
   { key: 'vim', label: tk('Vim keys'), desc: tk('Move around the page with h j k l and friends, the vim way.'), pocket: true },
-  { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.'), pocket: true, pocketDesc: tk('Plain text, Markdown and web page, beside Word and EPUB.') }
+  { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.'), pocket: true, pocketDesc: tk('Plain text, Markdown and web page, beside Word and EPUB.') },
+  { key: 'suggester', label: tk('Sentence shape suggester'), desc: tk('After a pause at the end of a sentence, a gray line suggests a shape for the next one. It’s gone when you type.'), pocket: false }
 ];
 const featureOn = (key) => {
   if (!library || !library.features || !library.features[key]) return false;

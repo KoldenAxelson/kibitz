@@ -163,11 +163,11 @@
   }
 
   // Runs of SAME_LENGTH_RUN or more sentences of about one length: the
-  // longest within half the shortest (and within four words for short ones)
+  // longest within half the shortest (and within three words for short ones)
   // of the shortest. "Your last five sentences all ran 18 to 26 words."
   // Returns [{ from, to, min, max }], indices into the array, inclusive.
   function sameLengthRuns(lengths) {
-    const fits = (lo, hi) => hi - lo <= Math.max(4, Math.round(lo * 0.5));
+    const fits = (lo, hi) => hi - lo <= Math.max(3, Math.round(lo * 0.5));
     const runs = [];
     let from = 0;
     while (from < lengths.length) {

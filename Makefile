@@ -49,14 +49,15 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit Phase 1 (the craft/ rules engine and its tests),
-# plus the earlier housekeeping (CLAUDE.md ignored, quest reset). Runs the
-# full test suite first (401: NEO's 365 and our 36) and lint on our files.
+# Current quest: commit Phase 2, the sentence shape suggester. Runs the
+# unit tests, lint on our files, and the suggester's end-to-end test on the
+# Mac (a Kibitz window opens and types for about 25 seconds; leave it be).
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint craft scripts/craft-*.test.js
-	git add Makefile .gitignore craft scripts/craft-*.test.js
-	git commit -m "Kibitz: craft/, the rules engine (sentences, shapes, words to cut, echoes, landings, voice)"
+	npx oxlint app/suggester.js craft scripts/craft-*.test.js scripts/suggester.e2e.js
+	npm run test:e2e -- suggester
+	git add Makefile app/suggester.js app/core.js kibitz.css index.html pocket/www/index.html scripts/app-files.js craft scripts/craft-*.test.js scripts/suggester.e2e.js
+	git commit -m "Kibitz: the sentence shape suggester (craft/suggest.js, app/suggester.js), off until switched on in Options"
 	git push
 	git status --short
 	git log --oneline -3

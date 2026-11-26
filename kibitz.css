@@ -1,0 +1,17 @@
+/* Kibitz's own styles, kept out of NEO's styles.css so upstream merges
+   stay clean. Loaded after styles.css, so its variables are all here. */
+
+/* SENTENCE SHAPE SUGGESTER (app/suggester.js): a gray line under the caret
+   after a pause, set like the walking note, gone at the next key */
+.kibitz-suggest {
+  position: absolute; z-index: 2; box-sizing: border-box; padding: 2px 0 0 2em;
+  font-family: var(--body-font); font-style: italic; line-height: 1.5;
+  font-size: calc(var(--editor-size, 17px) * 0.82 * var(--page-zoom, 1));
+  color: color-mix(in srgb, var(--ink) 38%, var(--paper));
+  user-select: none; -webkit-user-select: none; pointer-events: none;
+  animation: kibitz-suggest-in 500ms ease-out;
+}
+.kibitz-suggest .ks-why { color: color-mix(in srgb, var(--ink) 28%, var(--paper)); }
+body.focus-mode .kibitz-suggest { opacity: 0.6; }
+@keyframes kibitz-suggest-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kibitz-suggest { animation: none; } }

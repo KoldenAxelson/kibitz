@@ -8,7 +8,7 @@ with the CSS Highlight API.
 Each file runs in two places:
 - **Node:** `require('./craft')` (or one file), for the tests.
 - **The window:** a plain `<script>` in this order: text, shapes, cut,
-  echoes, landings, voice. Each hangs off `window.KibitzCraft`.
+  echoes, landings, voice, suggest. Each hangs off `window.KibitzCraft`.
 
 | File | What it gives |
 |---|---|
@@ -17,6 +17,7 @@ Each file runs in two places:
 | `cut.js` | `find`: the words-to-cut table (weasel, puff, filter, time, empty, inflation, hedge, doubled), preposition chains and tiny-word runs, with counts per thousand words; hedges in speech let off by default |
 | `echoes.js` | `find`: words that come back within 40 words |
 | `landings.js` | `find`: each sentence's opening and landing word, same openings in a row, weak landings |
+| `suggest.js` | The suggester's rhythm layer: `suggest` (eight rules, first match wins, one shape and one reason), `atSentenceEnd`, `shouldShow` (cooldown) |
 | `voice.js` | `lines` (quoted lines with a guessed speaker: tag, beat or paragraph), `profile`, `bySpeaker`, `compare` |
 
 Conventions:
