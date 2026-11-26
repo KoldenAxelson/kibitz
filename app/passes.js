@@ -10,10 +10,18 @@
 // revise. It never changes a word. Choosing the same pass again, End Pass,
 // the panel's × or Esc in the panel ends it.
 //
-// The passes themselves are craft/passes.js (pure, tested in Node). A
-// feature (FEATURES in core), off until switched on. Desktop only.
+// The passes themselves are craft/passes.js (pure, tested in Node). Zoom is
+// the one that asks the local model (craft/zoom.js says what; decide.js in
+// the main process asks): it reads a paragraph at a time, keeps each
+// paragraph's levels so an edit only asks again about what changed, and
+// says plainly in the panel when the model is waking or can't be reached.
+// A feature (FEATURES in core), off until switched on. Desktop only.
 
 const PASS_RESCAN_MS = 700;
+const ZOOM_RESCAN_MS = 2000;  // the model is slower: wait for a real pause
+const zoomCache = new Map();  // paragraph text → its levels, stretched
+let zoomRun = 0;              // bumped to abandon a reading in progress
+let zoomAsking = null;        // the id of the question out with the model
 let passKey = null;      // the pass running, or null
 let passChId = null;     // the chapter it read
 let passFound = null;    // { findings, summary } from craft/passes.js
@@ -69,6 +77,8 @@ function passBody() {
   return body && !body.hidden && !body.closest('.bookpage') ? body : null;
 }
 
+const passNeedsModel = (key) => !!(KibitzCraft.passes.PASSES.find((p) => p.key === key) || {}).model;
+
 function runPass(key) {
   if (!passesReady()) return;
   if (!passBody()) { toast(t('Open a chapter of prose to run a pass on it.')); return; }
@@ -76,7 +86,14 @@ function runPass(key) {
   passRefresh();
 }
 
+function stopZoom() {
+  zoomRun++;
+  if (zoomAsking && window.kibitz.decideCancel) window.kibitz.decideCancel(zoomAsking);
+  zoomAsking = null;
+}
+
 function endPass() {
+  stopZoom();
   passKey = null;
   passFound = null;
   passMarks = [];
@@ -93,16 +110,92 @@ function endPass() {
 function passRefresh() {
   passTimer = 0;
   if (!passKey) return;
+  if (passNeedsModel(passKey)) { passZoom(); return; }
   const body = passBody();
   if (!body) { endPass(); return; }
   const { text, lines } = passText(body);
   passChId = body.closest('.chapter').dataset.id;
+  passShow(KibitzCraft.passes.run(passKey, text), text, lines);
+}
+
+function passShow(found, text, lines) {
   passLines = lines;
-  passFound = KibitzCraft.passes.run(passKey, text);
-  passSpans = passFound.findings.map((f) => (f.start === null ? null : passRange(lines, f.start, f.end)));
-  passMarks = passFound.findings.map((f) => (f.start === null ? [] : (f.marks || [f]).map((m) => passRange(lines, m.start, m.end)).filter(Boolean)));
+  passFound = found;
+  passSpans = found.findings.map((f) => (f.start === null ? null : passRange(lines, f.start, f.end)));
+  passMarks = found.findings.map((f) => (f.start === null ? [] : (f.marks || [f]).map((m) => passRange(lines, m.start, m.end)).filter(Boolean)));
   paintPass(-1);
   renderPassPanel(text);
+}
+
+// Zoom: each paragraph of three sentences or more goes to the model in
+// turn; the list fills in as answers come back.
+async function passZoom() {
+  stopZoom();
+  const body = passBody();
+  if (!body) { endPass(); return; }
+  const run = zoomRun;
+  const Zm = KibitzCraft.zoom;
+  const { text, lines } = passText(body);
+  passChId = body.closest('.chapter').dataset.id;
+  const paras = Zm.paragraphsToRead(text);
+  const levels = paras.map((p) => zoomCache.get(p.text) || null);
+  const todo = paras.map((_, i) => i).filter((i) => !levels[i]);
+  const live = () => run === zoomRun && passKey === 'zoom';
+  const show = (status) => {
+    if (!live()) return;
+    const r = Zm.findings(paras, levels);
+    passShow({ findings: r.findings, summary: status ? [status, ...r.summary] : r.summary }, text, lines);
+  };
+  show(todo.length ? (zoomCache.size ? t('Reading {n} paragraphs…', { n: todo.length }) : t('Waking the local model: the first time takes about half a minute.')) : '');
+  for (let k = 0; k < todo.length; k++) {
+    if (!live()) return;
+    const i = todo[k];
+    const [req] = Zm.questions(paras[i].sentences.map((x) => x.text), Zm.CHOSEN.variant);
+    zoomAsking = `zoom-${run}-${i}`;
+    const res = await window.kibitz.decide({ id: zoomAsking, model: Zm.CHOSEN.model, state: req.state, questions: req.questions });
+    if (!live()) return;
+    zoomAsking = null;
+    if (res.error) {
+      if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error));
+      return;
+    }
+    levels[i] = Zm.levels(res.answers, paras[i].sentences.length).map((x) => (x ? Zm.stretch(x.level, Zm.CHOSEN.stretch) : null));
+    zoomCache.set(paras[i].text, levels[i]);
+    show(k + 1 < todo.length ? t('Reading paragraph {n} of {all}…', { n: k + 2, all: todo.length }) : '');
+  }
+}
+
+function zoomTrouble(err) {
+  if (err.code === 'NOT_RUNNING') return t('Zoom needs Ollaya, the local model, and it isn’t answering. {why}', { why: err.message });
+  if (err.code === 'MODEL_NOT_FOUND') return t('Zoom needs the {model} model. In a terminal: ollaya pull {model}', { model: KibitzCraft.zoom.CHOSEN.model });
+  if (err.code === 'TIMEOUT') return t('The local model took too long to answer. Try again in a moment.');
+  return t('The local model couldn’t answer: {why}', { why: err.message });
+}
+
+// A paragraph's climb, drawn small beside its finding: levels 1-5, low at
+// the bottom (the close-up) and high at the top (the big idea).
+function zoomCurve(curve) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  const w = Math.max(24, (curve.length - 1) * 14 + 4);
+  svg.setAttribute('viewBox', `0 0 ${w} 20`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', 20);
+  svg.setAttribute('class', 'kp-curve');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', t('Zoom levels: {levels}', { levels: curve.map((x) => (x === null ? '–' : x)).join(', ') }));
+  const pts = curve.map((x, i) => (x === null ? null : [2 + i * 14, 18 - (Math.min(5, Math.max(1, x)) - 1) * 4]));
+  const line = document.createElementNS(NS, 'polyline');
+  line.setAttribute('points', pts.filter(Boolean).map((p) => p.join(',')).join(' '));
+  svg.appendChild(line);
+  for (const p of pts.filter(Boolean)) {
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', p[0]);
+    dot.setAttribute('cy', p[1]);
+    dot.setAttribute('r', 1.8);
+    svg.appendChild(dot);
+  }
+  return svg;
 }
 
 function paintPass(current) {
@@ -178,7 +271,7 @@ function renderPassPanel(text) {
     const note = document.createElement('span');
     note.className = 'kp-note';
     note.textContent = f.note;
-    item.append(label, ...(f.start === null ? [] : [passQuote(text, f)]), note);
+    item.append(label, ...(f.curve ? [zoomCurve(f.curve)] : []), ...(f.start === null ? [] : [passQuote(text, f)]), note);
     if (f.start !== null) {
       item.type = 'button';
       item.addEventListener('click', () => showPassFinding(i, item));
@@ -220,7 +313,7 @@ function showPassFinding(i, item) {
 function queuePassRefresh() {
   if (!passKey) return;
   clearTimeout(passTimer);
-  passTimer = setTimeout(passRefresh, PASS_RESCAN_MS);
+  passTimer = setTimeout(passRefresh, passNeedsModel(passKey) ? ZOOM_RESCAN_MS : PASS_RESCAN_MS);
 }
 
 // Writing in the chapter reads it again; moving to another chapter reads

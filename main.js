@@ -393,6 +393,8 @@ ipcMain.handle('library:pocket', () => {
   return { offer, books: offer && hasBooks(cloud) };
 });
 ipcMain.handle('library:usePocket', async () => useCloudLibrary(BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]));
+// Kibitz: the local decision model (decide.js), asked by the Zoom pass
+require('./decide.js').register(ipcMain);
 
 async function chooseLibraryFolder() {
   const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];

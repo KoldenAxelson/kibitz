@@ -66,7 +66,7 @@ test('Edit → Revision Pass lists every pass and End Pass', async () => {
   const item = edit.submenu.items.find((m) => m.label === 'Revision Pass');
   assert.ok(item, 'the item is there with the feature on');
   assert.deepEqual(item.submenu.items.filter((m) => m.type !== 'separator').map((m) => m.label),
-    ['Words to Cut', 'Rhythm', 'Echoes', 'Point of View', 'Clutter', 'Dialogue', 'Description', 'Time and Cast', 'End Pass']);
+    ['Words to Cut', 'Rhythm', 'Echoes', 'Point of View', 'Clutter', 'Dialogue', 'Description', 'Time and Cast', 'Zoom', 'End Pass']);
 });
 
 test('a pass underlines and lists what the engine finds, and the page moves aside', async () => {

@@ -51,6 +51,9 @@ contextBridge.exposeInMainWorld('kibitz', {
   usePocketLibrary: () => ipcRenderer.invoke('library:usePocket'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   spellCheckWords: (words) => ipcRenderer.invoke('spell:check', words),
+  // Kibitz: the local decision model (decide.js)
+  decide: (req) => ipcRenderer.invoke('kibitz:decide', req),
+  decideCancel: (id) => ipcRenderer.invoke('kibitz:decide-cancel', id),
   spellSuggest: (word) => ipcRenderer.invoke('spell:suggest', word),
   spellLearn: (word) => ipcRenderer.invoke('spell:learn', word),
   setSpellLanguage: (code) => ipcRenderer.invoke('spell:setLanguage', code),

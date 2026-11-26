@@ -15,9 +15,17 @@
 // or wrong, how close together.
 
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else (root.KibitzCraft = root.KibitzCraft || {}).zoom = factory();
-})(typeof globalThis !== 'undefined' ? globalThis : this, () => {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./text.js'));
+  else (root.KibitzCraft = root.KibitzCraft || {}).zoom = factory(root.KibitzCraft.text);
+})(typeof globalThis !== 'undefined' ? globalThis : this, (T) => {
+  // What the Zoom pass asks, chosen by measurement (private/eval/zoom/,
+  // 2026-11-26): winnow:e4b asked per paragraph, its scale stretched by a
+  // line fitted on the reference set's training split. On the untouched
+  // test split: 0.42 levels from the rubric on average, 91% within one,
+  // rank 0.77, flags agreeing 89% (always-3: 0.65, 85%, 74%).
+  const CHOSEN = { model: 'winnow:e4b', variant: 'paragraph', stretch: { a: -0.68, b: 1.14 } };
+  const MIN_SENTENCES = 3;      // a shorter paragraph has no curve to judge
+  const MAX_SPOKEN = 0.5;       // paragraphs mostly in speech are left out
   // The rubric (private/eval/zoom/rubric.md, v2): Hayot's five levels by
   // distance from the evidence, read for fiction, where the evidence is the
   // story world's particulars.
@@ -175,5 +183,46 @@
     return dh && dm ? num / Math.sqrt(dh * dm) : null;
   }
 
-  return { LEVELS, EXAMPLES, VARIANTS: Object.keys(VARIANTS), questions, levels, flags, stretchFit, stretch, compare };
+  // The paragraphs of a chapter's text (one a line) that have a curve to
+  // read: three sentences or more, not mostly speech. Each with its
+  // sentences and offsets.
+  function paragraphsToRead(text) {
+    const quotes = T.quoteRanges(text);
+    return T.paragraphs(text).map((p) => ({ ...p, sentences: T.sentences(p.text).map((s) => ({ ...s, start: s.start + p.start, end: s.end + p.start })) }))
+      .filter((p) => p.sentences.length >= MIN_SENTENCES && T.quotedShare(text, p, quotes) <= MAX_SPOKEN);
+  }
+
+  const FLAG_TEXT = {
+    endsClose: ['Ends on the close-up', 'The paragraph stops on a detail and leaves the reader holding it. Pull back out: what does it add up to?'],
+    neverDown: ['Never comes down', 'Every sentence stays general. Ground it with one thing the reader can see.'],
+    onlyBack: ['Back where it started', 'It pushes in, then climbs back only to where it opened. End wider than you began.']
+  };
+
+  // The pass's findings from each paragraph's levels (already stretched;
+  // null where the model gave none): a finding per flag, underlining the
+  // sentence it's about (the last, or the first for neverDown), carrying the
+  // paragraph's curve for the panel to draw.
+  function findings(paragraphs, levelsByParagraph) {
+    const out = [];
+    let read = 0;
+    paragraphs.forEach((p, i) => {
+      const ls = levelsByParagraph[i];
+      if (!ls || ls.filter(Number.isFinite).length < MIN_SENTENCES) return;
+      read++;
+      const f = flags(ls);
+      const curve = ls.map((x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null));
+      for (const key of ['neverDown', 'endsClose', 'onlyBack']) {
+        if (!f[key]) continue;
+        const s = key === 'neverDown' ? p.sentences[0] : p.sentences[p.sentences.length - 1];
+        out.push({ start: p.start, end: p.end, label: FLAG_TEXT[key][0], note: FLAG_TEXT[key][1], marks: [{ start: s.start, end: s.end }], curve });
+      }
+    });
+    const summary = [
+      read ? `Read ${read} ${read === 1 ? 'paragraph' : 'paragraphs'} of three sentences or more.` : 'No paragraph of three sentences or more to read yet.',
+      'The uneven U: open a little wide, push in to the close-up, end wider than you began.'
+    ];
+    return { findings: out, summary };
+  }
+
+  return { CHOSEN, MIN_SENTENCES, LEVELS, EXAMPLES, paragraphsToRead, findings, VARIANTS: Object.keys(VARIANTS), questions, levels, flags, stretchFit, stretch, compare };
 });

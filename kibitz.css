@@ -66,6 +66,9 @@ body.kibitz-pass-open #paper-scroll { left: calc(50% - 150px * var(--ui-zoom, 1)
 .kibitz-pass .kp-quote { display: block; font-family: var(--body-font); font-size: 1.08em; margin: 2px 0; opacity: 0.95; }
 .kibitz-pass .kp-quote mark { background: none; color: inherit; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
 .kibitz-pass .kp-note { display: block; opacity: 0.8; }
+.kibitz-pass .kp-curve { display: block; margin: 4px 0 2px; overflow: visible; }
+.kibitz-pass .kp-curve polyline { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.kibitz-pass .kp-curve circle { fill: var(--accent); }
 .kibitz-pass .kp-empty { margin: 4px 14px; font-style: italic; }
 
 /* SCENE QUESTIONS AND BOOK SHAPE (app/scenes.js) */

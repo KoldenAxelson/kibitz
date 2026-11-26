@@ -9,7 +9,8 @@
 //
 // The manuscript never leaves the computer: only loopback addresses are
 // accepted. When nothing answers, Kibitz starts `ollaya serve` itself from
-// ~/.local/bin (where Konrad's install put it) and waits for it. Every
+// ~/.local/bin (where Konrad's install put it) and waits for it. (Tests set
+// KIBITZ_DECIDE_URL and KIBITZ_OLLAYA_BIN to a fake server and no binary.) Every
 // request has a timeout and can be cancelled; an answer that doesn't fit
 // its question is dropped, never guessed at. Errors carry a code:
 //   NOT_LOCAL, NOT_RUNNING, MODEL_NOT_FOUND, TIMEOUT, CANCELLED,
@@ -53,7 +54,7 @@ function fits(question, answer) {
 function createDecider({
   url = process.env.KIBITZ_DECIDE_URL || DEFAULT_URL,
   fetch = globalThis.fetch,
-  binary = path.join(os.homedir(), '.local', 'bin', 'ollaya'),
+  binary = process.env.KIBITZ_OLLAYA_BIN || path.join(os.homedir(), '.local', 'bin', 'ollaya'),
   exists = (p) => fs.existsSync(p),
   spawnServer = defaultSpawn,
   startWaitMs = START_WAIT_MS,

@@ -28,7 +28,10 @@
     { key: 'clutter', label: 'Clutter', about: 'Chains of prepositions, doubled body language, tiny words and trips between rooms.' },
     { key: 'dialogue', label: 'Dialogue', about: 'Beats, tags, adverbs on “said” and speakers who sound alike.' },
     { key: 'description', label: 'Description', about: 'A long silent opening, paragraphs that only see, and eye and hair colour.' },
-    { key: 'time', label: 'Time and Cast', about: 'Whether the chapter says when it is, and paragraphs that bring on too many names.' }
+    { key: 'time', label: 'Time and Cast', about: 'Whether the chapter says when it is, and paragraphs that bring on too many names.' },
+    // Zoom asks the local model (decide.js), so it isn't one of run()'s:
+    // app/passes.js runs it, with craft/zoom.js
+    { key: 'zoom', label: 'Zoom', about: 'Each paragraph’s climb from detail to idea, read by the local model: where it ends on the close-up, never comes down, or comes back only to where it started.', model: true }
   ];
 
   const RUN_MIN = 4;            // sentences in a row for a rhythm run

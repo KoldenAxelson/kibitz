@@ -22,13 +22,15 @@ const CHAPTER = [
 ].join('\n');
 
 test('the passes, in menu order, each with a label and a line about it', () => {
-  assert.deepEqual(P.PASSES.map((p) => p.key), ['cut', 'rhythm', 'echoes', 'pov', 'clutter', 'dialogue', 'description', 'time']);
+  assert.deepEqual(P.PASSES.map((p) => p.key), ['cut', 'rhythm', 'echoes', 'pov', 'clutter', 'dialogue', 'description', 'time', 'zoom']);
+  assert.deepEqual(P.PASSES.filter((p) => p.model).map((p) => p.key), ['zoom'], 'only Zoom needs the model');
   for (const p of P.PASSES) assert.ok(p.label && p.about);
   assert.throws(() => run('nope', 'x'), /No such pass/);
+  assert.throws(() => run('zoom', 'x'), /No such pass/, 'Zoom is run by the window, with the model');
 });
 
 test('every pass keeps its promises', () => {
-  for (const { key } of P.PASSES) {
+  for (const { key } of P.PASSES.filter((p) => !p.model)) {
     const a = run(key, CHAPTER);
     assert.deepEqual(run(key, CHAPTER), a, `${key} is the same twice`);
     assert.ok(a.summary.length && a.summary.every((l) => /^[A-Z0-9]/.test(l)), `${key} summary`);

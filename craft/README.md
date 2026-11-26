@@ -21,7 +21,7 @@ Each file runs in two places:
 | `lexicon.js` | Word lists for the passes: the five senses, time words, loud tags, motion verbs, own-face and eye/hair patterns, words that aren't names |
 | `passes.js` | The eight revision passes: `run(key, text)` → `{ findings: [{ start, end, label, note, marks? }], summary }`; `PASSES` (menu order, labels, about); `names` |
 | `scenes.js` | The questions a card asks (`FIELDS`, `CHAPTER_FIELDS`), `clean`, `summary`, `answered`; `bookShape(chapters)`: lengths, dialogue share, pace, runs that drag, narrator gaps |
-| `zoom.js` | Zoom levels 1-5 (the uneven U): `questions(sentences, variant)` for a decision model, `levels(answers)`, `flags(levels)` (endsClose, neverDown, onlyBack), `compare` with a person's labels, `stretchFit`/`stretch` |
+| `zoom.js` | Zoom levels 1-5 (the uneven U): `questions(sentences, variant)` for a decision model, `levels(answers)`, `flags(levels)` (endsClose, neverDown, onlyBack), `compare` with a person's labels, `stretchFit`/`stretch`; `CHOSEN` (the measured model, variant and stretch), `paragraphsToRead(text)`, `findings(paragraphs, levels)` for the Zoom pass |
 | `voice.js` | `lines` (quoted lines with a guessed speaker: tag, beat or paragraph), `profile`, `bySpeaker`, `compare` |
 
 Conventions:

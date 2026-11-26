@@ -55,13 +55,12 @@ quest:
 # stretch fixed. About 5 minutes.
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint tools/zoom-eval.js scripts/zoom-eval.test.js
-	git add Makefile tools/zoom-eval.js scripts/zoom-eval.test.js
-	git commit -m "Kibitz: zoom evaluation sorts by closeness and takes a stretch fixed in advance"
+	npx oxlint craft decide.js app/passes.js scripts/zoom.e2e.js scripts/craft-zoom.test.js scripts/craft-passes.test.js
+	npm run test:e2e -- zoom passes
+	git add Makefile craft decide.js main.js preload.js index.html kibitz.css app/passes.js scripts/zoom.e2e.js scripts/passes.e2e.js scripts/craft-zoom.test.js scripts/craft-passes.test.js
+	git commit -m "Kibitz: Zoom revision pass on the local model (winnow:e4b)" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
 	git push
-	node tools/zoom-eval.js --set reference --split train --models winnow:e4b --variants paragraph
-	node tools/zoom-eval.js --set reference --split test --models winnow:e4b --variants paragraph --stretch $$(node -p "const f=require('./private/eval/zoom/report-reference-train.json').rows[0].fit; f.a+','+f.b")
-	@cat private/eval/zoom/report-reference-test.md
+	@echo "Real-model check: open a chapter, Edit > Revision Pass > Zoom. The first read wakes winnow:e4b (about 30 s)."
 
 install:
 	npm install
