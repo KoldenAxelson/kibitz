@@ -7,11 +7,15 @@
 
 UPSTREAM  := https://github.com/hughhowey/neo.git
 FORK_NAME := kibitz
+LOG_DIR   := private/logs
 
-.PHONY: help quest install start test e2e lint sync status
+# bash, so the quest's pipe can use pipefail
+SHELL := /bin/bash
+
+.PHONY: help quest quest-steps install start test e2e lint sync status
 
 help:
-	@echo "make quest    run the batch of commands Claude left for you (described above the quest target)"
+	@echo "make quest    run the batch of commands Claude left for you (logged to private/logs, secrets redacted)"
 	@echo "make install  npm install"
 	@echo "make start    run Kibitz (electron .)"
 	@echo "make test     unit tests (node --test)"
@@ -22,30 +26,38 @@ help:
 
 # ---------------------------------------------------------------------------
 # QUEST: the current batch of commands for Konrad to run.
-# Claude rewrites this target each time; everything else stays put.
 #
-# Current quest: fork NEO on GitHub as $(FORK_NAME), turn this folder into
-# its clone (upstream = hughhowey/neo), keep private/ out of git, install.
-# Needs the GitHub CLI, signed in: brew install gh && gh auth login
+# `make quest` runs quest-steps and logs everything it prints to
+# private/logs/quest-<timestamp>.log (git-ignored), with
+# private/logs/quest-latest.log pointing at the newest. Output is passed
+# through tools/redact.pl first, so API keys, tokens and passwords are
+# masked in the log and on screen. Claude reads the log; no pasting needed.
+#
+# Claude rewrites quest-steps each time; everything else stays put.
 # ---------------------------------------------------------------------------
 quest:
-	@command -v gh >/dev/null || { echo "Needs the GitHub CLI: brew install gh && gh auth login"; exit 1; }
-	@gh auth status >/dev/null 2>&1 || { echo "Sign in to GitHub first: gh auth login"; exit 1; }
-	@test ! -d .git || { echo "This folder is already a git repo; this quest has already run."; exit 1; }
-	gh repo fork hughhowey/neo --clone=false --default-branch-only --fork-name $(FORK_NAME)
-	gh auth setup-git
-	git init -b main
-	git remote add upstream $(UPSTREAM)
-	git remote add origin https://github.com/$$(gh api user -q .login)/$(FORK_NAME).git
-	git fetch upstream
-	git checkout -B main upstream/main
-	printf '\n# Kibitz: planning docs and reference material, never part of the repo\nprivate/\n' >> .gitignore
-	git add .gitignore Makefile
-	git commit -m "Kibitz: add Makefile, keep private/ out of git"
-	git push -u origin main
-	npm install
-	@echo; echo "Quest done. Tracked files should not include private/:"; git status --short --ignored | grep private || true
-	@git remote -v
+	@mkdir -p $(LOG_DIR)
+	@log=$(LOG_DIR)/quest-$$(date +%Y%m%d-%H%M%S).log; \
+	{ echo "# make quest, $$(date)"; echo "# at commit $$(git rev-parse --short HEAD 2>/dev/null)"; echo; } > $$log; \
+	set -o pipefail; \
+	$(MAKE) --no-print-directory quest-steps 2>&1 | perl tools/redact.pl | tee -a $$log; \
+	status=$$?; \
+	echo "# exit status $$status" >> $$log; \
+	ln -sf $$(basename $$log) $(LOG_DIR)/quest-latest.log; \
+	echo; echo "Logged to $$log (exit status $$status)"; \
+	exit $$status
+
+# Current quest: commit the quest logging (Makefile, tools/redact.pl), push,
+# and prove the log hides secrets.
+quest-steps:
+	git add Makefile tools/redact.pl
+	git commit -m "Kibitz: log make quest output to private/logs, with secrets redacted"
+	git push
+	@echo "Redaction check, these should all come out masked:"
+	@echo "ANTHROPIC_API_KEY=sk-ant-api03-thisisnotarealkey0000000"
+	@echo "token: ghp_thisisnotarealtoken000000000000000000"
+	git status --short
+	git log --oneline -3
 
 install:
 	npm install
