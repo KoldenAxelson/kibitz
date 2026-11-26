@@ -8,7 +8,7 @@ with the CSS Highlight API.
 Each file runs in two places:
 - **Node:** `require('./craft')` (or one file), for the tests.
 - **The window:** a plain `<script>` in this order: text, shapes, cut,
-  echoes, landings, voice, suggest, lexicon, passes, scenes. Each hangs off `window.KibitzCraft`.
+  echoes, landings, voice, suggest, lexicon, passes, scenes, zoom. Each hangs off `window.KibitzCraft`.
 
 | File | What it gives |
 |---|---|
@@ -21,6 +21,7 @@ Each file runs in two places:
 | `lexicon.js` | Word lists for the passes: the five senses, time words, loud tags, motion verbs, own-face and eye/hair patterns, words that aren't names |
 | `passes.js` | The eight revision passes: `run(key, text)` → `{ findings: [{ start, end, label, note, marks? }], summary }`; `PASSES` (menu order, labels, about); `names` |
 | `scenes.js` | The questions a card asks (`FIELDS`, `CHAPTER_FIELDS`), `clean`, `summary`, `answered`; `bookShape(chapters)`: lengths, dialogue share, pace, runs that drag, narrator gaps |
+| `zoom.js` | Zoom levels 1-5 (the uneven U): `questions(sentences, variant)` for a decision model, `levels(answers)`, `flags(levels)` (endsClose, neverDown, onlyBack), `compare` with a person's labels, `stretchFit`/`stretch` |
 | `voice.js` | `lines` (quoted lines with a guessed speaker: tag, beat or paragraph), `profile`, `bySpeaker`, `compare` |
 
 Conventions:
@@ -32,3 +33,7 @@ Conventions:
   should say which part of the notes it follows.
 - Tests: `scripts/craft-*.test.js` (run by `npm test`). Every module must
   keep `craft-window.test.js` passing, which loads them the window's way.
+
+Outside craft/ (main process, Node only): `decide.js` asks the local
+decision model (Ollaya on loopback, started from ~/.local/bin when needed);
+`tools/zoom-eval.js` measures models against Konrad's zoom labels.

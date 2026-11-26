@@ -49,18 +49,18 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit Phase 4, scene questions and Book Shape. Runs the
-# unit tests, lint on our files, and the scenes and Pocket end-to-end tests
-# on the Mac (Kibitz windows open and work by themselves for ~25 seconds).
+# Current quest: commit the model plumbing (decide.js, craft/zoom.js,
+# tools/zoom-eval.js), then, if labels.md is filled in, run the zoom
+# evaluation against the real models (several minutes; Ollaya starts itself).
+# Label private/eval/zoom/labels.md BEFORE running this.
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint app/scenes.js app/passes.js app/suggester.js craft scripts/craft-*.test.js scripts/suggester.e2e.js scripts/passes.e2e.js scripts/scenes.e2e.js
-	npm run test:e2e -- scenes pocket
-	git add Makefile main.js app/scenes.js app/core.js kibitz.css index.html pocket/www/index.html scripts/app-files.js craft scripts/craft-*.test.js scripts/scenes.e2e.js
-	git commit -m "Kibitz: scene questions on outline cards and View > Book Shape (craft/scenes.js, app/scenes.js), off until switched on in Options"
+	npx oxlint decide.js tools/zoom-eval.js craft scripts/craft-*.test.js scripts/decide.test.js scripts/zoom-eval.test.js
+	git add Makefile decide.js tools/zoom-eval.js craft scripts/craft-*.test.js scripts/decide.test.js scripts/zoom-eval.test.js
+	git commit -m "Kibitz: local decision model client (decide.js), zoom levels (craft/zoom.js) and the zoom evaluation harness"
 	git push
-	git status --short
-	git log --oneline -3
+	node tools/zoom-eval.js || echo "(no evaluation this time: see the line above)"
+	@test -f private/eval/zoom/report.md && cat private/eval/zoom/report.md || true
 
 install:
 	npm install
