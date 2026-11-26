@@ -172,29 +172,50 @@ function zoomTrouble(err) {
   return t('The local model couldn’t answer: {why}', { why: err.message });
 }
 
-// A paragraph's climb, drawn small beside its finding: levels 1-5, low at
-// the bottom (the close-up) and high at the top (the big idea).
-function zoomCurve(curve) {
+// A paragraph's climb: a dot per sentence, the close-up at the bottom and
+// the big idea at the top. Pointing at a dot lights its sentence.
+function zoomCurve(f) {
   const NS = 'http://www.w3.org/2000/svg';
+  const STEP = 22, H = 40, PAD = 4;
+  const y = (x) => PAD + (5 - Math.min(5, Math.max(1, x))) * ((H - 2 * PAD) / 4);
   const svg = document.createElementNS(NS, 'svg');
-  const w = Math.max(24, (curve.length - 1) * 14 + 4);
-  svg.setAttribute('viewBox', `0 0 ${w} 20`);
+  const w = (f.curve.length - 1) * STEP + 2 * PAD;
+  svg.setAttribute('viewBox', `0 0 ${w} ${H}`);
   svg.setAttribute('width', w);
-  svg.setAttribute('height', 20);
+  svg.setAttribute('height', H);
   svg.setAttribute('class', 'kp-curve');
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', t('Zoom levels: {levels}', { levels: curve.map((x) => (x === null ? '–' : x)).join(', ') }));
-  const pts = curve.map((x, i) => (x === null ? null : [2 + i * 14, 18 - (Math.min(5, Math.max(1, x)) - 1) * 4]));
+  svg.setAttribute('aria-label', t('Zoom levels: {levels}', { levels: f.curve.map((x) => (x === null ? '–' : x)).join(', ') }));
+  for (const level of [1, 5]) {
+    const g = document.createElementNS(NS, 'line');
+    g.setAttribute('x1', 0); g.setAttribute('x2', w);
+    g.setAttribute('y1', y(level)); g.setAttribute('y2', y(level));
+    g.setAttribute('class', 'kp-guide');
+    svg.appendChild(g);
+  }
+  const pts = f.curve.map((x, i) => (x === null ? null : [PAD + i * STEP, y(x)]));
   const line = document.createElementNS(NS, 'polyline');
   line.setAttribute('points', pts.filter(Boolean).map((p) => p.join(',')).join(' '));
   svg.appendChild(line);
-  for (const p of pts.filter(Boolean)) {
+  pts.forEach((p, i) => {
+    if (!p) return;
     const dot = document.createElementNS(NS, 'circle');
     dot.setAttribute('cx', p[0]);
     dot.setAttribute('cy', p[1]);
-    dot.setAttribute('r', 1.8);
+    dot.setAttribute('r', 3);
+    const tip = document.createElementNS(NS, 'title');
+    tip.textContent = t('Sentence {n}: {level}', { n: i + 1, level: f.curve[i] });
+    dot.appendChild(tip);
+    const s = f.sentences && f.sentences[i];
+    if (s) {
+      dot.addEventListener('mouseenter', () => {
+        const r = passRange(passLines, s.start, s.end);
+        if (r) CSS.highlights.set('kibitz-pass-current', new Highlight(r));
+      });
+      dot.addEventListener('mouseleave', () => paintPass(-1));
+    }
     svg.appendChild(dot);
-  }
+  });
   return svg;
 }
 
@@ -249,9 +270,8 @@ function renderPassPanel(text) {
   close.setAttribute('aria-label', t('End the pass'));
   close.addEventListener('click', () => { endPass(); focusPage(); });
   head.append(which, close);
-  const about = document.createElement('p');
-  about.className = 'kp-about';
-  about.textContent = t(KibitzCraft.passes.PASSES.find((p) => p.key === passKey).about);
+  // What a pass looks for is the select's tooltip, not text in the panel
+  which.title = t(KibitzCraft.passes.PASSES.find((p) => p.key === passKey).about);
   const summary = document.createElement('div');
   summary.className = 'kp-summary';
   for (const line of passFound.summary) {
@@ -271,7 +291,8 @@ function renderPassPanel(text) {
     const note = document.createElement('span');
     note.className = 'kp-note';
     note.textContent = f.note;
-    item.append(label, ...(f.curve ? [zoomCurve(f.curve)] : []), ...(f.start === null ? [] : [passQuote(text, f)]), note);
+    if (f.curve && !f.label) item.classList.add('kp-fine');
+    item.append(...(f.label ? [label] : []), ...(f.curve ? [zoomCurve(f)] : []), ...(f.start === null ? [] : [passQuote(text, f)]), ...(f.note ? [note] : []));
     if (f.start !== null) {
       item.type = 'button';
       item.addEventListener('click', () => showPassFinding(i, item));
@@ -279,7 +300,7 @@ function renderPassPanel(text) {
     li.appendChild(item);
     list.appendChild(li);
   });
-  passEl.append(head, about, summary, list);
+  passEl.append(head, ...(passFound.summary.length ? [summary] : []), list);
   if (!passFound.findings.length) {
     const none = document.createElement('p');
     none.className = 'kp-empty';

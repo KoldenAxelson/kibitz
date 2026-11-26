@@ -193,35 +193,35 @@
   }
 
   const FLAG_TEXT = {
-    endsClose: ['Ends on the close-up', 'The paragraph stops on a detail and leaves the reader holding it. Pull back out: what does it add up to?'],
-    neverDown: ['Never comes down', 'Every sentence stays general. Ground it with one thing the reader can see.'],
-    onlyBack: ['Back where it started', 'It pushes in, then climbs back only to where it opened. End wider than you began.']
+    neverDown: ['Never comes down', 'Ground it in one thing the reader can see.'],
+    endsClose: ['Ends on the close-up', 'Pull back out at the end.'],
+    onlyBack: ['Back where it started', 'End wider than you began.']
   };
 
-  // The pass's findings from each paragraph's levels (already stretched;
-  // null where the model gave none): a finding per flag, underlining the
-  // sentence it's about (the last, or the first for neverDown), carrying the
-  // paragraph's curve for the panel to draw.
+  // One entry per paragraph read (levels already stretched; null where the
+  // model gave none), in order: its curve and sentences for the panel to
+  // draw, and, when its curve goes wrong, the flags with the sentence each
+  // is about underlined (the first for neverDown, else the last). A
+  // paragraph whose curve is fine gets an empty label and no marks.
   function findings(paragraphs, levelsByParagraph) {
     const out = [];
-    let read = 0;
     paragraphs.forEach((p, i) => {
       const ls = levelsByParagraph[i];
       if (!ls || ls.filter(Number.isFinite).length < MIN_SENTENCES) return;
-      read++;
       const f = flags(ls);
-      const curve = ls.map((x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null));
-      for (const key of ['neverDown', 'endsClose', 'onlyBack']) {
-        if (!f[key]) continue;
-        const s = key === 'neverDown' ? p.sentences[0] : p.sentences[p.sentences.length - 1];
-        out.push({ start: p.start, end: p.end, label: FLAG_TEXT[key][0], note: FLAG_TEXT[key][1], marks: [{ start: s.start, end: s.end }], curve });
-      }
+      const keys = ['neverDown', 'endsClose', 'onlyBack'].filter((k) => f[k]);
+      const marks = keys.map((k) => (k === 'neverDown' ? p.sentences[0] : p.sentences[p.sentences.length - 1]))
+        .filter((s, j, all) => all.indexOf(s) === j).map((s) => ({ start: s.start, end: s.end }));
+      out.push({
+        start: p.start, end: p.end,
+        label: keys.map((k) => FLAG_TEXT[k][0]).join(' · '),
+        note: keys.map((k) => FLAG_TEXT[k][1]).join(' '),
+        marks,
+        curve: ls.map((x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null)),
+        sentences: p.sentences.map((s) => ({ start: s.start, end: s.end }))
+      });
     });
-    const summary = [
-      read ? `Read ${read} ${read === 1 ? 'paragraph' : 'paragraphs'} of three sentences or more.` : 'No paragraph of three sentences or more to read yet.',
-      'The uneven U: open a little wide, push in to the close-up, end wider than you began.'
-    ];
-    return { findings: out, summary };
+    return { findings: out, summary: out.length ? [] : ['No paragraph of three sentences or more yet.'] };
   }
 
   return { CHOSEN, MIN_SENTENCES, LEVELS, EXAMPLES, paragraphsToRead, findings, VARIANTS: Object.keys(VARIANTS), questions, levels, flags, stretchFit, stretch, compare };

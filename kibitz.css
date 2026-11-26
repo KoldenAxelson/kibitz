@@ -50,7 +50,6 @@ body.kibitz-pass-open #paper-scroll { left: calc(50% - 150px * var(--ui-zoom, 1)
   background: none; border: none; color: var(--muted); font-size: 1.6em; line-height: 1; cursor: pointer; padding: 0 2px;
 }
 .kibitz-pass .kp-close:hover, .kibitz-pass .kp-close:focus-visible { color: var(--accent); outline: none; }
-.kibitz-pass .kp-about { margin: 0 14px 8px; font-style: italic; opacity: 0.85; }
 .kibitz-pass .kp-summary { margin: 0 14px 10px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); }
 .kibitz-pass .kp-summary p { margin: 0 0 4px; }
 .kibitz-pass .kp-list { list-style: none; margin: 0; padding: 0 8px 16px; overflow-y: auto; flex: 1; }
@@ -66,7 +65,11 @@ body.kibitz-pass-open #paper-scroll { left: calc(50% - 150px * var(--ui-zoom, 1)
 .kibitz-pass .kp-quote { display: block; font-family: var(--body-font); font-size: 1.08em; margin: 2px 0; opacity: 0.95; }
 .kibitz-pass .kp-quote mark { background: none; color: inherit; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
 .kibitz-pass .kp-note { display: block; opacity: 0.8; }
-.kibitz-pass .kp-curve { display: block; margin: 4px 0 2px; overflow: visible; }
+.kibitz-pass .kp-curve { display: block; margin: 6px 0 4px; overflow: visible; }
+.kibitz-pass .kp-curve .kp-guide { stroke: currentColor; opacity: 0.15; stroke-width: 1; }
+.kibitz-pass .kp-curve circle { cursor: default; }
+.kibitz-pass .kp-fine .kp-curve polyline { stroke: currentColor; opacity: 0.5; }
+.kibitz-pass .kp-fine .kp-curve circle { fill: currentColor; opacity: 0.6; }
 .kibitz-pass .kp-curve polyline { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 .kibitz-pass .kp-curve circle { fill: var(--accent); }
 .kibitz-pass .kp-empty { margin: 4px 14px; font-style: italic; }

@@ -86,17 +86,20 @@ test('paragraphs with a curve to read: three sentences or more, not mostly speec
   for (const p of ps) for (const s of p.sentences) assert.equal(text.slice(s.start, s.end), s.text);
 });
 
-test('levels become findings on the right sentence, with the curve', () => {
+test('every paragraph read is listed with its curve; the wrong ones flagged on the right sentence', () => {
   const text = 'Wide claim. Close detail. Closer still.\nGeneral. General again. Still general.\nWide. Close. Wider at the end.';
   const ps = Z.paragraphsToRead(text);
-  const r = Z.findings(ps, [[3, 2, 1], [4, 4.2, 4], [4, 2, 4]]);
-  assert.equal(Z.findings(ps, [[3, 1, 4.5], null, null]).findings.length, 0, 'a good uneven U: nothing to say');
-  assert.deepEqual(r.findings.map((f) => [f.label, text.slice(f.marks[0].start, f.marks[0].end)]), [
-    ['Ends on the close-up', 'Closer still.'],
-    ['Never comes down', 'General.'],
-    ['Back where it started', 'Wider at the end.']
+  const r = Z.findings(ps, [[3, 2, 1], [4, 4.2, 4], [3, 1, 4.5]]);
+  assert.deepEqual(r.findings.map((f) => [f.label, f.marks.map((m) => text.slice(m.start, m.end))]), [
+    ['Ends on the close-up', ['Closer still.']],
+    ['Never comes down', ['General.']],
+    ['', []]
   ]);
   assert.deepEqual(r.findings[0].curve, [3, 2, 1]);
-  assert.match(r.summary[0], /^Read 3 paragraphs/);
+  assert.deepEqual(r.findings[2].sentences.map((s) => text.slice(s.start, s.end)), ['Wide.', 'Close.', 'Wider at the end.']);
+  assert.deepEqual(r.summary, []);
+  assert.equal(Z.findings(ps, [[4, 2, 4], null, null]).findings[0].label, 'Back where it started');
+  const both = Z.findings(ps, [[3.5, 3, 1], null, null]).findings[0];
+  assert.equal(both.label, 'Ends on the close-up', 'ends close (1.0) but onlyBack needs to climb back');
   assert.match(Z.findings(ps, [null, [1, null, null], undefined]).summary[0], /^No paragraph/);
 });

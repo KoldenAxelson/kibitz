@@ -54,18 +54,18 @@ quest:
 # train split, then it runs once on the untouched test split with that
 # stretch fixed. About 5 minutes.
 quest-steps:
-	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint craft decide.js app/passes.js scripts/zoom.e2e.js scripts/craft-zoom.test.js scripts/craft-passes.test.js
+	./tools/dev-name.sh
+	set -o pipefail; npm test 2>&1 | tail -3
 	npm run test:e2e -- zoom passes
-	git add Makefile craft decide.js main.js preload.js index.html kibitz.css app/passes.js scripts/zoom.e2e.js scripts/passes.e2e.js scripts/craft-zoom.test.js scripts/craft-passes.test.js
-	git commit -m "Kibitz: Zoom revision pass on the local model (winnow:e4b)" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
+	git add Makefile tools/dev-name.sh app/core.js app/passes.js craft/zoom.js kibitz.css scripts/zoom.e2e.js scripts/craft-zoom.test.js
+	git commit -m "Kibitz: Zoom shows every paragraph's curve, panels drop their explanations; dev app named Kibitz" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_01G49LS2rKxy4YDtoJqLyXhV"
 	git push
-	@echo "Real-model check: open a chapter, Edit > Revision Pass > Zoom. The first read wakes winnow:e4b (about 30 s)."
 
 install:
 	npm install
 
 start:
+	@./tools/dev-name.sh
 	npm start
 
 test:

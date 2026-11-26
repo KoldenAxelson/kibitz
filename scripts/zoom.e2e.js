@@ -90,12 +90,12 @@ test('the model wakes, then each paragraph is read and the wrong curves flagged'
   await menu('zoom');
   const waking = await panel();
   assert.match(waking.summary[0], /Waking the local model/);
-  const done = await until(async () => { const p = await panel(); return p && p.labels.length === 2 && !/Reading|Waking/.test(p.summary[0]) && p; });
-  assert.ok(done, 'the findings arrive');
-  assert.deepEqual(done.labels, ['Ends on the close-up', 'Never comes down']);
-  assert.equal(done.curves, 2, 'each finding draws its paragraph\'s curve');
-  assert.ok(done.marks >= 2);
-  assert.match(done.summary[0], /^Read 3 paragraphs/, 'the two-sentence paragraph is left out');
+  const done = await until(async () => { const p = await panel(); return p && p.curves === 3 && !p.summary.length && p; });
+  assert.ok(done, 'the findings arrive, and no status or explanation is left in the panel');
+  assert.deepEqual(done.labels, ['Ends on the close-up', 'Never comes down'], 'the fine paragraph has no label');
+  assert.equal(done.curves, 3, 'every paragraph read draws its curve; the two-sentence one is left out');
+  assert.equal(done.marks, 2, 'only flagged sentences are underlined');
+  assert.equal(await js(`document.querySelectorAll('.kibitz-pass .kp-about').length`), 0);
   assert.equal(seen.length, 3, 'one question per paragraph read');
   assert.ok(seen.every((b) => b.model === 'winnow:e4b' && Object.keys(b.questions).length === 3));
   await shot('zoom.png');
@@ -121,8 +121,10 @@ test('an edit asks again only about the paragraph that changed', async () => {
   await tick(800);
   assert.equal(after - before, 1);
   assert.equal(seen.length - before, 1);
-  const p = await until(async () => { const v = await panel(); return v && v.labels.includes('Ends on the close-up') && v.labels.length === 3 && v; });
+  const p = await until(async () => { const v = await panel(); return v && v.labels.filter((l) => l === 'Ends on the close-up').length === 2 && v; });
   assert.ok(p, 'the edited paragraph now ends on a detail too');
+  await js(`document.querySelectorAll('.kibitz-pass .kp-curve circle')[1].dispatchEvent(new MouseEvent('mouseenter'))`);
+  assert.equal(await js(`String(CSS.highlights.get('kibitz-pass-current')?.values().next().value)`), 'Middle sentence about a thing.', 'pointing at a dot lights its sentence');
 });
 
 test('a missing model is explained in the panel', async () => {

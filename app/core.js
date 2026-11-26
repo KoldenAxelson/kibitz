@@ -307,7 +307,7 @@ const FEATURES = [
   { key: 'vim', label: tk('Vim keys'), desc: tk('Move around the page with h j k l and friends, the vim way.'), pocket: true },
   { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.'), pocket: true, pocketDesc: tk('Plain text, Markdown and web page, beside Word and EPUB.') },
   { key: 'suggester', label: tk('Sentence shape suggester'), desc: tk('After a pause at the end of a sentence, a gray line suggests a shape for the next one. It’s gone when you type.'), pocket: false },
-  { key: 'passes', label: tk('Revision passes'), desc: tk('Edit → Revision Pass: words to cut, rhythm, echoes, point of view, clutter, dialogue, description, time and cast, marked in the chapter and listed beside it. Nothing is changed.'), pocket: false },
+  { key: 'passes', label: tk('Revision passes'), desc: tk('Edit → Revision Pass: words to cut, rhythm, echoes, point of view, clutter, dialogue, description, time and cast, and Zoom (read by the local model), marked in the chapter and listed beside it. Nothing is changed.'), pocket: false },
   { key: 'scenes', label: tk('Scene questions and book shape'), desc: tk('Each outline card asks its scene’s question, what moves it on, how it ends, its tentpole and its revelation, and a chapter’s card its narrator. View → Book Shape… shows the whole book.'), pocket: false }
 ];
 const featureOn = (key) => {
