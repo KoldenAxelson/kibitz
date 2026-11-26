@@ -49,18 +49,15 @@ quest:
 	echo; echo "Logged to $$log (exit status $$status)"; \
 	exit $$status
 
-# Current quest: commit the model plumbing (decide.js, craft/zoom.js,
-# tools/zoom-eval.js), then, if labels.md is filled in, run the zoom
-# evaluation against the real models (several minutes; Ollaya starts itself).
-# Label private/eval/zoom/labels.md BEFORE running this.
+# Current quest: commit the evaluation's baseline (tools/zoom-eval.js now
+# always shows what "always answer the median" scores, and which pairings
+# beat it). No models run this time.
 quest-steps:
 	set -o pipefail; npm test 2>&1 | tail -9
-	npx oxlint decide.js tools/zoom-eval.js craft scripts/craft-*.test.js scripts/decide.test.js scripts/zoom-eval.test.js
-	git add Makefile decide.js tools/zoom-eval.js craft scripts/craft-*.test.js scripts/decide.test.js scripts/zoom-eval.test.js
-	git commit -m "Kibitz: local decision model client (decide.js), zoom levels (craft/zoom.js) and the zoom evaluation harness"
+	npx oxlint tools/zoom-eval.js scripts/zoom-eval.test.js
+	git add Makefile tools/zoom-eval.js scripts/zoom-eval.test.js
+	git commit -m "Kibitz: the zoom evaluation always reports a do-nothing baseline to beat"
 	git push
-	node tools/zoom-eval.js || echo "(no evaluation this time: see the line above)"
-	@test -f private/eval/zoom/report.md && cat private/eval/zoom/report.md || true
 
 install:
 	npm install

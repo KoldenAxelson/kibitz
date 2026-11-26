@@ -87,21 +87,36 @@ async function run({ dir = 'private/eval/zoom', models = DEFAULT_MODELS, variant
   }
   const flagsOf = (c) => avg(Object.values(c.flagAgree).filter((x) => x !== null));
   rows.sort((a, b) => (flagsOf(b.stretched) - flagsOf(a.stretched)) || (a.stretched.distance - b.stretched.distance));
+  // The bar to clear: a "model" that reads nothing and always answers the
+  // median of the labels. (It also never raises a flag, unless the median
+  // is at an extreme.) A real model is only worth having if it beats this.
+  const known = human.flat().filter(Number.isFinite).sort((a, b) => a - b);
+  const median = known[Math.floor(known.length / 2)];
+  const flat = human.map((ls) => ls.map((x) => (Number.isFinite(x) ? median : null)));
+  const baseline = { model: 'baseline', variant: `always ${median}`, raw: Z.compare(human, flat) };
+  baseline.stretched = baseline.raw;
+  const beats = (r) => r.stretched.distance < baseline.raw.distance && flagsOf(r.stretched) >= flagsOf(baseline.raw);
+  log(`baseline / always ${median}: distance ${num(baseline.raw.distance)}, within one ${pct(baseline.raw.withinOne)}, flags ${pct(flagsOf(baseline.raw))}`);
   const md = ['# Zoom levels: models against Konrad’s feel', '',
     `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC · ${paragraphs.length} paragraphs · ${labelled} labelled sentences`, '',
     'Distance: average gap in levels (lower is closer). Within one: share of sentences no more than a level apart. Rank: Spearman correlation of the two orderings. Flags: how often the two agree on each paragraph\'s flags (ends on the close-up / never comes down / climbs back only to where it opened). Stretched: the model\'s scale fitted to the labels with a straight line (fitted on these same labels, so a little flattering).', '',
     '| Model | Asked | Distance | Within one | Rank | Flags | Stretched distance | Stretched within one | Stretched flags | Confidence | s / sentence | Dropped | Load s |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|---|'];
+  md.push(`| *baseline* | *always ${median}* | ${num(baseline.raw.distance)} | ${pct(baseline.raw.withinOne)} | – | ${pct(flagsOf(baseline.raw))} | | | | | | | |`);
   for (const r of rows) {
     md.push(`| ${r.model} | ${r.variant} | ${num(r.raw.distance)} | ${pct(r.raw.withinOne)} | ${num(r.raw.rank)} | ${pct(flagsOf(r.raw))} | ${num(r.stretched.distance)} | ${pct(r.stretched.withinOne)} | ${pct(flagsOf(r.stretched))} | ${num(r.confidence)} | ${num(r.perSentence)} | ${r.dropped} | ${num(r.load, 1)} |`);
   }
   if (rows.length) {
     const best = rows[0];
+    const winners = rows.filter(beats);
+    md.push('', winners.length
+      ? `Beating the baseline (closer, and no worse on flags, after stretching): ${winners.map((r) => `${r.model} / ${r.variant}`).join(', ')}.`
+      : `**No model beats the baseline** (always answering ${median}) on both distance and flags, even after stretching.`);
     md.push('', `Closest: **${best.model}**, asked by **${best.variant}**: flags agree ${pct(flagsOf(best.stretched))} of the time after stretching (ends on the close-up ${pct(best.stretched.flagAgree.endsClose)}, never comes down ${pct(best.stretched.flagAgree.neverDown)}, only back ${pct(best.stretched.flagAgree.onlyBack)}); stretch ${num(best.fit.a)} + ${num(best.fit.b)} × level.`);
   }
   fs.writeFileSync(path.join(dir, 'report.md'), md.join('\n') + '\n');
-  fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify({ rows, human, levels: raw }, null, 2) + '\n');
-  return rows;
+  fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify({ rows, baseline, human, levels: raw }, null, 2) + '\n');
+  return Object.assign(rows, { baseline, beats: rows.filter(beats).map((r) => `${r.model}/${r.variant}`) });
 }
 
 if (require.main === module) {

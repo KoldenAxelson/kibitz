@@ -59,7 +59,11 @@ test('closeness per model and way of asking, best first, with a report', async (
   assert.equal(best.raw.paragraphs, 1);
   assert.deepEqual(best.raw.flagAgree, { endsClose: 1, neverDown: 1, onlyBack: 1 });
   assert.ok(!rows.some((r) => r.model === 'missing'), 'a model that isn\'t installed is skipped');
+  assert.equal(rows.baseline.variant, 'always 2', 'the median of 1, 3, 5, 1, 2');
+  assert.ok(rows.beats.includes('close/paragraph'), 'a model that matches the labels beats always-2');
+  assert.ok(!rows.beats.some((b) => b.startsWith('flat/')), 'always-3 doesn\'t beat always-2');
   const report = fs.readFileSync(path.join(dir, 'report.md'), 'utf8');
+  assert.match(report, /\| \*baseline\* \| \*always 2\* \|/);
   assert.match(report, /\| close \| (paragraph|choice) \|/);
   assert.match(report, /Closest: \*\*close\*\*/);
   assert.ok(JSON.parse(fs.readFileSync(path.join(dir, 'report.json'), 'utf8')).levels['flat / paragraph']);
