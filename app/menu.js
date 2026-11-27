@@ -20,15 +20,17 @@ const BODY_FONTS = {
   // a sans-serif for those who write in one (bundled, so it's the same everywhere)
   'Jost': '"Jost", "Avenir Next", "Helvetica Neue", Arial, sans-serif',
   // iA Writer's own face, bundled too (SIL Open Font License)
-  'iA Writer Quattro': '"iA Writer Quattro", "Helvetica Neue", Arial, sans-serif'
+  'iA Writer Quattro': '"iA Writer Quattro", "Helvetica Neue", Arial, sans-serif',
+  // Libron, a calm serif made for reading on screens, bundled (SIL Open Font License)
+  'Libron': '"Libron", Georgia, serif'
 };
 
 // Hoefler Text and Iowan Old Style ship only with macOS; elsewhere they
 // would fall back to Georgia, so offer the fonts Windows actually has.
 // Keep in step with bodyFonts in main.js.
 const BODY_FONT_CHOICES = IS_MAC
-  ? ['Georgia', 'Palatino', 'Baskerville', 'Hoefler Text', 'Iowan Old Style', 'Jost', 'iA Writer Quattro']
-  : ['Georgia', 'Palatino', 'Baskerville', 'Cambria', 'Constantia', 'Jost', 'iA Writer Quattro'];
+  ? ['Georgia', 'Palatino', 'Baskerville', 'Hoefler Text', 'Iowan Old Style', 'Jost', 'iA Writer Quattro', 'Libron']
+  : ['Georgia', 'Palatino', 'Baskerville', 'Cambria', 'Constantia', 'Jost', 'iA Writer Quattro', 'Libron'];
 
 function applyFonts() {
   const f = library.fonts || {};

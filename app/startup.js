@@ -30,7 +30,9 @@ const LINUX_BODY_FONTS = {
   'Alegreya': '"Alegreya", "Hoefler Text", Georgia, serif',
   'Source Serif Pro': '"Source Serif Pro", "Iowan Old Style", Georgia, serif',
   'Jost': '"Jost", "Avenir Next", "Helvetica Neue", Arial, sans-serif',
-  'iA Writer Quattro': '"iA Writer Quattro", "Helvetica Neue", Arial, sans-serif'
+  'iA Writer Quattro': '"iA Writer Quattro", "Helvetica Neue", Arial, sans-serif',
+  // Libron, a calm serif made for reading on screens, bundled (SIL Open Font License)
+  'Libron': '"Libron", Georgia, serif'
 };
 
 function installLinuxBodyFonts() {

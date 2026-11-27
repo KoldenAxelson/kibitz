@@ -186,6 +186,12 @@ button { font: inherit; cursor: pointer; }
 @font-face { font-family: 'iA Writer Quattro'; src: url('fonts/iAWriterQuattroS-Italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
 @font-face { font-family: 'iA Writer Quattro'; src: url('fonts/iAWriterQuattroS-Bold.woff2') format('woff2'); font-weight: 700; }
 @font-face { font-family: 'iA Writer Quattro'; src: url('fonts/iAWriterQuattroS-BoldItalic.woff2') format('woff2'); font-weight: 700; font-style: italic; }
+/* Libron (Nico Verbruggen's reading face, v0.32 web files, unmodified: the
+   license reserves the name "Libron" for the originals) */
+@font-face { font-family: 'Libron'; src: url('fonts/Libron-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Libron'; src: url('fonts/Libron-Italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+@font-face { font-family: 'Libron'; src: url('fonts/Libron-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Libron'; src: url('fonts/Libron-BoldItalic.woff2') format('woff2'); font-weight: 700; font-style: italic; }
 @font-face { font-family: 'Jost'; src: url('fonts/jost-latin-400-normal.ttf') format('truetype'); font-weight: 400; }
 @font-face { font-family: 'Jost'; src: url('fonts/jost-latin-400-italic.ttf') format('truetype'); font-weight: 400; font-style: italic; }
 @font-face { font-family: 'Jost'; src: url('fonts/jost-latin-700-normal.ttf') format('truetype'); font-weight: 700; }
