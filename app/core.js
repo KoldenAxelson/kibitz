@@ -304,6 +304,7 @@ const FEATURES = [
   { key: 'exports', label: tk('More exports'), desc: tk('Manuscript Format, plain text, Markdown and web page, and Import Chapters.') },
   { key: 'suggester', label: tk('Sentence shape suggester'), desc: tk('After a pause at the end of a sentence, a gray line suggests a shape for the next one. It’s gone when you type.') },
   { key: 'passes', label: tk('Revision passes'), desc: tk('Edit → Revision Pass: words to cut, rhythm, echoes, point of view, clutter, dialogue, description, time and cast, and Zoom (read by the local model), marked in the chapter and listed beside it. Nothing is changed.') },
+  { key: 'menus', label: tk('Writer and editor menus'), desc: tk('⌘J at the caret: rhythm and zoom for what comes next. ⌘K: several revision passes at once. Number keys tick, Enter runs, Enter alone repeats.') },
   { key: 'storyBeta', label: tk('Story readings (beta)'), desc: tk('Revision Pass → Strongest Moments: the local model’s three strongest candidates in a chapter for where something lands, opens out, climbs or is about to be shown.') },
   { key: 'scenes', label: tk('Scene questions and book shape'), desc: tk('Each outline card asks its scene’s question, what moves it on, how it ends, its tentpole and its revelation, and a chapter’s card its narrator. View → Book Shape… shows the whole book.') }
 ];

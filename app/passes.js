@@ -26,7 +26,7 @@ const zoomCache = new Map();  // paragraph text → its levels, stretched
 const strongCache = new Map(); // a moment's view → the model's chances
 let zoomRun = 0;              // bumped to abandon a reading in progress
 let zoomAsking = null;        // the id of the question out with the model
-let passKey = null;      // the pass running, or null
+let passSet = [];        // the passes running, in the order they're listed (empty: none)
 let passChId = null;     // the chapter it read
 let passFound = null;    // { findings, summary } from craft/passes.js
 let passMarks = [];      // per finding, the Ranges to underline
@@ -86,11 +86,20 @@ const passNeedsModel = (key) => !!(KibitzCraft.passes.PASSES.find((p) => p.key =
 const passesShown = () => KibitzCraft.passes.PASSES.filter((p) => !p.feature || featureOn(p.feature));
 
 function runPass(key) {
-  if (!passesReady() || !passesShown().some((p) => p.key === key)) return;
+  runPasses([key]);
+}
+
+// Several passes at once (the editor menu): their finds in one list.
+function runPasses(keys) {
+  if (!passesReady()) return;
+  const shown = passesShown().map((p) => p.key);
+  keys = shown.filter((k) => keys.includes(k));
+  if (!keys.length) return;
   if (!passBody()) { toast(t('Open a chapter of prose to run a pass on it.')); return; }
-  passKey = key;
+  passSet = keys;
   passRefresh();
 }
+const passLabel = (key) => t((KibitzCraft.passes.PASSES.find((p) => p.key === key) || {}).label || key);
 
 function stopZoom() {
   zoomRun++;
@@ -100,7 +109,7 @@ function stopZoom() {
 
 function endPass() {
   stopZoom();
-  passKey = null;
+  passSet = [];
   passFound = null;
   passMarks = [];
   passSpans = [];
@@ -112,17 +121,41 @@ function endPass() {
   document.body.classList.remove('kibitz-pass-open');
 }
 
-// Reads the chapter again and redraws the marks and the list.
-function passRefresh() {
+// Reads the chapter again and redraws the marks and the list: the rule
+// passes at once, then the model's passes in turn, the list filling in.
+async function passRefresh() {
   passTimer = 0;
-  if (!passKey) return;
-  if (passKey === 'zoom') { passZoom(); return; }
-  if (passKey === 'strongest') { passStrongest(); return; }
+  if (!passSet.length) return;
+  stopZoom();
   const body = passBody();
   if (!body) { endPass(); return; }
+  const run = zoomRun;
+  const keys = passSet.slice();
   const { text, lines } = passText(body);
   passChId = body.closest('.chapter').dataset.id;
-  passShow(KibitzCraft.passes.run(passKey, text), text, lines);
+  const parts = {};
+  for (const k of keys) if (!passNeedsModel(k)) parts[k] = KibitzCraft.passes.run(k, text);
+  const live = () => run === zoomRun && passSet.join() === keys.join();
+  const show = () => {
+    if (!live()) return;
+    const many = keys.length > 1;
+    const findings = [];
+    const summary = [];
+    for (const k of keys) {
+      const part = parts[k];
+      if (!part) continue;
+      for (const f of part.findings) findings.push(many ? { ...f, pass: k } : f);
+      for (const line of part.summary) summary.push(many ? `${passLabel(k)}: ${line}` : line);
+    }
+    passShow({ findings, summary }, text, lines);
+  };
+  show();
+  const readers = { zoom: readZoom, strongest: readStrongest };
+  for (const k of keys) {
+    if (!passNeedsModel(k) || !readers[k]) continue;
+    const ok = await readers[k](text, run, live, (part) => { parts[k] = part; show(); });
+    if (!ok || !live()) return;
+  }
 }
 
 function passShow(found, text, lines) {
@@ -135,58 +168,46 @@ function passShow(found, text, lines) {
 }
 
 // Zoom: each paragraph of three sentences or more goes to the model in
-// turn; the list fills in as answers come back.
-async function passZoom() {
-  stopZoom();
-  const body = passBody();
-  if (!body) { endPass(); return; }
-  const run = zoomRun;
+// turn; `emit` gets the findings so far as answers come back. False when
+// the model couldn't answer (the trouble is in the summary).
+async function readZoom(text, run, live, emit) {
   const Zm = KibitzCraft.zoom;
-  const { text, lines } = passText(body);
-  passChId = body.closest('.chapter').dataset.id;
   const paras = Zm.paragraphsToRead(text);
   const levels = paras.map((p) => zoomCache.get(p.text) || null);
   const todo = paras.map((_, i) => i).filter((i) => !levels[i]);
-  const live = () => run === zoomRun && passKey === 'zoom';
   const show = (status) => {
     if (!live()) return;
     const r = Zm.findings(paras, levels);
-    passShow({ findings: r.findings, summary: status ? [status, ...r.summary] : r.summary }, text, lines);
+    emit({ findings: r.findings, summary: status ? [status, ...r.summary] : r.summary });
   };
   show(todo.length ? (zoomCache.size ? t('Reading {n} paragraphs…', { n: todo.length }) : t('Waking the local model: the first time takes about half a minute.')) : '');
   for (let k = 0; k < todo.length; k++) {
-    if (!live()) return;
+    if (!live()) return false;
     const i = todo[k];
     const [req] = Zm.questions(paras[i].sentences.map((x) => x.text), Zm.CHOSEN.variant);
     zoomAsking = `zoom-${run}-${i}`;
     const res = await window.kibitz.decide({ id: zoomAsking, model: Zm.CHOSEN.model, state: req.state, questions: req.questions });
-    if (!live()) return;
+    if (!live()) return false;
     zoomAsking = null;
     if (res.error) {
       if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error, 'Zoom'));
-      return;
+      return false;
     }
     levels[i] = Zm.levels(res.answers, paras[i].sentences.length).map((x) => (x ? Zm.stretch(x.level, Zm.CHOSEN.stretch) : null));
     zoomCache.set(paras[i].text, levels[i]);
     show(k + 1 < todo.length ? t('Reading paragraph {n} of {all}…', { n: k + 2, all: todo.length }) : '');
   }
+  return true;
 }
 
 // Strongest Moments: each moment goes to the model in turn (one request,
 // four yes/no questions); the lists rank as answers come back.
-async function passStrongest() {
-  stopZoom();
-  const body = passBody();
-  if (!body) { endPass(); return; }
-  const run = zoomRun;
+async function readStrongest(text, run, live, emit) {
   const St = KibitzCraft.story;
-  const { text, lines } = passText(body);
-  passChId = body.closest('.chapter').dataset.id;
   const keys = St.strongestKeys();
   const moms = St.moments(text);
   const chances = moms.map((m) => strongCache.get(m.view) || null);
   const todo = moms.map((_, i) => i).filter((i) => !chances[i]);
-  const live = () => run === zoomRun && passKey === 'strongest';
   const show = (status) => {
     if (!live()) return;
     const ranked = St.strongest(chances);
@@ -198,25 +219,26 @@ async function passStrongest() {
       }
     }
     const summary = status ? [status] : (!moms.length || (!ranked.length && !todo.length) ? [t('Too few moments to rank yet.')] : []);
-    passShow({ findings, summary }, text, lines);
+    emit({ findings, summary });
   };
   show(todo.length ? (strongCache.size ? t('Reading {n} moments…', { n: todo.length }) : t('Waking the local model: the first time takes about half a minute.')) : '');
   for (let k = 0; k < todo.length; k++) {
-    if (!live()) return;
+    if (!live()) return false;
     const i = todo[k];
     const req = St.question({ scene: moms[i].view }, keys);
     zoomAsking = `strongest-${run}-${i}`;
     const res = await window.kibitz.decide({ id: zoomAsking, model: req.model, state: req.state, questions: req.questions });
-    if (!live()) return;
+    if (!live()) return false;
     zoomAsking = null;
     if (res.error) {
       if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error, 'Strongest Moments', req.model));
-      return;
+      return false;
     }
     chances[i] = St.yesChances(res.answers);
     strongCache.set(moms[i].view, chances[i]);
     show(k + 1 < todo.length ? t('Reading moment {n} of {all}…', { n: k + 2, all: todo.length }) : '');
   }
+  return true;
 }
 
 function zoomTrouble(err, pass, model = KibitzCraft.zoom.CHOSEN.model) {
@@ -314,8 +336,10 @@ function renderPassPanel(text) {
   const which = document.createElement('select');
   which.className = 'kp-which';
   which.setAttribute('aria-label', t('Which pass'));
-  for (const p of passesShown()) which.add(new Option(t(p.label), p.key, false, p.key === passKey));
-  which.addEventListener('change', () => runPass(which.value));
+  // several passes at once show as one more choice, named after them
+  if (passSet.length > 1) which.add(new Option(passSet.map(passLabel).join(' · '), '', false, true));
+  for (const p of passesShown()) which.add(new Option(t(p.label), p.key, false, passSet.length === 1 && p.key === passSet[0]));
+  which.addEventListener('change', () => { if (which.value) runPass(which.value); });
   const close = document.createElement('button');
   close.type = 'button';
   close.className = 'kp-close';
@@ -325,7 +349,7 @@ function renderPassPanel(text) {
   close.addEventListener('click', () => { endPass(); focusPage(); });
   head.append(which, close);
   // What a pass looks for is the select's tooltip, not text in the panel
-  which.title = t(KibitzCraft.passes.PASSES.find((p) => p.key === passKey).about);
+  which.title = passSet.map((k) => t(KibitzCraft.passes.PASSES.find((p) => p.key === k).about)).join('\n');
   const summary = document.createElement('div');
   summary.className = 'kp-summary';
   for (const line of passFound.summary) {
@@ -346,7 +370,10 @@ function renderPassPanel(text) {
     note.className = 'kp-note';
     note.textContent = f.note;
     if (f.curve && !f.label) item.classList.add('kp-fine');
-    item.append(...(f.label ? [label] : []), ...(f.curve ? [zoomCurve(f)] : []), ...(f.start === null ? [] : [passQuote(text, f)]), ...(f.note ? [note] : []));
+    const tag = document.createElement('span');
+    tag.className = 'kp-pass';
+    tag.textContent = f.pass ? passLabel(f.pass) : '';
+    item.append(...(f.pass ? [tag] : []), ...(f.label ? [label] : []), ...(f.curve ? [zoomCurve(f)] : []), ...(f.start === null ? [] : [passQuote(text, f)]), ...(f.note ? [note] : []));
     if (f.start !== null) {
       item.type = 'button';
       item.addEventListener('click', () => showPassFinding(i, item));
@@ -386,20 +413,20 @@ function showPassFinding(i, item) {
 }
 
 function queuePassRefresh() {
-  if (!passKey) return;
+  if (!passSet.length) return;
   clearTimeout(passTimer);
-  passTimer = setTimeout(passRefresh, passNeedsModel(passKey) ? ZOOM_RESCAN_MS : PASS_RESCAN_MS);
+  passTimer = setTimeout(passRefresh, passSet.some(passNeedsModel) ? ZOOM_RESCAN_MS : PASS_RESCAN_MS);
 }
 
 // Writing in the chapter reads it again; moving to another chapter reads
 // that one; leaving the manuscript ends the pass.
 document.addEventListener('input', (e) => {
-  if (passKey && e.target && e.target.closest && e.target.closest('.chapter-body')) queuePassRefresh();
+  if (passSet.length && e.target && e.target.closest && e.target.closest('.chapter-body')) queuePassRefresh();
 }, true);
 document.addEventListener('selectionchange', () => {
-  if (passKey && currentChapterId && currentChapterId !== passChId) queuePassRefresh();
+  if (passSet.length && currentChapterId && currentChapterId !== passChId) queuePassRefresh();
 });
-const passStillHere = () => { if (passKey && !passBody()) endPass(); };
+const passStillHere = () => { if (passSet.length && !passBody()) endPass(); };
 document.addEventListener('click', () => setTimeout(passStillHere), true);
 document.addEventListener('keyup', () => setTimeout(passStillHere), true);
 
@@ -408,7 +435,7 @@ document.addEventListener('keyup', () => setTimeout(passStillHere), true);
 if (window.kibitz && window.kibitz.onMenu) {
   window.kibitz.onMenu((msg) => {
     if (msg.type !== 'revisionPass') return;
-    if (!msg.pass || msg.pass === passKey) endPass();
+    if (!msg.pass || passSet.join() === msg.pass) endPass();
     else runPass(msg.pass);
   });
 }

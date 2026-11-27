@@ -2751,7 +2751,10 @@ function buildMenu() {
             { type: 'separator' },
             { label: t('End Pass'), click: () => sendToWindow({ type: 'revisionPass', pass: null }) }
           ]
-        }
+        },
+        // Kibitz: help pulled at the caret (app/menus.js)
+        { label: t('Writer Menu'), accelerator: 'CmdOrCtrl+J', feature: 'menus', click: () => sendToWindow({ type: 'helpMenu', which: 'writer' }) },
+        { label: t('Editor Menu'), accelerator: 'CmdOrCtrl+K', feature: 'menus', click: () => sendToWindow({ type: 'helpMenu', which: 'editor' }) }
       ]
     },
     {
