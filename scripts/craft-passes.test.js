@@ -22,8 +22,9 @@ const CHAPTER = [
 ].join('\n');
 
 test('the passes, in menu order, each with a label and a line about it', () => {
-  assert.deepEqual(P.PASSES.map((p) => p.key), ['cut', 'rhythm', 'echoes', 'pov', 'clutter', 'dialogue', 'description', 'time', 'zoom']);
-  assert.deepEqual(P.PASSES.filter((p) => p.model).map((p) => p.key), ['zoom'], 'only Zoom needs the model');
+  assert.deepEqual(P.PASSES.map((p) => p.key), ['cut', 'rhythm', 'echoes', 'pov', 'clutter', 'dialogue', 'description', 'time', 'zoom', 'strongest']);
+  assert.deepEqual(P.PASSES.filter((p) => p.model).map((p) => p.key), ['zoom', 'strongest'], 'only Zoom and Strongest Moments need the model');
+  assert.deepEqual(P.PASSES.filter((p) => p.feature).map((p) => [p.key, p.feature]), [['strongest', 'storyBeta']], 'Strongest Moments is behind the story beta');
   for (const p of P.PASSES) assert.ok(p.label && p.about);
   assert.throws(() => run('nope', 'x'), /No such pass/);
   assert.throws(() => run('zoom', 'x'), /No such pass/, 'Zoom is run by the window, with the model');

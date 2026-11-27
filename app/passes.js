@@ -15,11 +15,15 @@
 // the main process asks): it reads a paragraph at a time, keeps each
 // paragraph's levels so an edit only asks again about what changed, and
 // says plainly in the panel when the model is waking or can't be reached.
+// Strongest Moments (beta, feature storyBeta) asks the same model about
+// each narrated paragraph's last sentence and lists, per reading, the three
+// it rates strongest: candidates, never verdicts (craft/story.js).
 // A feature (FEATURES in core), off until switched on.
 
 const PASS_RESCAN_MS = 700;
 const ZOOM_RESCAN_MS = 2000;  // the model is slower: wait for a real pause
 const zoomCache = new Map();  // paragraph text → its levels, stretched
+const strongCache = new Map(); // a moment's view → the model's chances
 let zoomRun = 0;              // bumped to abandon a reading in progress
 let zoomAsking = null;        // the id of the question out with the model
 let passKey = null;      // the pass running, or null
@@ -78,9 +82,11 @@ function passBody() {
 }
 
 const passNeedsModel = (key) => !!(KibitzCraft.passes.PASSES.find((p) => p.key === key) || {}).model;
+// The passes this library shows: a pass behind a feature only when it's on
+const passesShown = () => KibitzCraft.passes.PASSES.filter((p) => !p.feature || featureOn(p.feature));
 
 function runPass(key) {
-  if (!passesReady()) return;
+  if (!passesReady() || !passesShown().some((p) => p.key === key)) return;
   if (!passBody()) { toast(t('Open a chapter of prose to run a pass on it.')); return; }
   passKey = key;
   passRefresh();
@@ -110,7 +116,8 @@ function endPass() {
 function passRefresh() {
   passTimer = 0;
   if (!passKey) return;
-  if (passNeedsModel(passKey)) { passZoom(); return; }
+  if (passKey === 'zoom') { passZoom(); return; }
+  if (passKey === 'strongest') { passStrongest(); return; }
   const body = passBody();
   if (!body) { endPass(); return; }
   const { text, lines } = passText(body);
@@ -156,7 +163,7 @@ async function passZoom() {
     if (!live()) return;
     zoomAsking = null;
     if (res.error) {
-      if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error));
+      if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error, 'Zoom'));
       return;
     }
     levels[i] = Zm.levels(res.answers, paras[i].sentences.length).map((x) => (x ? Zm.stretch(x.level, Zm.CHOSEN.stretch) : null));
@@ -165,9 +172,56 @@ async function passZoom() {
   }
 }
 
-function zoomTrouble(err) {
-  if (err.code === 'NOT_RUNNING') return t('Zoom needs Ollaya, the local model, and it isn’t answering. {why}', { why: err.message });
-  if (err.code === 'MODEL_NOT_FOUND') return t('Zoom needs the {model} model. In a terminal: ollaya pull {model}', { model: KibitzCraft.zoom.CHOSEN.model });
+// Strongest Moments: each moment goes to the model in turn (one request,
+// four yes/no questions); the lists rank as answers come back.
+async function passStrongest() {
+  stopZoom();
+  const body = passBody();
+  if (!body) { endPass(); return; }
+  const run = zoomRun;
+  const St = KibitzCraft.story;
+  const { text, lines } = passText(body);
+  passChId = body.closest('.chapter').dataset.id;
+  const keys = St.strongestKeys();
+  const moms = St.moments(text);
+  const chances = moms.map((m) => strongCache.get(m.view) || null);
+  const todo = moms.map((_, i) => i).filter((i) => !chances[i]);
+  const live = () => run === zoomRun && passKey === 'strongest';
+  const show = (status) => {
+    if (!live()) return;
+    const ranked = St.strongest(chances);
+    const findings = [];
+    for (const r of ranked) {
+      for (const pick of r.picks) {
+        const m = moms[pick.index];
+        findings.push({ start: m.start, end: m.end, label: t(St.STRONG_LABEL[r.key]) + (r.provisional ? ' · ' + t('provisional') : ''), note: '' });
+      }
+    }
+    const summary = status ? [status] : (!moms.length || (!ranked.length && !todo.length) ? [t('Too few moments to rank yet.')] : []);
+    passShow({ findings, summary }, text, lines);
+  };
+  show(todo.length ? (strongCache.size ? t('Reading {n} moments…', { n: todo.length }) : t('Waking the local model: the first time takes about half a minute.')) : '');
+  for (let k = 0; k < todo.length; k++) {
+    if (!live()) return;
+    const i = todo[k];
+    const req = St.question({ scene: moms[i].view }, keys);
+    zoomAsking = `strongest-${run}-${i}`;
+    const res = await window.kibitz.decide({ id: zoomAsking, model: req.model, state: req.state, questions: req.questions });
+    if (!live()) return;
+    zoomAsking = null;
+    if (res.error) {
+      if (res.error.code !== 'CANCELLED') show(zoomTrouble(res.error, 'Strongest Moments', req.model));
+      return;
+    }
+    chances[i] = St.yesChances(res.answers);
+    strongCache.set(moms[i].view, chances[i]);
+    show(k + 1 < todo.length ? t('Reading moment {n} of {all}…', { n: k + 2, all: todo.length }) : '');
+  }
+}
+
+function zoomTrouble(err, pass, model = KibitzCraft.zoom.CHOSEN.model) {
+  if (err.code === 'NOT_RUNNING') return t('{pass} needs Ollaya, the local model, and it isn’t answering. {why}', { pass: t(pass), why: err.message });
+  if (err.code === 'MODEL_NOT_FOUND') return t('{pass} needs the {model} model. In a terminal: ollaya pull {model}', { pass: t(pass), model });
   if (err.code === 'TIMEOUT') return t('The local model took too long to answer. Try again in a moment.');
   return t('The local model couldn’t answer: {why}', { why: err.message });
 }
@@ -260,7 +314,7 @@ function renderPassPanel(text) {
   const which = document.createElement('select');
   which.className = 'kp-which';
   which.setAttribute('aria-label', t('Which pass'));
-  for (const p of KibitzCraft.passes.PASSES) which.add(new Option(t(p.label), p.key, false, p.key === passKey));
+  for (const p of passesShown()) which.add(new Option(t(p.label), p.key, false, p.key === passKey));
   which.addEventListener('change', () => runPass(which.value));
   const close = document.createElement('button');
   close.type = 'button';

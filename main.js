@@ -2747,7 +2747,7 @@ function buildMenu() {
           label: t('Revision Pass'),
           feature: 'passes',
           submenu: [
-            ...require('./craft/passes.js').PASSES.map((p) => ({ label: t(p.label), click: () => sendToWindow({ type: 'revisionPass', pass: p.key }) })),
+            ...require('./craft/passes.js').PASSES.map((p) => ({ label: t(p.label), ...(p.feature ? { feature: p.feature } : {}), click: () => sendToWindow({ type: 'revisionPass', pass: p.key }) })),
             { type: 'separator' },
             { label: t('End Pass'), click: () => sendToWindow({ type: 'revisionPass', pass: null }) }
           ]

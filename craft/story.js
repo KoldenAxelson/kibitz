@@ -93,6 +93,52 @@
     return n ? sum : null;
   }
 
+  // STRONGEST MOMENTS (beta). Yes/no calls on these readings never got
+  // precise enough, but the model ranks well: in a chapter, its 3 strongest
+  // moments for a reading usually hold a real one (report-topn.md). So the
+  // pass ranks and never claims. SHOWN passed the pre-registered top-3 test;
+  // PROVISIONAL passed on the training books but the test had too few
+  // chapters to confirm. The rest are held back.
+  const STRONGEST = { shown: ['landed', 'opening'], provisional: ['rising', 'reveal'], top: 3, minMoments: 4 };
+  const MIN_BEFORE = 40;           // words before a moment: the model needs some scene to read
+  const STRONG_LABEL = { landed: 'Lands', opening: 'Opens out', rising: 'Climbs', reveal: 'About to show' };
+
+  // The moments a chapter is ranked over: each narrated paragraph's last
+  // sentence (a beat the writer can find), with what the model reads there.
+  // A paragraph that's mostly speech isn't a moment.
+  function moments(text) {
+    const quotes = T.quoteRanges(text);
+    const sents = T.sentences(text);
+    const end = text.trimEnd().length;
+    const out = [];
+    let words = 0;
+    for (const s of sents) {
+      words += s.words;
+      const after = text.slice(s.end, s.end + 4);
+      if (!(s.end >= end || /^\s*\n/.test(after))) continue;
+      if (words - s.words < MIN_BEFORE || T.quotedShare(text, s, quotes) > 0.2) continue;
+      out.push({ start: s.start, end: s.end, view: tail(text.slice(0, s.end)) });
+    }
+    return out;
+  }
+
+  // The readings the pass asks about, in the order it lists them.
+  const strongestKeys = (cfg = STRONGEST) => cfg.shown.concat(cfg.provisional);
+
+  // Per reading, the moments with the highest chance, best first:
+  // [{ key, provisional, picks: [{ index, chance }] }]. Empty with too few
+  // moments to rank.
+  function strongest(chances, cfg = STRONGEST) {
+    const read = chances.filter(Boolean).length;
+    if (read < cfg.minMoments) return [];
+    return strongestKeys(cfg).map((key) => ({
+      key,
+      provisional: cfg.provisional.includes(key),
+      picks: chances.map((c, index) => ({ index, chance: c && Number.isFinite(c[key]) ? c[key] : null }))
+        .filter((x) => x.chance !== null).sort((a, b) => b.chance - a.chance || a.index - b.index).slice(0, cfg.top)
+    }));
+  }
+
   // Rhythm rules that name a real rhythm problem speak before the story.
   const RHYTHM_FIRST = new Set(['landLong', 'threeShort', 'funnel', 'sameLength', 'noShort']);
 
@@ -170,5 +216,5 @@
   const rhythmSettles = (rhythm) => !!rhythm && RHYTHM_FIRST.has(rhythm.rule);
   const asking = (thresholds = THRESHOLDS) => KEYS.filter((k) => k in thresholds);
 
-  return { MODEL, MAX_WORDS, TIMEOUT_MS, LADDER_CUT, ladderQuestion, ladderLevel, READINGS, KEYS, SHAPE_TEXT, THRESHOLDS, tail, context, question, yesChances, fromReadings, combine, rhythmSettles, asking };
+  return { STRONGEST, STRONG_LABEL, MIN_BEFORE, moments, strongestKeys, strongest, MODEL, MAX_WORDS, TIMEOUT_MS, LADDER_CUT, ladderQuestion, ladderLevel, READINGS, KEYS, SHAPE_TEXT, THRESHOLDS, tail, context, question, yesChances, fromReadings, combine, rhythmSettles, asking };
 });

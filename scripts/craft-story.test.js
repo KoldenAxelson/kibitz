@@ -84,3 +84,27 @@ test('the level: the sum of the yes-chances', () => {
   assert.equal(St.ladderLevel({}), null);
   assert.equal(St.LADDER_CUT, 3);
 });
+
+// Strongest Moments (beta): rank, never claim
+const PARA = (n, last) => Array.from({ length: n }, (_, i) => `Owen walked past house number ${i} on the hill.`).join(' ') + ' ' + last;
+
+test('moments: each narrated paragraph\'s last sentence, once there is scene enough to read', () => {
+  const text = [PARA(1, 'Too early.'), PARA(4, 'The bus stopped.'), '“Get in,” she said, “now, before he sees you.”', '', PARA(2, 'He got in.')].join('\n');
+  const m = St.moments(text);
+  assert.deepEqual(m.map((x) => text.slice(x.start, x.end)), ['The bus stopped.', 'He got in.'], 'not the first (too little before), not speech, not the scene break');
+  assert.match(m[0].view, /The bus stopped\.$/);
+  assert.ok(T.wordCount(m[1].view) <= St.MAX_WORDS);
+});
+
+test('strongest: per reading, the top three by chance, shown readings before provisional', () => {
+  assert.deepEqual(St.strongestKeys(), ['landed', 'opening', 'rising', 'reveal']);
+  const chances = [0.1, 0.9, 0.5, 0.7, 0.3].map((x) => ({ landed: x, opening: 1 - x, rising: x, reveal: 0.5 }));
+  const r = St.strongest(chances);
+  assert.deepEqual(r.map((x) => [x.key, x.provisional]), [['landed', false], ['opening', false], ['rising', true], ['reveal', true]]);
+  assert.deepEqual(r[0].picks.map((p) => p.index), [1, 3, 2]);
+  assert.deepEqual(r[1].picks.map((p) => p.index), [0, 4, 2]);
+  assert.deepEqual(r[3].picks.map((p) => p.index), [0, 1, 2], 'ties keep the page order');
+  assert.deepEqual(St.strongest(chances.slice(0, 3)), [], 'too few moments to rank');
+  assert.deepEqual(St.strongest([null, ...chances]).length, 4, 'moments not yet read are skipped');
+  for (const k of St.strongestKeys()) assert.ok(St.STRONG_LABEL[k], k);
+});

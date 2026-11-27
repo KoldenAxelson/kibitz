@@ -31,7 +31,10 @@
     { key: 'time', label: 'Time and Cast', about: 'Whether the chapter says when it is, and paragraphs that bring on too many names.' },
     // Zoom asks the local model (decide.js), so it isn't one of run()'s:
     // app/passes.js runs it, with craft/zoom.js
-    { key: 'zoom', label: 'Zoom', about: 'Each paragraph’s climb from detail to idea, read by the local model: where it ends on the close-up, never comes down, or comes back only to where it started.', model: true }
+    { key: 'zoom', label: 'Zoom', about: 'Each paragraph’s climb from detail to idea, read by the local model: where it ends on the close-up, never comes down, or comes back only to where it started.', model: true },
+    // Beta (feature storyBeta): the local model ranks the chapter's moments
+    // per reading and lists its strongest three (craft/story.js strongest)
+    { key: 'strongest', label: 'Strongest Moments', about: 'The local model’s three strongest candidates per reading: where something lands, opens out, climbs or is about to be shown. Candidates, not verdicts.', model: true, feature: 'storyBeta' }
   ];
 
   const RUN_MIN = 4;            // sentences in a row for a rhythm run
