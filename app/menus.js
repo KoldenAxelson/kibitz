@@ -83,13 +83,16 @@ function openMenu(which) {
     const li = document.createElement('li');
     li.setAttribute('role', 'menuitemcheckbox');
     li.dataset.key = item.key;
+    const check = document.createElement('span');
+    check.className = 'km-check';
+    check.setAttribute('aria-hidden', 'true');
     const n = document.createElement('span');
     n.className = 'km-n';
     n.textContent = String((i + 1) % 10);
     const name = document.createElement('span');
     name.className = 'km-label';
     name.textContent = item.label;
-    li.append(n, name);
+    li.append(check, n, name);
     li.addEventListener('mousedown', (e) => { e.preventDefault(); toggle(i); });
     list.appendChild(li);
     return li;
@@ -199,6 +202,7 @@ function sayRhythm(say, at) {
   why.className = 'kc-why';
   why.textContent = found.why;
   say.append(found.text, ' ', why);
+  say.dataset.guide = found.shape || found.rule || '';
 }
 
 // Zoom: the caret's paragraph, read by the local model (kept with the pass's
@@ -229,6 +233,55 @@ async function sayZoom(say, at, live) {
   what.textContent = f.label ? `${f.label}. ${f.note}` : t('No flag.');
   say.append(' ', what);
 }
+
+/* ---- ⌘L: what a suggested shape is ---- */
+// While a suggestion is on screen (the suggester's gray line, or Rhythm in
+// the writer's card), ⌘L ("learn") explains its shape in a card by the
+// caret. ⌘L was free; with nothing to explain it does nothing.
+function guideShowing() {
+  const from = (menuCardEl && menuCardEl.querySelector('[data-guide]')) || (typeof suggestEl !== 'undefined' && suggestEl);
+  const key = from && from.dataset.guide;
+  return key && KibitzCraft.shapes.guideFor(key) ? key : null;
+}
+
+function showGuide(key) {
+  const g = KibitzCraft.shapes.guideFor(key);
+  hideMenuCard();
+  hideSuggestion();
+  const card = document.createElement('div');
+  card.className = 'kibitz-card kibitz-guide';
+  card.setAttribute('role', 'note');
+  const head = document.createElement('div');
+  head.className = 'kg-name';
+  head.textContent = t(g.name);
+  card.appendChild(head);
+  for (const [label, text] of [['What', g.what], ['How', g.how], ['When', g.when]]) {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const name = document.createElement('span');
+    name.className = 'kc-name';
+    name.textContent = t(label);
+    const say = document.createElement('span');
+    say.className = 'kc-say';
+    say.textContent = t(text);
+    row.append(name, say);
+    card.appendChild(row);
+  }
+  menuCardEl = card;
+  document.body.appendChild(card);
+  placeCard(card);
+}
+
+// on the window, before the listeners that put suggestions away
+window.addEventListener('keydown', (e) => {
+  if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || keyLetter(e) !== 'l') return;
+  if (typeof KibitzCraft === 'undefined' || !KibitzCraft.shapes || !KibitzCraft.shapes.guideFor) return;
+  const key = guideShowing();
+  if (!key) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  showGuide(key);
+}, true);
 
 // Any key or click puts the card away (the menu keeps its own keys). Esc
 // only puts it away: on the page it would also leave the book.

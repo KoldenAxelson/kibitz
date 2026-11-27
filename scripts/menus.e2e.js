@@ -112,6 +112,31 @@ test('⌘J: rhythm ticked first; Enter answers in a card by the caret', async ()
   assert.equal(await card(), null, 'any key puts the card away');
 });
 
+test('⌘L on a suggestion explains its shape', async () => {
+  await caretAtEnd(0);
+  await help('writer');
+  await key('Enter');
+  const c = await until(card);
+  assert.equal(c[0].name, 'Rhythm');
+  const cmdL = async () => {
+    wc.sendInputEvent({ type: 'keyDown', keyCode: 'L', modifiers: ['control'] });
+    wc.sendInputEvent({ type: 'keyUp', keyCode: 'L', modifiers: ['control'] });
+    await tick(200);
+  };
+  await cmdL();
+  const g = await js(`(() => { const el = document.querySelector('.kibitz-guide'); return el && { name: el.querySelector('.kg-name').textContent, rows: [...el.querySelectorAll('.kc-name')].map((x) => x.textContent) }; })()`);
+  assert.ok(g, 'the guide card is up');
+  assert.equal(g.name, 'Long', 'four short sentences ask for a long one');
+  assert.deepEqual(g.rows, ['What', 'How', 'When']);
+  await shot('menus-guide.png');
+  await key('Escape');
+  assert.equal(await js(`!!document.querySelector('.kibitz-guide')`), false);
+  const before = await js(`document.querySelectorAll('.chapter-body')[0].innerHTML`);
+  await cmdL();
+  assert.equal(await js(`!!document.querySelector('.kibitz-guide')`), false, 'nothing to explain: nothing happens');
+  assert.equal(await js(`document.querySelectorAll('.chapter-body')[0].innerHTML`), before);
+});
+
 test('the last set comes back ticked; a number key adds Zoom, read by the model', async () => {
   await caretAtEnd(1);
   await help('writer');

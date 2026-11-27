@@ -115,6 +115,7 @@ function showSuggestion(p, found) {
   if (walk) top = Math.max(top, walk.getBoundingClientRect().bottom);
   const el = document.createElement('div');
   el.className = 'kibitz-suggest';
+  el.dataset.guide = found.shape || found.rule || ''; // ⌘L explains it (app/menus.js)
   el.contentEditable = 'false';
   el.setAttribute('role', 'status');
   el.setAttribute('aria-live', 'polite');

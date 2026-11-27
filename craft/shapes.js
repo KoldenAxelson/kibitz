@@ -34,6 +34,47 @@
     { key: 'long', label: 'Long', about: 'one deliberate sentence that travels' }
   ];
 
+  // ⌘L on a suggestion: what the shape is, how it's built and when it
+  // helps, from private/rules/writing-techniques.md. Patterns only, never an
+  // example sentence: Kibitz doesn't write lines, not even to illustrate.
+  // Keyed by shape, plus the two suggester rules that name no shape.
+  const GUIDES = {
+    delay: { name: 'Delay', what: 'A sentence that holds its subject back until the end, so the reader leans in to find out what it\'s about.',
+      how: 'Phrases first (where, when, how), then the thing itself last: [past this], [past that], [the subject].',
+      when: 'Arrivals, reveals, and the start of a scene. Douglas Adams opens The Hitchhiker\'s Guide to the Galaxy this way.' },
+    contrast: { name: 'Contrast', what: 'Two halves pulling against each other: the hard thing called easy and the easy thing unbearable.',
+      how: '[One side], but [the other side]. The turn usually sits on but, yet or not.',
+      when: 'When a character feels the opposite of what you\'d expect. Tana French\'s narrator in In the Woods does it.' },
+    short: { name: 'Short', what: 'A few words, three to five, that land after longer ones.',
+      how: 'Subject and verb, or a fragment. Nothing extra.',
+      when: 'A punch after a long one, a last line, a funnel\'s end, a catchphrase the book returns to. If nothing in a draft is under four words, add one.' },
+    list: { name: 'List', what: 'A short claim, then the details that prove it.',
+      how: '[Claim]: [detail], [detail], [detail]. A colon or a dash after the claim.',
+      when: 'To make a picture specific. Lists of three were writers\' before they were AI\'s. David Benioff does it in City of Thieves.' },
+    repetition: { name: 'Repetition', what: 'One word used three times in a sentence, on purpose, so it rings instead of reading as sloppy.',
+      how: 'Pick the word that matters and bring it back in each part.',
+      when: 'When a word carries the scene\'s feeling. Susanna Clarke\'s Piranesi does it.' },
+    pileOn: { name: 'Pile-on', what: 'And, and, and: more conjunctions than grammar needs, for rhythm.',
+      how: '[This] and [this] and [this] and [this].',
+      when: 'Breathless moments, abundance, someone overwhelmed.' },
+    building: { name: 'Building', what: 'Clauses that start the same way (anaphora), each one climbing.',
+      how: '[Every X ...]. [Every Y ...]. [Every Z ...]. Hand the last word of each clause to the next.',
+      when: 'Rising tension, an argument gathering force, a speech.' },
+    reversal: { name: 'Reversal', what: 'A sentence that sets something up and flips it by the end.',
+      how: '[Expectation] ... [the flip]. Reusing the same word for the flip makes it ring.',
+      when: 'Irony and twists. Orwell\'s line in Animal Farm about some animals being more equal is the famous one.' },
+    long: { name: 'Long', what: 'One deliberate sentence that travels: grammatical, never a run-on.',
+      how: 'Clauses that each move a step further, ending on the most important thing.',
+      when: 'Slowing time, memory, a view taken in. One in Watership Down travels from a standoff to agreement.' },
+    openings: { name: 'Openings', what: 'Varying how sentences start, so not every one opens on the subject.',
+      how: 'Open on a clause (when, after, because ...), or one word and a comma (still, outside, then ...).',
+      when: 'After three or more sentences in a row that start with he, she, the or a name.' },
+    threePart: { name: 'Three-part', what: 'A sentence in threes (a list or three clauses) shouldn\'t sit next to another one.',
+      how: 'Follow it with two parts, or one, or something short.',
+      when: 'Right after any sentence built in threes.' }
+  };
+  const guideFor = (key) => GUIDES[key] || null;
+
   const SUBORDINATORS = new Set(('when while after before as if because since although though unless until till once ' +
     'whenever wherever where whether even').split(' '));
   const PREPOSITIONS = new Set(('of in on at by for with from into onto under over behind past through across near beside between ' +
@@ -222,7 +263,7 @@
     };
   }
 
-  return {
+  return { GUIDES, guideFor,
     SHORT_MAX, LONG_MIN, SAME_LENGTH_RUN, FUNNEL_MIN, SHAPES,
     opening, shapesOf, clauses, sameLengthRuns, funnels, rhythm
   };

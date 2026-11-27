@@ -79,3 +79,12 @@ test('rhythm sums a run of sentences', () => {
   assert.ok(r.shapesUsed.has('short'));
   assert.equal(r.sameLengthRuns.length, 1);
 });
+
+test('a guide for every shape and for the rules that name none: what, how, when, never an example sentence', () => {
+  for (const key of [...S.SHAPES.map((s) => s.key), 'openings', 'threePart']) {
+    const g = S.guideFor(key);
+    assert.ok(g && g.name && g.what && g.how && g.when, key);
+    for (const text of [g.what, g.how, g.when]) assert.doesNotMatch(text, /[“”"]/, `${key}: no quoted lines`);
+  }
+  assert.equal(S.guideFor('nope'), null);
+});
